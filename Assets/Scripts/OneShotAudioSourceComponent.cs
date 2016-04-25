@@ -1,18 +1,20 @@
 ﻿using UnityEngine;
 
-public class OneShotAudioComponent : MonoBehaviour
+public class OneShotAudioSourceComponent : MonoBehaviour
 {
 	private AudioSource audioSource;
 
-	private void Start()
+	private void Awake()
 	{
 		audioSource = GetComponent<AudioSource>();
+		audioSource.Play();
 	}
 	private void Update()
 	{
 		if(!audioSource.isPlaying)
 		{
 			Destroy(gameObject);
+			enabled = false;
 		}
 	}
 }
