@@ -74,15 +74,24 @@ public static class AudioUtils
 	// TODO: Endianness?
 	public static PCMAudioBuffer ReadWAV(string filePath)
 	{
-		using(BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
+		using(BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read)))
 		{
-			var chunkID = new string(reader.ReadChars(4)); // "RIFF".
-			var chunkSize = reader.ReadUInt32(); // Size of the rest of the chunk after this number.
-			var format = new string(reader.ReadChars(4)); // "WAVE".
+			var chunkID = reader.ReadBytes(4);
+			Debug.Assert(StringUtils.Equals(chunkID, "RIFF"));
 
-			var subchunk1ID = new string(reader.ReadChars(4)); // "fmt "
+			var chunkSize = reader.ReadUInt32(); // Size of the rest of the chunk after this number.
+
+			var format = reader.ReadBytes(4);
+			Debug.Assert(StringUtils.Equals(format, "WAVE"));
+
+			var subchunk1ID = reader.ReadBytes(4);
+			Debug.Assert(StringUtils.Equals(subchunk1ID, "fmt "));
+
 			var subchunk1Size = reader.ReadUInt32(); // Size of rest of subchunk.
+
 			var audioFormat = reader.ReadUInt16(); // 1 = PCM
+			Debug.Assert(audioFormat == 1);
+
 			var numChannels = reader.ReadUInt16();
 			var samplingRate = reader.ReadUInt32(); // # of samples per second (not including all channels).
 			var byteRate = reader.ReadUInt32(); // # of bytes per second (including all channels).
@@ -96,7 +105,9 @@ public static class AudioUtils
 				reader.ReadBytes(subchunk1ExtraSize);
 			}
 
-			var subchunk2ID = new string(reader.ReadChars(4)); // "data"
+			var subchunk2ID = reader.ReadBytes(4); // "data"
+			Debug.Assert(StringUtils.Equals(subchunk2ID, "data"));
+
 			var subchunk2Size = reader.ReadUInt32(); // Size of rest of subchunk.
 			byte[] audioData = reader.ReadBytes((int)subchunk2Size);
 

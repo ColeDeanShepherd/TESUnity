@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 // TODO: improve error handling
@@ -87,5 +88,59 @@ public struct ArrayRange<T> : IEnumerable<T>
 	IEnumerator IEnumerable.GetEnumerator()
 	{
 		return GetEnumerator();
+	}
+}
+
+public static class StringUtils
+{
+	public static bool Equals(byte[] ASCIIBytes, string str)
+	{
+		if(ASCIIBytes.Length != str.Length)
+		{
+			return false;
+		}
+
+		for(int i = 0; i < ASCIIBytes.Length; i++)
+		{
+			if((int)ASCIIBytes[i] != (int)str[i])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+}
+
+public static class Utils
+{
+	public static bool ContainsBitFlags(uint x, params uint[] bitFlags)
+	{
+		uint encodedBitFlags = 0;
+
+		foreach(var bitFlag in bitFlags)
+		{
+			encodedBitFlags |= bitFlag;
+		}
+
+		return (x & encodedBitFlags) == encodedBitFlags;
+	}
+
+	public static void Flip2DArray<T>(ref T[] arr, uint rowCount, uint columnCount)
+	{
+		var tmpRow = new T[columnCount];
+		var lastRowIndex = rowCount - 1;
+
+		for(uint rowIndex = 0; rowIndex < (rowCount / 2); rowIndex++)
+		{
+			uint otherRowIndex = lastRowIndex - rowIndex;
+
+			uint rowStartIndex = rowIndex * columnCount;
+			uint otherRowStartIndex = otherRowIndex * columnCount;
+
+			Array.Copy(arr, otherRowStartIndex, tmpRow, 0, columnCount); // other -> tmp
+			Array.Copy(arr, rowStartIndex, arr, otherRowStartIndex, columnCount); // row -> other
+			Array.Copy(tmpRow, 0, arr, rowStartIndex, columnCount); // tmp -> row
+		}
 	}
 }
