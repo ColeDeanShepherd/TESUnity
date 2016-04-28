@@ -11,8 +11,13 @@ public class TESUnity : MonoBehaviour
 
 	public Sprite UIBackgroundImg;
 	public Sprite UISpriteImg;
+	public Sprite UIMaskImg;
 
-	public GameObject scrollViewPrefab;
+	// UI Prefabs
+	public GameObject dropdownPrefab;
+	public GameObject inputFieldPrefab;
+	public GameObject sliderPrefab;
+	public GameObject togglePrefab;
 
 	private GameObject canvasObject;
 	private BSAFile MWArchiveFile;
@@ -28,25 +33,19 @@ public class TESUnity : MonoBehaviour
 		canvasObject = GUIUtils.CreateCanvas();
 		GUIUtils.CreateEventSystem();
 
+		//GUIUtils.CreateScrollView(canvasObject);
+		//var UIObj = GameObject.Instantiate(dropdownPrefab);
+		//UIObj.transform.SetParent(canvasObject.transform, false);
+
 		MWArchiveFile = new BSAFile(MorrowindDataPath + "/Morrowind.bsa");
 
 		var scrollView = GUIUtils.CreateScrollView(canvasObject);
 		scrollView.GetComponent<RectTransform>().sizeDelta = new Vector2(480, 400);
 
 		var scrollViewContent = GUIUtils.GetScrollViewContent(scrollView);
-		scrollViewContent.AddComponent<GridLayoutGroup>();
-		var contentSizeFitter = scrollViewContent.AddComponent<ContentSizeFitter>();
-		contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-		contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-		/*var contentTransform = scrollViewContent.GetComponent<RectTransform>();
-		//contentTransform.anchorMin = Vector2.zero;
-		//contentTransform.anchorMax = Vector2.one;
-		//contentTransform.offsetMin = Vector2.zero;
-		//contentTransform.offsetMax = Vector2.zero;
-		var contentSizeFitter = scrollViewContent.AddComponent<UnityEngine.UI.ContentSizeFitter>();
-		contentSizeFitter.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
-		contentSizeFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;*/
+		scrollViewContent.AddComponent<VerticalLayoutGroup>();
+		var scrollViewContentTransform = scrollViewContent.GetComponent<RectTransform>();
+		scrollViewContentTransform.sizeDelta = new Vector2(scrollViewContentTransform.sizeDelta.x, 128000);
 
 		float x = 0;
 		float y0 = 0;
@@ -55,19 +54,19 @@ public class TESUnity : MonoBehaviour
 		float yMarginBottom = 0;
 		int drawI = 0;
 
-		//for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
-		for(int i = 0; i < 20; i++)
+		for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
+		//for(int i = 0; i < 200; i++)
 		{
 			if(Path.GetExtension(MWArchiveFile.fileMetadatas[i].name) == ".dds")
 			{
+				int iCopy = i;
 				float y = y0 - drawI * (height + yMarginBottom);
 
 				var button = GUIUtils.CreateTextButton(MWArchiveFile.fileMetadatas[i].name, scrollViewContent);
 				button.GetComponent<Button>().onClick.AddListener(() =>
 				{
-					Debug.Log(i);
-					byte[] fileData = MWArchiveFile.LoadFileData(MWArchiveFile.fileMetadatas[i]);
-					File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(MWArchiveFile.fileMetadatas[i].name), fileData);
+					byte[] fileData = MWArchiveFile.LoadFileData(MWArchiveFile.fileMetadatas[iCopy]);
+					File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(MWArchiveFile.fileMetadatas[iCopy].name), fileData);
 					testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
 				});
 
@@ -88,7 +87,7 @@ public class TESUnity : MonoBehaviour
 
 		//var fileMetadata = MWArchiveFile.fileMetadatas[1287];
 		//var fileMetadata = MWArchiveFile.fileMetadatas[132];
-		
+
 		//testImg = TextureUtils.LoadDDSTexture("C:/Users/Cole/Desktop/tx_book_08.dds");
 		//File.WriteAllBytes("C:/Users/Cole/Desktop/menu_rightbuttonup_top.png", loadedTexture.EncodeToPNG());
 

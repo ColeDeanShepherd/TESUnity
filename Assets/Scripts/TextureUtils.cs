@@ -127,6 +127,12 @@ public static class TextureUtils
 
 				textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
 			}
+			else if(StringUtils.Equals(dwPixelFormatFourCC, "DXT5"))
+			{
+				textureFormat = TextureFormat.DXT5;
+
+				textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
+			}
 			else
 			{
 				throw new NotImplementedException();

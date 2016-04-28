@@ -15,6 +15,27 @@ public static class GUIUtils
 			return _Arial;
 		}
 	}
+	public static Sprite UIBackgroundImage
+	{
+		get
+		{
+			return TESUnity.instance.UIBackgroundImg;
+		}
+	}
+	public static Sprite UISpriteImage
+	{
+		get
+		{
+			return TESUnity.instance.UISpriteImg;
+		}
+	}
+	public static Sprite UIMaskImage
+	{
+		get
+		{
+			return TESUnity.instance.UIMaskImg;
+		}
+	}
 
 	public static GameObject CreateCanvas()
 	{
@@ -33,133 +54,205 @@ public static class GUIUtils
 
 		return eventSystem;
 	}
+
 	public static GameObject CreateText(string text, GameObject parent)
 	{
 		var textObject = CreateUIObject("Text", parent);
 		textObject.AddComponent<CanvasRenderer>();
+
 		var textComponent = textObject.AddComponent<Text>();
 		textComponent.font = Arial;
 		textComponent.text = text;
+		textComponent.color = new Color32(50, 50, 50, 255);
+
+		textObject.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 30);
 
 		return textObject;
 	}
-	public static GameObject CreateTextButton(string text, GameObject parent)
+	public static GameObject CreateButton(GameObject parent)
 	{
 		var button = CreateUIObject("Button", parent);
 		button.AddComponent<CanvasRenderer>();
 
 		var buttonImage = button.AddComponent<Image>();
-		buttonImage.sprite = TESUnity.instance.UISpriteImg;
+		buttonImage.sprite = UISpriteImage;
 		buttonImage.type = Image.Type.Sliced;
 
 		button.AddComponent<Button>();
+		button.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 30);
+
+		return button;
+	}
+	public static GameObject CreateTextButton(string text, GameObject parent)
+	{
+		var button = CreateButton(parent);
 
 		var textObj = CreateText(text, button);
 		var textObjTransform = textObj.GetComponent<RectTransform>();
 		textObjTransform.anchorMin = Vector2.zero;
 		textObjTransform.anchorMax = Vector2.one;
+		textObjTransform.offsetMin = Vector2.zero;
+		textObjTransform.offsetMax = Vector2.zero;
+
+		textObj.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
 
 		return button;
 	}
-	public static GameObject CreateScrollView(GameObject parent)
+
+	public static GameObject CreateImage(Sprite sprite, GameObject parent)
 	{
-		var scrollView = GameObject.Instantiate(TESUnity.instance.scrollViewPrefab);
-		scrollView.transform.SetParent(parent.transform, false);
+		var image = CreateUIObject("Image", parent);
+		image.AddComponent<CanvasRenderer>();
+		image.AddComponent<Image>().sprite = sprite;
 
-		return scrollView;
-
-		/*// Create the scroll view.
-		var scrollView = CreateUIObject("Scroll View", parent);
-		scrollView.AddComponent<CanvasRenderer>();
-
-		var scrollViewScrollRect = scrollView.AddComponent<ScrollRect>();
-		scrollViewScrollRect.movementType = ScrollRect.MovementType.Clamped;
-
-		var scrollViewImage = scrollView.AddComponent<Image>();
-		scrollViewImage.sprite = TESUnity.instance.UIBackgroundImg;
-		scrollViewImage.type = Image.Type.Sliced;
-		scrollViewImage.color = new Color32(255, 255, 255, 100);
-
-		// Create the viewport.
-		var viewport = CreateUIObject("Viewport", scrollView);
-		viewport.AddComponent<Mask>().showMaskGraphic = false;
-		viewport.AddComponent<Image>();
-		var viewportRectTransform = viewport.GetComponent<RectTransform>();
-		viewportRectTransform.anchorMin = Vector2.zero;
-		viewportRectTransform.anchorMax = Vector2.one;
-		viewportRectTransform.offsetMin = Vector2.zero;
-		viewportRectTransform.offsetMax = Vector2.zero;
-
-		// Create the content container.
-		var content = CreateUIObject("Content", viewport);
-		var contentRectTransform = content.GetComponent<RectTransform>();
-		contentRectTransform.pivot = Vector2.up;
-		contentRectTransform.anchorMin = Vector2.up;
-		contentRectTransform.anchorMax = Vector2.up;
-		contentRectTransform.anchoredPosition = Vector2.zero;
-
-		// Create the scroll bars.
-		var verticalScrollBar = CreateScrollBar(Scrollbar.Direction.BottomToTop, scrollView);
-		var horizontalScrollBar = CreateScrollBar(Scrollbar.Direction.RightToLeft, scrollView);
-
-		scrollViewScrollRect.viewport = viewport.GetComponent<RectTransform>();
-		scrollViewScrollRect.content = content.GetComponent<RectTransform>();
-
-		// Link everything together.
-		scrollViewScrollRect.verticalScrollbar = verticalScrollBar.GetComponent<Scrollbar>();
-		scrollViewScrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
-
-		scrollViewScrollRect.horizontalScrollbar = horizontalScrollBar.GetComponent<Scrollbar>();
-		scrollViewScrollRect.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
-
-		return scrollView;*/
+		return image;
 	}
-	// TODO: Verify everything is the same as Unity's default scrollbar.
+	public static GameObject CreateRawImage(Texture texture, GameObject parent)
+	{
+		var rawImage = CreateUIObject("Raw Image", parent);
+		rawImage.AddComponent<CanvasRenderer>();
+		rawImage.AddComponent<RawImage>().texture = texture;
+
+		return rawImage;
+	}
+
+	public static GameObject CreatePanel(GameObject parent)
+	{
+		var panel = CreateUIObject("Panel", parent);
+		panel.AddComponent<CanvasRenderer>();
+
+		var image = panel.AddComponent<Image>();
+		image.sprite = UIBackgroundImage;
+		image.type = Image.Type.Sliced;
+		image.color = new Color32(255, 255, 255, 100);
+
+		var transform = panel.GetComponent<RectTransform>();
+		transform.anchorMin = Vector2.zero;
+		transform.anchorMax = Vector2.one;
+		transform.offsetMin = Vector2.zero;
+		transform.offsetMax = Vector2.zero;
+
+		return panel;
+	}
+
 	public static GameObject CreateScrollBar(Scrollbar.Direction direction, GameObject parent)
 	{
 		// Create the scroll bar object.
-		var isVertical = (direction == Scrollbar.Direction.BottomToTop) || (direction == Scrollbar.Direction.TopToBottom);
-		var scrollBarName = isVertical ? "Scrollbar Vertical" : "Scrollbar Horizontal";
-		var scrollBar = CreateUIObject(scrollBarName, parent);
+		var scrollBar = CreateUIObject("Scrollbar", parent);
 		scrollBar.AddComponent<CanvasRenderer>();
 
+		var isHorizontal = (direction == Scrollbar.Direction.LeftToRight) || (direction == Scrollbar.Direction.RightToLeft);
+		float length = 160;
+		scrollBar.GetComponent<RectTransform>().sizeDelta = isHorizontal ? new Vector2(length, 20) : new Vector2(20, length);
+
 		var scrollBarImage = scrollBar.AddComponent<Image>();
-		scrollBarImage.sprite = TESUnity.instance.UIBackgroundImg;
+		scrollBarImage.sprite = UIBackgroundImage;
 		scrollBarImage.type = Image.Type.Sliced;
 
 		var scrollBarComponent = scrollBar.AddComponent<Scrollbar>();
 		scrollBarComponent.direction = direction;
 
-		var scrollBarTransform = scrollBar.GetComponent<RectTransform>();
-		scrollBarTransform.sizeDelta = new Vector2(20, 20);
-		scrollBarTransform.anchorMin = new Vector2(1, 0);
-		scrollBarTransform.anchorMax = new Vector2(1, 1);
-
 		// Create the sliding area.
 		var slidingArea = CreateUIObject("Sliding Area", scrollBar);
+
 		var slidingAreaRectTransform = slidingArea.GetComponent<RectTransform>();
 		slidingAreaRectTransform.anchorMin = Vector2.zero;
 		slidingAreaRectTransform.anchorMax = Vector2.one;
-		slidingAreaRectTransform.offsetMin = Vector2.zero;
-		slidingAreaRectTransform.offsetMax = Vector2.zero;
+		slidingAreaRectTransform.offsetMin = new Vector2(10, 10);
+		slidingAreaRectTransform.offsetMax = new Vector2(-10, -10);
 
 		// Create the handle.
 		var handle = CreateUIObject("Handle", slidingArea);
 		handle.AddComponent<CanvasRenderer>();
 
 		var handleImage = handle.AddComponent<Image>();
-		handleImage.sprite = TESUnity.instance.UISpriteImg;
+		handleImage.sprite = UISpriteImage;
 		handleImage.type = Image.Type.Sliced;
 
 		var handleRectTransform = handle.GetComponent<RectTransform>();
-		handleRectTransform.offsetMin = Vector2.zero;
-		handleRectTransform.offsetMax = Vector2.zero;
+		handleRectTransform.offsetMin = new Vector2(-10, -10);
+		handleRectTransform.offsetMax = new Vector2(10, 10);
 
 		// Link everything together.
 		scrollBarComponent.handleRect = handle.GetComponent<RectTransform>();
 		scrollBarComponent.targetGraphic = handle.GetComponent<Image>();
 
 		return scrollBar;
+	}
+	public static GameObject CreateHorizontalScrollBar(GameObject parent)
+	{
+		return CreateScrollBar(Scrollbar.Direction.LeftToRight, parent);
+	}
+	public static GameObject CreateVerticalScrollBar(GameObject parent)
+	{
+		return CreateScrollBar(Scrollbar.Direction.BottomToTop, parent);
+	}
+
+	public static GameObject CreateScrollView(GameObject parent)
+	{
+		// Create the scroll view.
+		var scrollView = CreateUIObject("Scroll View", parent);
+		var scrollViewScrollRect = scrollView.AddComponent<ScrollRect>();
+		scrollView.AddComponent<CanvasRenderer>();
+
+		var scrollViewImage = scrollView.AddComponent<Image>();
+		scrollViewImage.sprite = UIBackgroundImage;
+		scrollViewImage.type = Image.Type.Sliced;
+		scrollViewImage.color = new Color32(255, 255, 255, 100);
+
+		var scrollViewTransform = scrollView.GetComponent<RectTransform>();
+		scrollViewTransform.sizeDelta = new Vector2(200, 200);
+
+		// Create the viewport.
+		var viewport = CreateUIObject("Viewport", scrollView);
+		viewport.AddComponent<Mask>().showMaskGraphic = false;
+
+		var viewportImage = viewport.AddComponent<Image>();
+		viewportImage.sprite = UIMaskImage;
+		viewportImage.type = Image.Type.Sliced;
+
+		var viewportRectTransform = viewport.GetComponent<RectTransform>();
+		viewportRectTransform.pivot = Vector2.up;
+
+		// Create the content container.
+		var content = CreateUIObject("Content", viewport);
+		var contentRectTransform = content.GetComponent<RectTransform>();
+		contentRectTransform.anchorMin = Vector2.up;
+		contentRectTransform.anchorMax = Vector2.one;
+		contentRectTransform.pivot = Vector2.up;
+		contentRectTransform.sizeDelta = new Vector2(0, 300);
+
+		// Create the scroll bars.
+		var horizontalScrollBar = CreateHorizontalScrollBar(scrollView);
+		horizontalScrollBar.name = "Scrollbar Horizontal";
+
+		var horizontalScrollBarTransform = horizontalScrollBar.GetComponent<RectTransform>();
+		horizontalScrollBarTransform.anchorMin = Vector2.zero;
+		horizontalScrollBarTransform.anchorMax = Vector2.right;
+		horizontalScrollBarTransform.pivot = Vector2.zero;
+
+		var verticalScrollBar = CreateVerticalScrollBar(scrollView);
+		verticalScrollBar.name = "Scrollbar Vertical";
+
+		var verticalScrollBarTransform = verticalScrollBar.GetComponent<RectTransform>();
+		verticalScrollBarTransform.anchorMin = Vector2.right;
+		verticalScrollBarTransform.anchorMax = Vector2.one;
+		verticalScrollBarTransform.pivot = Vector2.one;
+
+		// Link everything together.
+		scrollViewScrollRect.viewport = viewport.GetComponent<RectTransform>();
+		scrollViewScrollRect.content = content.GetComponent<RectTransform>();
+
+		scrollViewScrollRect.horizontalScrollbar = horizontalScrollBar.GetComponent<Scrollbar>();
+		scrollViewScrollRect.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+		scrollViewScrollRect.horizontalScrollbarSpacing = -3;
+
+		scrollViewScrollRect.verticalScrollbar = verticalScrollBar.GetComponent<Scrollbar>();
+		scrollViewScrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+		scrollViewScrollRect.verticalScrollbarSpacing = -3;
+
+
+		return scrollView;
 	}
 
 	public static void AddToScrollView(GameObject UIObject)
