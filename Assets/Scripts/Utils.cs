@@ -2,6 +2,23 @@
 using System.Collections;
 using System.Collections.Generic;
 
+
+namespace System.IO
+{
+	public class FileFormatException : FormatException
+	{
+		public FileFormatException() : base()
+		{
+		}
+		public FileFormatException(string message) : base(message)
+		{
+		}
+		public FileFormatException(string message, Exception innerException) : base(message, innerException)
+		{
+		}
+	}
+}
+
 // TODO: improve error handling
 public struct ArrayRange<T> : IEnumerable<T>
 {
@@ -126,7 +143,7 @@ public static class Utils
 		return (x & encodedBitFlags) == encodedBitFlags;
 	}
 
-	public static void Flip2DArray<T>(ref T[] arr, uint rowCount, uint columnCount)
+	public static void Flip2DArrayVertically<T>(ref T[] arr, uint rowCount, uint columnCount)
 	{
 		var tmpRow = new T[columnCount];
 		var lastRowIndex = rowCount - 1;

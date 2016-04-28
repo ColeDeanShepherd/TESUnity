@@ -54,7 +54,6 @@ public static class AudioUtils
 		audioStreamComponent.audioStream = audioStream;
 	}
 
-	// TODO: throw better exception
 	public static PCMAudioBuffer ReadAudioFile(string filePath)
 	{
 		string fileExtension = Path.GetExtension(filePath).ToLower();
@@ -66,31 +65,42 @@ public static class AudioUtils
 			case ".mp3":
 				return ReadMP3(filePath);
 			default:
-				throw new NotImplementedException();
+				throw new ArgumentOutOfRangeException("filePath", "Tried to read an unsupported audio file format.");
 		}
 	}
 
-	// TODO: Handle exceptions
 	// TODO: Endianness?
 	public static PCMAudioBuffer ReadWAV(string filePath)
 	{
 		using(BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read)))
 		{
 			var chunkID = reader.ReadBytes(4);
-			Debug.Assert(StringUtils.Equals(chunkID, "RIFF"));
+			if(!StringUtils.Equals(chunkID, "RIFF"))
+			{
+				throw new FileFormatException("Invalid chunk ID.");
+			}
 
 			var chunkSize = reader.ReadUInt32(); // Size of the rest of the chunk after this number.
 
 			var format = reader.ReadBytes(4);
-			Debug.Assert(StringUtils.Equals(format, "WAVE"));
+			if(!StringUtils.Equals(format, "WAVE"))
+			{
+				throw new FileFormatException("Invalid chunk format.");
+			}
 
 			var subchunk1ID = reader.ReadBytes(4);
-			Debug.Assert(StringUtils.Equals(subchunk1ID, "fmt "));
+			if(!StringUtils.Equals(subchunk1ID, "fmt "))
+			{
+				throw new FileFormatException("Invalid subchunk ID.");
+			}
 
 			var subchunk1Size = reader.ReadUInt32(); // Size of rest of subchunk.
 
-			var audioFormat = reader.ReadUInt16(); // 1 = PCM
-			Debug.Assert(audioFormat == 1);
+			var audioFormat = reader.ReadUInt16();
+			if(audioFormat != 1) // 1 = PCM
+			{
+				throw new NotImplementedException("Unsupported audio format.");
+			}
 
 			var numChannels = reader.ReadUInt16();
 			var samplingRate = reader.ReadUInt32(); // # of samples per second (not including all channels).
@@ -106,7 +116,10 @@ public static class AudioUtils
 			}
 
 			var subchunk2ID = reader.ReadBytes(4); // "data"
-			Debug.Assert(StringUtils.Equals(subchunk2ID, "data"));
+			if(!StringUtils.Equals(subchunk2ID, "data"))
+			{
+				throw new FileFormatException("Invalid subchunk ID.");
+			}
 
 			var subchunk2Size = reader.ReadUInt32(); // Size of rest of subchunk.
 			byte[] audioData = reader.ReadBytes((int)subchunk2Size);
@@ -305,14 +318,14 @@ public struct PCMAudioBuffer
 
 		data = new byte[sampleFrameCount * bytesPerSampleFrame];
 	}
-
-	// TODO: verify data size
 	public PCMAudioBuffer(int channelCount, int bitDepth, int samplingRate, byte[] data)
 	{
 		this.channelCount = channelCount;
 		this.bitDepth = bitDepth;
 		this.samplingRate = samplingRate;
 		this.data = data;
+
+		Debug.Assert((data.Length % bytesPerSampleFrame) == 0);
 	}
 
 	public float[] ToFloatArray()
@@ -365,16 +378,14 @@ public struct PCMAudioBuffer
 	}
 }
 
-// TODO: protect public attributes
 // TODO: Handle exceptions
 // TODO: Change MP3 libraries to properly handle mono/stereo.
 public class MP3StreamReader : IDisposable
 {
-	public int channelCount = 2;
-	public int bitDepth = 16;
-	public int samplingRate;
-	public long compressedStreamLengthInBytes;
-	public int streamedSampleFrameCount = 0;
+	public readonly int channelCount = 2;
+	public readonly int bitDepth = 16; // bits per sample
+	public readonly int samplingRate; // sample frames per second
+	public readonly long compressedStreamLengthInBytes;
 	public bool isDoneStreaming
 	{
 		get
@@ -444,8 +455,6 @@ public class MP3StreamReader : IDisposable
 		}
 
 		int sampleFramesRead = AudioUtils.BytesToSampleFrames(bytesRead, channelCount, bitDepth);
-		streamedSampleFrameCount += sampleFramesRead;
-
 		return sampleFramesRead;
 	}
 

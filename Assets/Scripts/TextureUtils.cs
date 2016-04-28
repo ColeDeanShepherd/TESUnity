@@ -48,7 +48,11 @@ public static class TextureUtils
 	// TODO: improve error handling
 	public static Texture2D LoadDDSTexture(string filePath)
 	{
-		using(BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read)))
+		return LoadDDSTexture(File.Open(filePath, FileMode.Open, FileAccess.Read));
+	}
+	public static Texture2D LoadDDSTexture(Stream inputStream)
+	{
+		using(BinaryReader reader = new BinaryReader(inputStream))
 		{
 			var magicString = reader.ReadBytes(4); // "DDS "
 
@@ -115,7 +119,13 @@ public static class TextureUtils
 
 				uint dataSize = dwPitchOrLinearSize * dwHeight;
 				textureData = reader.ReadBytes((int)dataSize);
-				Utils.Flip2DArray(ref textureData, dwHeight, dwPitchOrLinearSize);
+				Utils.Flip2DArrayVertically(ref textureData, dwHeight, dwPitchOrLinearSize);
+			}
+			else if(StringUtils.Equals(dwPixelFormatFourCC, "DXT1"))
+			{
+				textureFormat = TextureFormat.DXT1;
+
+				textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
 			}
 			else
 			{
