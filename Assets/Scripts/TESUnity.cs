@@ -37,6 +37,19 @@ public class TESUnity : MonoBehaviour
 		//var UIObj = GameObject.Instantiate(dropdownPrefab);
 		//UIObj.transform.SetParent(canvasObject.transform, false);
 
+		CreateBSABrowser();
+	}
+
+	private void OnGUI()
+	{
+		if(testImg != null)
+		{
+			GUI.DrawTexture(new Rect(10, 10, testImg.width, testImg.height), testImg);
+		}
+	}
+
+	private void CreateBSABrowser()
+	{
 		MWArchiveFile = new BSAFile(MorrowindDataPath + "/Morrowind.bsa");
 
 		var scrollView = GUIUtils.CreateScrollView(canvasObject);
@@ -54,10 +67,20 @@ public class TESUnity : MonoBehaviour
 		float yMarginBottom = 0;
 		int drawI = 0;
 
+		/*
+		File Formats:
+		.nif - model
+		.dds - texture
+		.kl - animation
+		.pso - DirectX Shader
+		.vso - DirectX Shader
+		*/
+
 		for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
 		//for(int i = 0; i < 200; i++)
 		{
-			if(Path.GetExtension(MWArchiveFile.fileMetadatas[i].name) == ".dds")
+			Debug.Log(Path.GetExtension(MWArchiveFile.fileMetadatas[i].name));
+			/*if(Path.GetExtension(MWArchiveFile.fileMetadatas[i].name) == ".dds")
 			{
 				int iCopy = i;
 				float y = y0 - drawI * (height + yMarginBottom);
@@ -66,61 +89,22 @@ public class TESUnity : MonoBehaviour
 				button.GetComponent<Button>().onClick.AddListener(() =>
 				{
 					byte[] fileData = MWArchiveFile.LoadFileData(MWArchiveFile.fileMetadatas[iCopy]);
-					File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(MWArchiveFile.fileMetadatas[iCopy].name), fileData);
 					testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
 				});
 
 				drawI++;
-			}
+			}*/
 		}
-
-
-
-
-
-
-
-		/*var fileMetadata = MWArchiveFile.fileMetadatas[1287];
-		byte[] fileData = MWArchiveFile.LoadFileData(fileMetadata);
-
-		File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(fileMetadata.name), fileData);*/
-
-		//var fileMetadata = MWArchiveFile.fileMetadatas[1287];
-		//var fileMetadata = MWArchiveFile.fileMetadatas[132];
-
-		//testImg = TextureUtils.LoadDDSTexture("C:/Users/Cole/Desktop/tx_book_08.dds");
-		//File.WriteAllBytes("C:/Users/Cole/Desktop/menu_rightbuttonup_top.png", loadedTexture.EncodeToPNG());
-
-
-
-
-		// meshes\i\in_r_l_int_entrance_03.nif
-
-		/*var MWArchiveFile = 
-
-		var fileMetadata = MWArchiveFile.fileMetadatas[1];
-		byte[] fileData = MWArchiveFile.LoadFileData(fileMetadata);
-
-		File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(fileMetadata.name), fileData);*/
-
-		/*
-
-		int i = 3;*/
-		/*var MWMasterFile = new ESMFile(MorrowindDataPath + "/Morrowind.esm");
+	}
+	private void ReadESMFile()
+	{
+		var MWMasterFile = new ESMFile(MorrowindDataPath + "/Morrowind.esm");
 
 		while(!MWMasterFile.isAtEOF)
 		{
 			MWMasterFile.SkipRecord();
 
 			int i = 3;
-		}*/
-	}
-
-	private void OnGUI()
-	{
-		if(testImg != null)
-		{
-			GUI.DrawTexture(new Rect(10, 10, testImg.width, testImg.height), testImg);
 		}
 	}
 

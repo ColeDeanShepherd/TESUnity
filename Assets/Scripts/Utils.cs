@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using UnityEngine;
 
 namespace System.IO
 {
@@ -159,5 +159,39 @@ public static class Utils
 			Array.Copy(arr, rowStartIndex, arr, otherRowStartIndex, columnCount); // row -> other
 			Array.Copy(tmpRow, 0, arr, rowStartIndex, columnCount); // tmp -> row
 		}
+	}
+
+	public static ulong GetBits(uint bitOffset, uint bitCount, byte[] bytes)
+	{
+		Debug.Assert(bitCount <= 64);
+
+		ulong bits = 0;
+		var remainingBitCount = bitCount;
+		var byteIndex = bitOffset / 8;
+		var bitIndex = bitOffset - (byteIndex * 8);
+
+		while(remainingBitCount > 0)
+		{
+			var numBitsLeftInByte = 8 - bitIndex;
+			var numBitsReadNow = Math.Min(remainingBitCount, numBitsLeftInByte);
+			var unmaskedBits = (uint)bytes[byteIndex] >> (int)(8 - (bitIndex + numBitsReadNow));
+			var bitMask = 0xFFu >> (int)(8 - numBitsReadNow);
+			uint bitsReadNow = unmaskedBits & bitMask;
+
+			bits <<= (int)numBitsReadNow;
+			bits |= bitsReadNow;
+
+			bitIndex += numBitsReadNow;
+
+			if(bitIndex == 8)
+			{
+				byteIndex++;
+				bitIndex = 0;
+			}
+
+			remainingBitCount -= numBitsReadNow;
+		}
+
+		return bits;
 	}
 }
