@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.3.4f1</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -69,14 +67,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\AudioUtils.cs" />
+    <Compile Include="Assets\Scripts\AutoNIFReader.cs" />
     <Compile Include="Assets\Scripts\BSAFile.cs" />
     <Compile Include="Assets\Scripts\ESMFile.cs" />
     <Compile Include="Assets\Scripts\GUIUtils.cs" />
+    <Compile Include="Assets\Scripts\NIFParserGenerator.cs" />
     <Compile Include="Assets\Scripts\OneShotAudioSourceComponent.cs" />
     <Compile Include="Assets\Scripts\OneShotAudioStreamComponent.cs" />
     <Compile Include="Assets\Scripts\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
     <Compile Include="Assets\Scripts\Utils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Misc\nif.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

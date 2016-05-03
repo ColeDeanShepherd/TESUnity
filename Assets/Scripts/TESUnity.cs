@@ -37,7 +37,9 @@ public class TESUnity : MonoBehaviour
 		//var UIObj = GameObject.Instantiate(dropdownPrefab);
 		//UIObj.transform.SetParent(canvasObject.transform, false);
 
-		CreateBSABrowser();
+		//CreateBSABrowser();
+		var parserGenerator = new NIFParserGenerator();
+		parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
 	}
 
 	private void OnGUI()
@@ -76,24 +78,26 @@ public class TESUnity : MonoBehaviour
 		.vso - DirectX Shader
 		*/
 
-		for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
-		//for(int i = 0; i < 200; i++)
+		//for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
+		for(int i = 0; i < 1000; i++)
 		{
-			Debug.Log(Path.GetExtension(MWArchiveFile.fileMetadatas[i].name));
-			/*if(Path.GetExtension(MWArchiveFile.fileMetadatas[i].name) == ".dds")
+			var filePath = MWArchiveFile.fileMetadatas[i].name;
+
+			if(Path.GetExtension(filePath) == ".nif")
 			{
 				int iCopy = i;
 				float y = y0 - drawI * (height + yMarginBottom);
 
-				var button = GUIUtils.CreateTextButton(MWArchiveFile.fileMetadatas[i].name, scrollViewContent);
+				var button = GUIUtils.CreateTextButton(filePath, scrollViewContent);
 				button.GetComponent<Button>().onClick.AddListener(() =>
 				{
 					byte[] fileData = MWArchiveFile.LoadFileData(MWArchiveFile.fileMetadatas[iCopy]);
-					testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
+					File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(filePath), fileData);
+					//testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
 				});
 
 				drawI++;
-			}*/
+			}
 		}
 	}
 	private void ReadESMFile()
