@@ -6,70 +6,39 @@ using System.Xml;
 using UnityEngine;
 
 // TODO: enum duplicates
-// TODO: conditionals
-// TODO: arrays
+// TODO: conditionals (cond, vercond)
+// TODO: default?
+// TODO: arrays (sizes)
 // TODO: default values
+// TODO: reading
 public class NIFParserGenerator
 {
 	public const uint NIFVersion = 0x04000002;
 
 	public void GenerateParser(string NIFXMLFilePath, string parserFilePath)
 	{
-		strBuilder = new StringBuilder();
-
 		NIFXMLDoc = new XmlDocument();
 		NIFXMLDoc.Load(NIFXMLFilePath);
 
+		strBuilder = new StringBuilder();
+
+		GenerateCode("// Automatically generated."); EndLine();
+		EndLine();
+
+		GenerateCode("using System;"); EndLine();
+		EndLine();
+
+		GenerateCode("namespace NIFReader"); EndLine();
+		GenerateCode("{");
+		EndLine(1);
+
 		var XMLDocElement = NIFXMLDoc.DocumentElement;
 
-		GenerateCode("// Automatically generated.");
+		GenerateTypes(XMLDocElement);
 		EndLine();
-		EndLine();
+		GenerateBinaryReader(XMLDocElement);
 
-		GenerateCode("using System;");
-		EndLine();
-		EndLine();
-
-		GenerateCode("namespace NIFReader");
-		EndLine();
-		GenerateCode("{");
-		indentLevel++;
-		EndLine();
-
-		for(int i = 0; i < XMLDocElement.ChildNodes.Count; i++)
-		{
-			var node = XMLDocElement.ChildNodes[i];
-
-			switch(node.Name)
-			{
-				case "version":
-					GenerateVersion(node);
-					break;
-				case "basic":
-					GenerateBasic(node);
-					break;
-				case "enum":
-					GenerateEnum(node);
-					break;
-				case "bitflags":
-					GenerateBitFlags(node);
-					break;
-				case "compound":
-					GenerateCompound(node);
-					break;
-				case "niobject":
-					GenerateNIObject(node);
-					break;
-				case "#comment":
-					GenerateComment(node);
-					break;
-				default:
-					throw new NotImplementedException("Found an unexpected tag in nif.xml (" + node.Name + ").");
-			}
-		}
-
-		indentLevel--;
-		EndLine();
+		EndLine(-1);
 		GenerateCode("}");
 
 		File.WriteAllBytes(parserFilePath, Encoding.UTF8.GetBytes(strBuilder.ToString()));
@@ -99,8 +68,10 @@ public class NIFParserGenerator
 	{
 		strBuilder.Append(codeStr);
 	}
-	private void EndLine()
+	private void EndLine(int deltaIndentLevel = 0)
 	{
+		indentLevel += deltaIndentLevel;
+
 		strBuilder.AppendLine("");
 		strBuilder.Append('\t', indentLevel);
 	}
@@ -160,6 +131,40 @@ public class NIFParserGenerator
 		GenerateCode(FormatTypeName(typeName));
 	}
 
+	private void GenerateTypes(XmlElement XMLDocElement)
+	{
+		for(int i = 0; i < XMLDocElement.ChildNodes.Count; i++)
+		{
+			var node = XMLDocElement.ChildNodes[i];
+
+			switch(node.Name)
+			{
+				case "version":
+					GenerateVersion(node);
+					break;
+				case "basic":
+					GenerateBasic(node);
+					break;
+				case "enum":
+					GenerateEnum(node);
+					break;
+				case "bitflags":
+					GenerateBitFlags(node);
+					break;
+				case "compound":
+					GenerateCompound(node);
+					break;
+				case "niobject":
+					GenerateNIObject(node);
+					break;
+				case "#comment":
+					GenerateComment(node);
+					break;
+				default:
+					throw new NotImplementedException("Found an unexpected tag in nif.xml (" + node.Name + ").");
+			}
+		}
+	}
 	private void GenerateComment(XmlNode node)
 	{
 	}
@@ -188,8 +193,7 @@ public class NIFParserGenerator
 		EndLine();
 
 		GenerateCode("{");
-		indentLevel++;
-		EndLine();
+		EndLine(1);
 
 		for(int valueIndex = 0; valueIndex < node.ChildNodes.Count; valueIndex++)
 		{
@@ -204,9 +208,8 @@ public class NIFParserGenerator
 				EndLine();
 			}
 		}
-
-		indentLevel--;
-		EndLine();
+		
+		EndLine(-1);
 		GenerateCode("}");
 		EndLine();
 	}
@@ -229,8 +232,7 @@ public class NIFParserGenerator
 		EndLine();
 
 		GenerateCode("{");
-		indentLevel++;
-		EndLine();
+		EndLine(1);
 
 		for(int memberIndex = 0; memberIndex < node.ChildNodes.Count; memberIndex++)
 		{
@@ -242,9 +244,7 @@ public class NIFParserGenerator
 			}
 		}
 
-
-		indentLevel--;
-		EndLine();
+		EndLine(-1);
 		GenerateCode("}");
 		EndLine();
 	}
@@ -270,8 +270,7 @@ public class NIFParserGenerator
 		EndLine();
 
 		GenerateCode("{");
-		indentLevel++;
-		EndLine();
+		EndLine(1);
 
 		for(int memberIndex = 0; memberIndex < node.ChildNodes.Count; memberIndex++)
 		{
@@ -283,9 +282,7 @@ public class NIFParserGenerator
 			}
 		}
 
-
-		indentLevel--;
-		EndLine();
+		EndLine(-1);
 		GenerateCode("}");
 		EndLine();
 	}
@@ -345,5 +342,45 @@ public class NIFParserGenerator
 
 		GenerateCode(";");
 		EndLine();
+	}
+
+	private void GenerateBinaryReader(XmlElement XMLDocElement)
+	{
+		GenerateCode("public static class NIFBinaryReader"); EndLine();
+		GenerateCode("{"); EndLine(1);
+
+		for(int i = 0; i < XMLDocElement.ChildNodes.Count; i++)
+		{
+			var node = XMLDocElement.ChildNodes[i];
+
+			switch(node.Name)
+			{
+				case "version":
+					//GenerateVersion(node);
+					break;
+				case "basic":
+					//GenerateBasic(node);
+					break;
+				case "enum":
+					//GenerateEnum(node);
+					break;
+				case "bitflags":
+					//GenerateBitFlags(node);
+					break;
+				case "compound":
+					//GenerateCompound(node);
+					break;
+				case "niobject":
+					//GenerateNIObject(node);
+					break;
+				case "#comment":
+					//GenerateComment(node);
+					break;
+				default:
+					throw new NotImplementedException("Found an unexpected tag in nif.xml (" + node.Name + ").");
+			}
+		}
+
+		EndLine(-1); GenerateCode("}");
 	}
 }

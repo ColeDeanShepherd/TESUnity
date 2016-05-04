@@ -38,8 +38,14 @@ public class TESUnity : MonoBehaviour
 		//UIObj.transform.SetParent(canvasObject.transform, false);
 
 		//CreateBSABrowser();
-		var parserGenerator = new NIFParserGenerator();
-		parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
+
+		//var parserGenerator = new NIFParserGenerator();
+		//parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
+
+		var NIFFile = new NIF.NiFile();
+		NIFFile.Deserialize(new BinaryReader(new FileStream("C:/Users/Cole/Desktop/gold_010_mod.nif", FileMode.Open, FileAccess.Read)));
+
+		int j = 3;
 	}
 
 	private void OnGUI()
