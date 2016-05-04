@@ -8,19 +8,25 @@ public class BSAFile : IDisposable
 	{
 		public uint value1;
 		public uint value2;
-	}
 
-	public struct FileMetadata
+		public override int GetHashCode()
+		{
+			return unchecked((int)(value1 ^ value2));
+		}
+	}
+	public class FileMetadata
 	{
 		public uint size;
 		public uint offsetInDataSection;
-		public string name;
-		public FileNameHash nameHash;
+		public string path;
+		public FileNameHash pathHash;
 	}
 
 	/* Public */
 	public byte[] version; // 4 bytes
 	public FileMetadata[] fileMetadatas;
+	public Dictionary<FileNameHash, FileMetadata> fileMetadataHashTable;
+	public VirtualFileSystem.Directory rootDir;
 
 	public bool isAtEOF
 	{
@@ -45,6 +51,22 @@ public class BSAFile : IDisposable
 		Close();
 	}
 
+	public byte[] LoadFileData(string filePath)
+	{
+		filePath = filePath.ToLower();
+
+		var hash = HashFilePath(filePath);
+		FileMetadata metadata;
+
+		if(fileMetadataHashTable.TryGetValue(hash, out metadata))
+		{
+			return LoadFileData(metadata);
+		}
+		else
+		{
+			throw new FileNotFoundException("Could not find file \"" + filePath + "\" in a BSA file.");
+		}
+	}
 	public byte[] LoadFileData(FileMetadata fileMetadata)
 	{
 		reader.BaseStream.Position = fileDataSectionPostion + fileMetadata.offsetInDataSection;
@@ -69,7 +91,13 @@ public class BSAFile : IDisposable
 		hashTablePosition = headerSize + hashTableOffsetFromEndOfHeader;
 		fileDataSectionPostion = hashTablePosition + (8 * fileCount);
 
+		// Create file metadatas.
 		fileMetadatas = new FileMetadata[fileCount];
+
+		for(int i = 0; i < fileCount; i++)
+		{
+			fileMetadatas[i] = new FileMetadata();
+		}
 
 		// Read file sizes/offsets.
 		for(int i = 0; i < fileCount; i++)
@@ -102,7 +130,7 @@ public class BSAFile : IDisposable
 				filenameBuffer.Add(curCharAsByte);
 			}
 
-			fileMetadatas[i].name = System.Text.Encoding.ASCII.GetString(filenameBuffer.ToArray());
+			fileMetadatas[i].path = System.Text.Encoding.ASCII.GetString(filenameBuffer.ToArray());
 		}
 
 		// Read filename hashes.
@@ -110,14 +138,33 @@ public class BSAFile : IDisposable
 
 		for(int i = 0; i < fileCount; i++)
 		{
-			fileMetadatas[i].nameHash.value1 = reader.ReadUInt32();
-			fileMetadatas[i].nameHash.value2 = reader.ReadUInt32();
+			fileMetadatas[i].pathHash.value1 = reader.ReadUInt32();
+			fileMetadatas[i].pathHash.value2 = reader.ReadUInt32();
 		}
 
+		// Create the file metadata hash table.
+		fileMetadataHashTable = new Dictionary<FileNameHash, FileMetadata>();
+
+		for(int i = 0; i < fileCount; i++)
+		{
+			fileMetadataHashTable[fileMetadatas[i].pathHash] = fileMetadatas[i];
+		}
+
+		// Create a virtual directory tree.
+		rootDir = new VirtualFileSystem.Directory();
+
+		foreach(var fileMetadata in fileMetadatas)
+		{
+			rootDir.CreateDescendantFile(fileMetadata.path);
+		}
+
+		// Skip to the file data section.
 		reader.BaseStream.Position = fileDataSectionPostion;
 	}
 	private FileNameHash HashFilePath(string filePath)
 	{
+		filePath = filePath.Replace('/', '\\');
+
 		FileNameHash hash = new FileNameHash();
 
 		uint len = (uint)filePath.Length;

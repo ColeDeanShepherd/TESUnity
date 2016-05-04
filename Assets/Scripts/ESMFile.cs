@@ -23,7 +23,6 @@ public class ESMFile : IDisposable
 
 	/* Public */
 	public RecordHeader curRecordHeader;
-	
 	public bool isAtEOF
 	{
 		get
@@ -63,7 +62,6 @@ public class ESMFile : IDisposable
 
 	/* Private */
 	private BinaryReader reader;
-
 	private long curRecordHeaderStartPos;
 	private long curRecordDataStartPos
 	{

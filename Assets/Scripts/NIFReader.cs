@@ -15,6 +15,10 @@ namespace NIF
 		{
 			return reader.ReadInt32();
 		}
+		public static int ReadPtr(BinaryReader reader)
+		{
+			return reader.ReadInt32();
+		}
 		public static int[] ReadLengthPrefixedRefs32(BinaryReader reader)
 		{
 			var refs = new int[reader.ReadUInt32()];
@@ -123,89 +127,24 @@ namespace NIF
 
 				return data;
 			}
-			else
+			else if(StringUtils.Equals(nodeTypeBytes, "NiSkinInstance"))
 			{
-				throw new NotImplementedException("Tried to read an unsupport NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
-			}
-		}
+				var instance = new NiSkinInstance();
+				instance.Deserialize(reader);
 
-		public static GameObject InstantiateNIFFile(NiFile file)
-		{
-			return InstantiateNiObject(file, file.blocks[0]);
-		}
-		private static GameObject InstantiateNiObject(NiFile file, NiObject NIFObj)
-		{
-			if(NIFObj.GetType() == typeof(NiNode))
-			{
-				return InstantiateNiNode(file, (NiNode)NIFObj);
+				return instance;
 			}
-			else if(NIFObj.GetType() == typeof(NiTriShape))
+			else if(StringUtils.Equals(nodeTypeBytes, "NiSkinData"))
 			{
-				return InstantiateNiTriShape(file, (NiTriShape)NIFObj);
-			}
-			else if(NIFObj.GetType() == typeof(RootCollisionNode))
-			{
-				return null;
+				var data = new NiSkinData();
+				data.Deserialize(reader);
+
+				return data;
 			}
 			else
 			{
-				throw new NotImplementedException("Tried to instantiate an unsupported NiObject (" + NIFObj.GetType().Name + ").");
+				throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
 			}
-		}
-		private static GameObject InstantiateNiNode(NiFile file, NiNode node)
-		{
-			GameObject obj = new GameObject(System.Text.Encoding.ASCII.GetString(node.name));
-
-			for(int i = 0; i < node.children.Length; i++)
-			{
-				var childIndex = node.children[i];
-
-				if(childIndex >= 0)
-				{
-					var childObj = InstantiateNiObject(file, file.blocks[childIndex]);
-
-					if(childObj != null)
-					{
-						childObj.transform.SetParent(obj.transform);
-					}
-				}
-			}
-
-			return obj;
-		}
-		private static GameObject InstantiateNiTriShape(NiFile file, NiTriShape triShape)
-		{
-			var mesh = NiTriShapeDataToMesh(file, (NiTriShapeData)file.blocks[triShape.dataRef]);
-
-			var obj = new GameObject(System.Text.Encoding.ASCII.GetString(triShape.name));
-			obj.AddComponent<MeshFilter>().mesh = mesh;
-			obj.AddComponent<MeshRenderer>().material = TESUnity.instance.defaultMaterial;
-
-			return obj;
-		}
-		private static Mesh NiTriShapeDataToMesh(NiFile file, NiTriShapeData data)
-		{
-			var vertices = data.vertices;
-			for(int i = 0; i < vertices.Length; i++)
-			{
-				Utils.Swap(ref vertices[i].y, ref vertices[i].z);
-			}
-
-			var triangles = new int[data.numTrianglePoints];
-			for(int i = 0; i < data.triangles.Length; i++)
-			{
-				int baseI = 3 * i;
-
-				triangles[baseI] = data.triangles[i].v1;
-				triangles[baseI + 1] = data.triangles[i].v3;
-				triangles[baseI + 2] = data.triangles[i].v2;
-			}
-
-			Mesh mesh = new Mesh();
-			mesh.vertices = vertices;
-			mesh.triangles = triangles;
-
-			return mesh;
 		}
 	}
 
@@ -398,6 +337,20 @@ namespace NIF
 		}
 	}
 
+	public class SkinTransform
+	{
+		public Matrix4x4 rotation;
+		public Vector3 translation;
+		public float scale;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			rotation = NiUtils.ReadMatrix3x3(reader);
+			translation = NiUtils.ReadVector3(reader);
+			scale = reader.ReadSingle();
+		}
+	}
+
 	#endregion // Misc Classes
 
 	public class NiHeader
@@ -445,7 +398,7 @@ namespace NIF
 		public float scale;
 		public Vector3 velocity;
 		//public uint numProperties;
-		public int[] properties;
+		public int[] propertyRefs;
 		public bool hasBoundingBox;
 		public BoundingBox boundingBox;
 
@@ -458,7 +411,7 @@ namespace NIF
 			rotation = NiUtils.ReadMatrix3x3(reader);
 			scale = reader.ReadSingle();
 			velocity = NiUtils.ReadVector3(reader);
-			properties = NiUtils.ReadLengthPrefixedRefs32(reader);
+			propertyRefs = NiUtils.ReadLengthPrefixedRefs32(reader);
 			hasBoundingBox = NiUtils.ReadBool(reader);
 
 			if(hasBoundingBox)
@@ -511,6 +464,94 @@ namespace NIF
 
 			bytesRemaining = reader.ReadUInt32();
 			stringData = NiUtils.ReadLengthPrefixedBytes32(reader);
+		}
+	}
+
+	public class NiSkinInstance : NiObject
+	{
+		public int dataRef;
+		public int skeletonRootPtr;
+		public uint numBones;
+		public int[] bonePtrs;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			dataRef = NiUtils.ReadRef(reader);
+			skeletonRootPtr = NiUtils.ReadPtr(reader);
+			numBones = reader.ReadUInt32();
+
+			bonePtrs = new int[numBones];
+			for(int i = 0; i < bonePtrs.Length; i++)
+			{
+				bonePtrs[i] = NiUtils.ReadPtr(reader);
+			}
+		}
+	}
+
+	public class NiSkinData : NiObject
+	{
+		public SkinTransform skinTransform;
+		public uint numBones;
+		public int skinPartitionRef;
+		public SkinData[] boneList;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			skinTransform = new SkinTransform();
+			skinTransform.Deserialize(reader);
+
+			numBones = reader.ReadUInt32();
+
+			skinPartitionRef = NiUtils.ReadRef(reader);
+
+			boneList = new SkinData[numBones];
+			for(int i = 0; i < boneList.Length; i++)
+			{
+				boneList[i] = new SkinData();
+				boneList[i].Deserialize(reader);
+			}
+		}
+	}
+
+	public class SkinData
+	{
+		public SkinTransform skinTransform;
+		public Vector3 boundingSphereOffset;
+		public float boundingSphereRadius;
+		public ushort numVertices;
+		public SkinWeight[] vertexWeights;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			skinTransform = new SkinTransform();
+			skinTransform.Deserialize(reader);
+
+			boundingSphereOffset = NiUtils.ReadVector3(reader);
+			boundingSphereRadius = reader.ReadSingle();
+			numVertices = reader.ReadUInt16();
+
+			vertexWeights = new SkinWeight[numVertices];
+			for(int i = 0; i < vertexWeights.Length; i++)
+			{
+				vertexWeights[i] = new SkinWeight();
+				vertexWeights[i].Deserialize(reader);
+			}
+		}
+	}
+
+	public class SkinWeight
+	{
+		public ushort index;
+		public float weight;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			index = reader.ReadUInt16();
+			weight = reader.ReadSingle();
 		}
 	}
 

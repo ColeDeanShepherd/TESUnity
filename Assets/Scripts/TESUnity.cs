@@ -2,8 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// TODO: Figure out and use C# documentation standards.
-
+// TODO: read & use NIF footer
 public class TESUnity : MonoBehaviour
 {
 	const string MorrowindDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
@@ -22,10 +21,11 @@ public class TESUnity : MonoBehaviour
 	public Material defaultMaterial;
 
 	private GameObject canvasObject;
-	private BSAFile MWArchiveFile;
 
+	private MorrowindDataReader MWDataReader;
 	private Texture2D testImg;
 	private GameObject testObj;
+	private string testObjPath;
 
 	private void Awake()
 	{
@@ -36,20 +36,33 @@ public class TESUnity : MonoBehaviour
 		canvasObject = GUIUtils.CreateCanvas();
 		GUIUtils.CreateEventSystem();
 
+		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
+
+		/*MWArchiveFile = new BSAFile(MorrowindDataPath + "/Morrowind.bsa");
+		var NIFData = MWArchiveFile.LoadFileData("meshes/c/c_m_robe_common_02hh.1st.nif");
+
+		var NIFFile = new NIF.NiFile();
+		NIFFile.Deserialize(new BinaryReader(new MemoryStream(NIFData)));
+		NIF.NiUtils.InstantiateNIFFile(NIFFile);*/
+
 		//GUIUtils.CreateScrollView(canvasObject);
 		//var UIObj = GameObject.Instantiate(dropdownPrefab);
 		//UIObj.transform.SetParent(canvasObject.transform, false);
 
-		//CreateBSABrowser();
+		CreateBSABrowser();
 
 		//var parserGenerator = new NIFParserGenerator();
 		//parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
-
-		var NIFFile = new NIF.NiFile();
-		NIFFile.Deserialize(new BinaryReader(new FileStream("C:/Users/Cole/Desktop/c_m_robe_common_02h.1st.nif", FileMode.Open, FileAccess.Read)));
-		NIF.NiUtils.InstantiateNIFFile(NIFFile);
 	}
-
+	private void Update()
+	{
+		if(Input.GetKeyDown(KeyCode.K))
+		{
+			var fileName = Path.GetFileName(testObjPath);
+			var fileBytes = MWDataReader.MWBSAFile.LoadFileData(testObjPath);
+			File.WriteAllBytes("C:/Users/Cole/Desktop/" + fileName, fileBytes);
+		}
+	}
 	private void OnGUI()
 	{
 		if(testImg != null)
@@ -60,7 +73,7 @@ public class TESUnity : MonoBehaviour
 
 	private void CreateBSABrowser()
 	{
-		MWArchiveFile = new BSAFile(MorrowindDataPath + "/Morrowind.bsa");
+		var MWArchiveFile = MWDataReader.MWBSAFile;
 
 		var scrollView = GUIUtils.CreateScrollView(canvasObject);
 		scrollView.GetComponent<RectTransform>().sizeDelta = new Vector2(480, 400);
@@ -89,7 +102,7 @@ public class TESUnity : MonoBehaviour
 		//for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
 		for(int i = 0; i < 1000; i++)
 		{
-			var filePath = MWArchiveFile.fileMetadatas[i].name;
+			var filePath = MWArchiveFile.fileMetadatas[i].path;
 
 			if(Path.GetExtension(filePath) == ".nif")
 			{
@@ -99,19 +112,14 @@ public class TESUnity : MonoBehaviour
 				var button = GUIUtils.CreateTextButton(filePath, scrollViewContent);
 				button.GetComponent<Button>().onClick.AddListener(() =>
 				{
-					byte[] fileData = MWArchiveFile.LoadFileData(MWArchiveFile.fileMetadatas[iCopy]);
-					File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(filePath), fileData);
-
-					var NIFFile = new NIF.NiFile();
-					NIFFile.Deserialize(new BinaryReader(new MemoryStream(fileData)));
-					
 					if(testObj != null)
 					{
 						Destroy(testObj);
 						testObj = null;
 					}
 
-					testObj = NIF.NiUtils.InstantiateNIFFile(NIFFile);
+					testObj = MWDataReader.InstantiateNIF(filePath);
+					testObjPath = filePath;
 
 					//testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
 				});

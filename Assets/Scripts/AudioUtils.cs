@@ -154,7 +154,13 @@ public static class AudioUtils
 		}
 	}
 
-	// Returns the number of samples that were read from the stream.
+	/// <summary>
+	/// Streams audio into a floating point sample buffer.
+	/// </summary>
+	/// <param name="unityBuffer"></param>
+	/// <param name="intermediateBuffer">A PCM sample buffer to act as an intermediary between the raw audio stream and Unity.</param>
+	/// <param name="audioStream"></param>
+	/// <returns>Returns the number of samples that were read from the stream.</returns>
 	public static int FillUnityStreamBuffer(float[] unityBuffer, PCMAudioBuffer intermediateBuffer, MP3StreamReader audioStream)
 	{
 		if(audioStream.isDoneStreaming)
@@ -255,6 +261,9 @@ public static class AudioUtils
 		}
 	}
 
+	/// <summary>
+	/// Create a Unity audio clip for an audio stream.
+	/// </summary>
 	private static AudioClip CreateStreamingAudioClip(string name, MP3StreamReader audioStream)
 	{
 		PCMAudioBuffer streamBuffer = new PCMAudioBuffer(audioStream.channelCount, audioStream.bitDepth, audioStream.samplingRate, 8192);
@@ -272,7 +281,9 @@ public static class AudioUtils
 	}
 }
 
-// pulse-code modulation (uncompressed samples) audio buffer
+/// <summary>
+/// Pulse-code modulation (uncompressed samples) audio buffer
+/// </summary>
 public struct PCMAudioBuffer
 {
 	public int channelCount;
