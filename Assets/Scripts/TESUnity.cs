@@ -19,10 +19,13 @@ public class TESUnity : MonoBehaviour
 	public GameObject sliderPrefab;
 	public GameObject togglePrefab;
 
+	public Material defaultMaterial;
+
 	private GameObject canvasObject;
 	private BSAFile MWArchiveFile;
 
 	private Texture2D testImg;
+	private GameObject testObj;
 
 	private void Awake()
 	{
@@ -43,9 +46,8 @@ public class TESUnity : MonoBehaviour
 		//parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
 
 		var NIFFile = new NIF.NiFile();
-		NIFFile.Deserialize(new BinaryReader(new FileStream("C:/Users/Cole/Desktop/gold_010_mod.nif", FileMode.Open, FileAccess.Read)));
-
-		int j = 3;
+		NIFFile.Deserialize(new BinaryReader(new FileStream("C:/Users/Cole/Desktop/c_m_robe_common_02h.1st.nif", FileMode.Open, FileAccess.Read)));
+		NIF.NiUtils.InstantiateNIFFile(NIFFile);
 	}
 
 	private void OnGUI()
@@ -99,6 +101,18 @@ public class TESUnity : MonoBehaviour
 				{
 					byte[] fileData = MWArchiveFile.LoadFileData(MWArchiveFile.fileMetadatas[iCopy]);
 					File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(filePath), fileData);
+
+					var NIFFile = new NIF.NiFile();
+					NIFFile.Deserialize(new BinaryReader(new MemoryStream(fileData)));
+					
+					if(testObj != null)
+					{
+						Destroy(testObj);
+						testObj = null;
+					}
+
+					testObj = NIF.NiUtils.InstantiateNIFFile(NIFFile);
+
 					//testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
 				});
 

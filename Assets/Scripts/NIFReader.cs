@@ -109,10 +109,103 @@ namespace NIF
 
 				return data;
 			}
+			else if(StringUtils.Equals(nodeTypeBytes, "RootCollisionNode"))
+			{
+				var node = new RootCollisionNode();
+				node.Deserialize(reader);
+
+				return node;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiStringExtraData"))
+			{
+				var data = new NiStringExtraData();
+				data.Deserialize(reader);
+
+				return data;
+			}
 			else
 			{
 				throw new NotImplementedException("Tried to read an unsupport NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
 			}
+		}
+
+		public static GameObject InstantiateNIFFile(NiFile file)
+		{
+			return InstantiateNiObject(file, file.blocks[0]);
+		}
+		private static GameObject InstantiateNiObject(NiFile file, NiObject NIFObj)
+		{
+			if(NIFObj.GetType() == typeof(NiNode))
+			{
+				return InstantiateNiNode(file, (NiNode)NIFObj);
+			}
+			else if(NIFObj.GetType() == typeof(NiTriShape))
+			{
+				return InstantiateNiTriShape(file, (NiTriShape)NIFObj);
+			}
+			else if(NIFObj.GetType() == typeof(RootCollisionNode))
+			{
+				return null;
+			}
+			else
+			{
+				throw new NotImplementedException("Tried to instantiate an unsupported NiObject (" + NIFObj.GetType().Name + ").");
+			}
+		}
+		private static GameObject InstantiateNiNode(NiFile file, NiNode node)
+		{
+			GameObject obj = new GameObject(System.Text.Encoding.ASCII.GetString(node.name));
+
+			for(int i = 0; i < node.children.Length; i++)
+			{
+				var childIndex = node.children[i];
+
+				if(childIndex >= 0)
+				{
+					var childObj = InstantiateNiObject(file, file.blocks[childIndex]);
+
+					if(childObj != null)
+					{
+						childObj.transform.SetParent(obj.transform);
+					}
+				}
+			}
+
+			return obj;
+		}
+		private static GameObject InstantiateNiTriShape(NiFile file, NiTriShape triShape)
+		{
+			var mesh = NiTriShapeDataToMesh(file, (NiTriShapeData)file.blocks[triShape.dataRef]);
+
+			var obj = new GameObject(System.Text.Encoding.ASCII.GetString(triShape.name));
+			obj.AddComponent<MeshFilter>().mesh = mesh;
+			obj.AddComponent<MeshRenderer>().material = TESUnity.instance.defaultMaterial;
+
+			return obj;
+		}
+		private static Mesh NiTriShapeDataToMesh(NiFile file, NiTriShapeData data)
+		{
+			var vertices = data.vertices;
+			for(int i = 0; i < vertices.Length; i++)
+			{
+				Utils.Swap(ref vertices[i].y, ref vertices[i].z);
+			}
+
+			var triangles = new int[data.numTrianglePoints];
+			for(int i = 0; i < data.triangles.Length; i++)
+			{
+				int baseI = 3 * i;
+
+				triangles[baseI] = data.triangles[i].v1;
+				triangles[baseI + 1] = data.triangles[i].v3;
+				triangles[baseI + 2] = data.triangles[i].v2;
+			}
+
+			Mesh mesh = new Mesh();
+			mesh.vertices = vertices;
+			mesh.triangles = triangles;
+
+			return mesh;
 		}
 	}
 
@@ -323,7 +416,7 @@ namespace NIF
 
 	public class NiObject
 	{
-		public void Deserialize(BinaryReader reader)
+		public virtual void Deserialize(BinaryReader reader)
 		{
 		}
 	}
@@ -334,7 +427,7 @@ namespace NIF
 		public int extraDataRef;
 		public int controllerRef;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
@@ -356,7 +449,7 @@ namespace NIF
 		public bool hasBoundingBox;
 		public BoundingBox boundingBox;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
@@ -383,12 +476,41 @@ namespace NIF
 		//public uint numEffects;
 		public int[] effects;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
 			children = NiUtils.ReadLengthPrefixedRefs32(reader);
 			effects = NiUtils.ReadLengthPrefixedRefs32(reader);
+		}
+	}
+
+	public class RootCollisionNode : NiNode
+	{
+	}
+
+	public class NiExtraData : NiObject
+	{
+		public int nextExtraDataRef;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			nextExtraDataRef = NiUtils.ReadRef(reader);
+		}
+	}
+	public class NiStringExtraData : NiExtraData
+	{
+		public uint bytesRemaining;
+		public byte[] stringData;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			bytesRemaining = reader.ReadUInt32();
+			stringData = NiUtils.ReadLengthPrefixedBytes32(reader);
 		}
 	}
 
@@ -398,19 +520,18 @@ namespace NIF
 		public int dataRef;
 		public int skinInstanceRef;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
 			dataRef = reader.ReadInt32();
 			skinInstanceRef = reader.ReadInt32();
-
 		}
 	}
 
 	public class NiTriBasedGeom : NiGeometry
 	{
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 		}
@@ -418,7 +539,7 @@ namespace NIF
 
 	public class NiTriShape : NiTriBasedGeom
 	{
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 		}
@@ -439,7 +560,7 @@ namespace NIF
 		public bool hasUV;
 		public TexCoord[,] UVSets;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
@@ -503,7 +624,7 @@ namespace NIF
 	{
 		public ushort numTriangles;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
@@ -518,7 +639,7 @@ namespace NIF
 		public ushort numMatchGroups;
 		public MatchGroup[] matchGroups;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
@@ -545,7 +666,7 @@ namespace NIF
 	// Properties
 	public class NiProperty : NiObjectNET
 	{
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 		}
@@ -579,7 +700,7 @@ namespace NIF
 		public bool hasDecal0Texture;
 		public TexDesc decal0Texture;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
@@ -641,7 +762,7 @@ namespace NIF
 
 	public class NiTexture : NiObjectNET
 	{
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 		}
@@ -656,7 +777,7 @@ namespace NIF
 		public AlphaFormat alphaFormat;
 		public byte isStatic;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
@@ -679,7 +800,7 @@ namespace NIF
 		public float glossiness;
 		public float alpha;
 
-		public void Deserialize(BinaryReader reader)
+		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
