@@ -259,4 +259,26 @@ public static class Utils
 
 		return list[list.Count - 1];
 	}
+
+	public static float ChangeRange(float x, float min0, float max0, float min1, float max1)
+	{
+		var range0 = max0 - min0;
+		var range1 = max1 - min1;
+
+		var xPct = (x - min0) / range0;
+
+		return min1 + (xPct * range1);
+	}
+
+	public static void GetMinMax(float[,] array, out float min, out float max)
+	{
+		min = float.MaxValue;
+		max = float.MinValue;
+
+		foreach(var element in array)
+		{
+			min = Math.Min(min, element);
+			max = Math.Max(max, element);
+		}
+	}
 }

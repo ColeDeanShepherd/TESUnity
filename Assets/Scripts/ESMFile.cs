@@ -7,14 +7,14 @@ namespace ESM
 {
 	public class RecordHeader
 	{
-		public byte[] name; // 4 bytes
+		public string name; // 4 bytes
 		public uint dataSize;
 		public uint unknown0;
 		public uint flags;
 
 		public virtual void Deserialize(BinaryReader reader)
 		{
-			name = reader.ReadBytes(4);
+			name = BinaryReaderUtils.ReadASCIIString(reader, 4);
 			dataSize = reader.ReadUInt32();
 			unknown0 = reader.ReadUInt32();
 			flags = reader.ReadUInt32();
@@ -22,12 +22,12 @@ namespace ESM
 	}
 	public class SubRecordHeader
 	{
-		public byte[] name; // 4 bytes
+		public string name; // 4 bytes
 		public uint dataSize;
 
 		public virtual void Deserialize(BinaryReader reader)
 		{
-			name = reader.ReadBytes(4);
+			name = BinaryReaderUtils.ReadASCIIString(reader, 4);
 			dataSize = reader.ReadUInt32();
 		}
 	}
@@ -50,9 +50,8 @@ namespace ESM
 			{
 				var subRecordHeader = new SubRecordHeader();
 				subRecordHeader.Deserialize(reader);
-
-				var subRecordName = System.Text.Encoding.ASCII.GetString(subRecordHeader.name);
-				SubRecord subRecord = CreateUninitializedSubRecord(subRecordName);
+				
+				SubRecord subRecord = CreateUninitializedSubRecord(subRecordHeader.name);
 
 				// Read or skip the record.
 				if(subRecord != null)
@@ -83,16 +82,16 @@ namespace ESM
 		{
 			public float version;
 			public uint fileType;
-			public byte[] companyName; // 32 bytes
-			public byte[] fileDescription; // 256 bytes
+			public string companyName; // 32 bytes
+			public string fileDescription; // 256 bytes
 			public uint numRecords;
 
 			public override void DeserializeData(BinaryReader reader)
 			{
 				version = reader.ReadSingle();
 				fileType = reader.ReadUInt32();
-				companyName = reader.ReadBytes(32);
-				fileDescription = reader.ReadBytes(256);
+				companyName = BinaryReaderUtils.ReadASCIIString(reader, 32);
+				fileDescription = BinaryReaderUtils.ReadASCIIString(reader, 256);
 				numRecords = reader.ReadUInt32();
 			}
 		}
@@ -178,17 +177,19 @@ namespace ESM
 		}
 		public class VHGTSubRecord : SubRecord
 		{
-			// reference height
-			// Z either floats or halffloats
+			public float referenceHeight;
+			public sbyte[] heightOffsets;
 
 			public override void DeserializeData(BinaryReader reader)
 			{
-				var referenceHeight = reader.ReadSingle();
-				var heightCount = header.dataSize - 4 - 2 - 1;
+				referenceHeight = reader.ReadSingle();
 
-				for(int i = 0; i < heightCount; i++)
+				var heightOffsetCount = header.dataSize - 4 - 2 - 1;
+				heightOffsets = new sbyte[heightOffsetCount];
+
+				for(int i = 0; i < heightOffsetCount; i++)
 				{
-					var height = reader.ReadByte();
+					heightOffsets[i] = reader.ReadSByte();
 				}
 
 				// unknown
@@ -243,7 +244,7 @@ namespace ESM
 			}
 		}
 
-		public INTVSubRecord INTV;
+		public INTVTwoI32SubRecord INTV;
 		//public DATASubRecord DATA;
 		public VNMLSubRecord VNML;
 		public VHGTSubRecord VHGT;
@@ -256,7 +257,7 @@ namespace ESM
 			switch(subRecordName)
 			{
 				case "INTV":
-					INTV = new INTVSubRecord();
+					INTV = new INTVTwoI32SubRecord();
 					return INTV;
 				/*case "DATA":
 					DATA = new DATASubRecord();
@@ -484,11 +485,11 @@ namespace ESM
 	// Common sub-records.
 	public class STRVSubRecord : SubRecord
 	{
-		public byte[] value;
+		public string value;
 
 		public override void DeserializeData(BinaryReader reader)
 		{
-			value = reader.ReadBytes((int)header.dataSize);
+			value = BinaryReaderUtils.ReadASCIIString(reader, (int)header.dataSize);
 		}
 	}
 
@@ -516,6 +517,18 @@ namespace ESM
 				default:
 					throw new NotImplementedException("Tried to read an INTV subrecord with an unsupported size (" + header.dataSize.ToString() + ").");
 			}
+		}
+	}
+	public class INTVTwoI32SubRecord : SubRecord
+	{
+		public int value0, value1;
+
+		public override void DeserializeData(BinaryReader reader)
+		{
+			Debug.Assert(header.dataSize == 8);
+
+			value0 = reader.ReadInt32();
+			value1 = reader.ReadInt32();
 		}
 	}
 
@@ -578,6 +591,21 @@ namespace ESM
 			Close();
 		}
 
+		public List<T> GetRecordsOfType<T>() where T : Record
+		{
+			var results = new List<T>();
+
+			foreach(var record in records)
+			{
+				if(record is T)
+				{
+					results.Add((T)record);
+				}
+			}
+
+			return results;
+		}
+
 		/* Private */
 		private const int recordHeaderSizeInBytes = 16;
 
@@ -608,7 +636,7 @@ namespace ESM
 				var recordHeader = new RecordHeader();
 				recordHeader.Deserialize(reader);
 
-				var recordName = System.Text.Encoding.ASCII.GetString(recordHeader.name);
+				var recordName = recordHeader.name;
 				Record record = CreateUninitializedRecord(recordName);
 
 				// Read or skip the record.
@@ -621,7 +649,10 @@ namespace ESM
 				}
 				else
 				{
+					// Skip the record.
 					reader.BaseStream.Position += recordHeader.dataSize;
+
+					recordList.Add(null);
 				}
 			}
 

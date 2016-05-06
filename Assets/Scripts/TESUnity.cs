@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// cells are 8192 world units across
+
 // TODO: read & use NIF footer
 public class TESUnity : MonoBehaviour
 {
@@ -37,6 +39,13 @@ public class TESUnity : MonoBehaviour
 		GUIUtils.CreateEventSystem();
 
 		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
+
+		var LANDS = MWDataReader.MWESMFile.GetRecordsOfType<ESM.LANDRecord>();
+
+		for(int i = 0; i < 500; i++)
+		{
+			InstantiateLAND(LANDS[i]);
+		}
 
 		//GUIUtils.CreateScrollView(canvasObject);
 		//var UIObj = GameObject.Instantiate(dropdownPrefab);
@@ -120,6 +129,50 @@ public class TESUnity : MonoBehaviour
 				drawI++;
 			}
 		}
+	}
+	private void InstantiateLAND(ESM.LANDRecord LAND)
+	{
+		if(LAND.VHGT == null)
+		{
+			return;
+		}
+
+		int LAND_SIZE = 65;
+
+		var heights = new float[LAND_SIZE, LAND_SIZE];
+		float rowOffset = LAND.VHGT.referenceHeight;
+
+		for(int y = 0; y < LAND_SIZE; y++)
+		{
+			rowOffset += LAND.VHGT.heightOffsets[y * LAND_SIZE];
+
+			heights[y, 0] = rowOffset;
+
+			float colOffset = rowOffset;
+			for(int x = 1; x < LAND_SIZE; x++)
+			{
+				colOffset += LAND.VHGT.heightOffsets[(y * LAND_SIZE) + x];
+				heights[y, x] = colOffset;
+			}
+		}
+
+		float min, max;
+		Utils.GetMinMax(heights, out min, out max);
+
+		float range = max - min;
+
+		for(int i = 0; i < LAND_SIZE; i++)
+		{
+			for(int j = 0; j < LAND_SIZE; j++)
+			{
+				heights[i, j] = Utils.ChangeRange(heights[i, j], min, max, 0, 1);
+			}
+		}
+
+		float heightScale = 1.0f / 8;
+		var maxHeight = (!Mathf.Approximately(range, 0)) ? (range * heightScale) : 1;
+		var terrain = GameObjectUtils.CreateTerrain(heights, maxHeight);
+		terrain.transform.position = new Vector3((LAND_SIZE - 1) * LAND.INTV.value0, min * heightScale, (LAND_SIZE - 1) * LAND.INTV.value1);
 	}
 
 	/*
