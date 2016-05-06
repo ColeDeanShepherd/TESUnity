@@ -6,11 +6,6 @@ namespace NIF
 {
 	public class NiUtils
 	{
-		public static byte[] ReadLengthPrefixedBytes32(BinaryReader reader)
-		{
-			var length = reader.ReadUInt32();
-			return reader.ReadBytes((int)length);
-		}
 		public static int ReadRef(BinaryReader reader)
 		{
 			return reader.ReadInt32();
@@ -34,42 +29,9 @@ namespace NIF
 		{
 			return reader.ReadUInt16();
 		}
-		public static Vector3 ReadVector3(BinaryReader reader)
-		{
-			float x = reader.ReadSingle();
-			float y = reader.ReadSingle();
-			float z = reader.ReadSingle();
-
-			return new Vector3(x, y, z);
-		}
-		public static Matrix4x4 ReadMatrix3x3(BinaryReader reader)
-		{
-			var mat = new Matrix4x4();
-
-			for(int j = 0; j < 4; j++)
-			{
-				for(int i = 0; i < 4; i++)
-				{
-					if(i < 3 && j < 3)
-					{
-						mat[i, j] = reader.ReadSingle();
-					}
-					else
-					{
-						mat[i, j] = (i == j) ? 1 : 0;
-					}
-				}
-			}
-
-			return mat;
-		}
-		public static bool ReadBool(BinaryReader reader)
-		{
-			return reader.ReadUInt32() != 0;
-		}
 		public static NiObject ReadNiObject(BinaryReader reader)
 		{
-			var nodeTypeBytes = ReadLengthPrefixedBytes32(reader); // "NiNode"
+			var nodeTypeBytes = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader); // "NiNode"
 
 			if(StringUtils.Equals(nodeTypeBytes, "NiNode"))
 			{
@@ -236,9 +198,9 @@ namespace NIF
 		public void Deserialize(BinaryReader reader)
 		{
 			unknownInt = reader.ReadUInt32();
-			translation = NiUtils.ReadVector3(reader);
-			rotation = NiUtils.ReadMatrix3x3(reader);
-			radius = NiUtils.ReadVector3(reader);
+			translation = BinaryReaderUtils.ReadVector3(reader);
+			rotation = BinaryReaderUtils.ReadMatrix3x3(reader);
+			radius = BinaryReaderUtils.ReadVector3(reader);
 		}
 	}
 
@@ -345,8 +307,8 @@ namespace NIF
 
 		public void Deserialize(BinaryReader reader)
 		{
-			rotation = NiUtils.ReadMatrix3x3(reader);
-			translation = NiUtils.ReadVector3(reader);
+			rotation = BinaryReaderUtils.ReadMatrix3x3(reader);
+			translation = BinaryReaderUtils.ReadVector3(reader);
 			scale = reader.ReadSingle();
 		}
 	}
@@ -384,7 +346,7 @@ namespace NIF
 		{
 			base.Deserialize(reader);
 
-			name = NiUtils.ReadLengthPrefixedBytes32(reader);
+			name = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader);
 			extraDataRef = NiUtils.ReadRef(reader);
 			controllerRef = NiUtils.ReadRef(reader);
 		}
@@ -407,12 +369,12 @@ namespace NIF
 			base.Deserialize(reader);
 
 			flags = NiUtils.ReadFlags(reader);
-			translation = NiUtils.ReadVector3(reader);
-			rotation = NiUtils.ReadMatrix3x3(reader);
+			translation = BinaryReaderUtils.ReadVector3(reader);
+			rotation = BinaryReaderUtils.ReadMatrix3x3(reader);
 			scale = reader.ReadSingle();
-			velocity = NiUtils.ReadVector3(reader);
+			velocity = BinaryReaderUtils.ReadVector3(reader);
 			propertyRefs = NiUtils.ReadLengthPrefixedRefs32(reader);
-			hasBoundingBox = NiUtils.ReadBool(reader);
+			hasBoundingBox = BinaryReaderUtils.ReadBool32(reader);
 
 			if(hasBoundingBox)
 			{
@@ -463,7 +425,7 @@ namespace NIF
 			base.Deserialize(reader);
 
 			bytesRemaining = reader.ReadUInt32();
-			stringData = NiUtils.ReadLengthPrefixedBytes32(reader);
+			stringData = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader);
 		}
 	}
 
@@ -530,7 +492,7 @@ namespace NIF
 			skinTransform = new SkinTransform();
 			skinTransform.Deserialize(reader);
 
-			boundingSphereOffset = NiUtils.ReadVector3(reader);
+			boundingSphereOffset = BinaryReaderUtils.ReadVector3(reader);
 			boundingSphereRadius = reader.ReadSingle();
 			numVertices = reader.ReadUInt16();
 
@@ -606,31 +568,31 @@ namespace NIF
 			base.Deserialize(reader);
 
 			numVertices = reader.ReadUInt16();
-			hasVertices = NiUtils.ReadBool(reader);
+			hasVertices = BinaryReaderUtils.ReadBool32(reader);
 
 			if(hasVertices)
 			{
 				vertices = new Vector3[numVertices];
 				for(int i = 0; i < vertices.Length; i++)
 				{
-					vertices[i] = NiUtils.ReadVector3(reader);
+					vertices[i] = BinaryReaderUtils.ReadVector3(reader);
 				}
 			}
 
-			hasNormals = NiUtils.ReadBool(reader);
+			hasNormals = BinaryReaderUtils.ReadBool32(reader);
 
 			if(hasNormals)
 			{
 				normals = new Vector3[numVertices];
 				for(int i = 0; i < normals.Length; i++)
 				{
-					normals[i] = NiUtils.ReadVector3(reader);
+					normals[i] = BinaryReaderUtils.ReadVector3(reader);
 				}
 			}
 
-			center = NiUtils.ReadVector3(reader);
+			center = BinaryReaderUtils.ReadVector3(reader);
 			radius = reader.ReadSingle();
-			hasVertexColors = NiUtils.ReadBool(reader);
+			hasVertexColors = BinaryReaderUtils.ReadBool32(reader);
 
 			if(hasVertexColors)
 			{
@@ -643,7 +605,7 @@ namespace NIF
 			}
 
 			numUVSets = reader.ReadUInt16();
-			hasUV = NiUtils.ReadBool(reader);
+			hasUV = BinaryReaderUtils.ReadBool32(reader);
 
 			if(hasUV)
 			{
@@ -750,49 +712,49 @@ namespace NIF
 			applyMode = (ApplyMode)reader.ReadUInt32();
 			textureCount = reader.ReadUInt32();
 
-			hasBaseTexture = NiUtils.ReadBool(reader);
+			hasBaseTexture = BinaryReaderUtils.ReadBool32(reader);
 			if(hasBaseTexture)
 			{
 				baseTexture = new TexDesc();
 				baseTexture.Deserialize(reader);
 			}
 
-			hasDarkTexture = NiUtils.ReadBool(reader);
+			hasDarkTexture = BinaryReaderUtils.ReadBool32(reader);
 			if(hasDarkTexture)
 			{
 				darkTexture = new TexDesc();
 				darkTexture.Deserialize(reader);
 			}
 
-			hasDetailTexture = NiUtils.ReadBool(reader);
+			hasDetailTexture = BinaryReaderUtils.ReadBool32(reader);
 			if(hasDetailTexture)
 			{
 				detailTexture = new TexDesc();
 				detailTexture.Deserialize(reader);
 			}
 
-			hasGlossTexture = NiUtils.ReadBool(reader);
+			hasGlossTexture = BinaryReaderUtils.ReadBool32(reader);
 			if(hasGlossTexture)
 			{
 				glossTexture = new TexDesc();
 				glossTexture.Deserialize(reader);
 			}
 
-			hasGlowTexture = NiUtils.ReadBool(reader);
+			hasGlowTexture = BinaryReaderUtils.ReadBool32(reader);
 			if(hasGlowTexture)
 			{
 				glowTexture = new TexDesc();
 				glowTexture.Deserialize(reader);
 			}
 
-			hasBumpMapTexture = NiUtils.ReadBool(reader);
+			hasBumpMapTexture = BinaryReaderUtils.ReadBool32(reader);
 			if(hasBumpMapTexture)
 			{
 				bumpMapTexture = new TexDesc();
 				bumpMapTexture.Deserialize(reader);
 			}
 
-			hasDecal0Texture = NiUtils.ReadBool(reader);
+			hasDecal0Texture = BinaryReaderUtils.ReadBool32(reader);
 			if(hasDecal0Texture)
 			{
 				decal0Texture = new TexDesc();
@@ -823,7 +785,7 @@ namespace NIF
 			base.Deserialize(reader);
 
 			useExternal = reader.ReadByte();
-			fileName = NiUtils.ReadLengthPrefixedBytes32(reader);
+			fileName = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader);
 			pixelLayout = (PixelLayout)reader.ReadUInt32();
 			useMipMaps = (MipMapFormat)reader.ReadUInt32();
 			alphaFormat = (AlphaFormat)reader.ReadUInt32();

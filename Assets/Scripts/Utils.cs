@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace System.IO
@@ -129,6 +130,56 @@ public static class StringUtils
 	}
 }
 
+public static class BinaryReaderUtils
+{
+	public static bool ReadBool32(BinaryReader reader)
+	{
+		return reader.ReadUInt32() != 0;
+	}
+	public static string ReadASCIIString(BinaryReader reader, int length)
+	{
+		return System.Text.Encoding.ASCII.GetString(reader.ReadBytes(length));
+	}
+	public static byte[] ReadLengthPrefixedBytes32(BinaryReader reader)
+	{
+		var length = reader.ReadUInt32();
+		return reader.ReadBytes((int)length);
+	}
+	public static string ReadLengthPrefixedASCIIString32(BinaryReader reader)
+	{
+		return System.Text.Encoding.ASCII.GetString(ReadLengthPrefixedBytes32(reader));
+	}
+	public static Vector3 ReadVector3(BinaryReader reader)
+	{
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		float z = reader.ReadSingle();
+
+		return new Vector3(x, y, z);
+	}
+	public static Matrix4x4 ReadMatrix3x3(BinaryReader reader)
+	{
+		var mat = new Matrix4x4();
+
+		for(int j = 0; j < 4; j++)
+		{
+			for(int i = 0; i < 4; i++)
+			{
+				if(i < 3 && j < 3)
+				{
+					mat[i, j] = reader.ReadSingle();
+				}
+				else
+				{
+					mat[i, j] = (i == j) ? 1 : 0;
+				}
+			}
+		}
+
+		return mat;
+	}
+}
+
 public static class Utils
 {
 	public static bool ContainsBitFlags(uint x, params uint[] bitFlags)
@@ -200,5 +251,12 @@ public static class Utils
 		var tmp = a;
 		a = b;
 		b = tmp;
+	}
+
+	public static T Last<T>(List<T> list)
+	{
+		Debug.Assert(list.Count > 0);
+
+		return list[list.Count - 1];
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using ESM;
 
 public class MorrowindDataReader : IDisposable
 {

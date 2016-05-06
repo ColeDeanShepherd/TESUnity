@@ -38,18 +38,11 @@ public class TESUnity : MonoBehaviour
 
 		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 
-		/*MWArchiveFile = new BSAFile(MorrowindDataPath + "/Morrowind.bsa");
-		var NIFData = MWArchiveFile.LoadFileData("meshes/c/c_m_robe_common_02hh.1st.nif");
-
-		var NIFFile = new NIF.NiFile();
-		NIFFile.Deserialize(new BinaryReader(new MemoryStream(NIFData)));
-		NIF.NiUtils.InstantiateNIFFile(NIFFile);*/
-
 		//GUIUtils.CreateScrollView(canvasObject);
 		//var UIObj = GameObject.Instantiate(dropdownPrefab);
 		//UIObj.transform.SetParent(canvasObject.transform, false);
 
-		CreateBSABrowser();
+		//CreateBSABrowser();
 
 		//var parserGenerator = new NIFParserGenerator();
 		//parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
@@ -126,17 +119,6 @@ public class TESUnity : MonoBehaviour
 
 				drawI++;
 			}
-		}
-	}
-	private void ReadESMFile()
-	{
-		var MWMasterFile = new ESMFile(MorrowindDataPath + "/Morrowind.esm");
-
-		while(!MWMasterFile.isAtEOF)
-		{
-			MWMasterFile.SkipRecord();
-
-			int i = 3;
 		}
 	}
 
