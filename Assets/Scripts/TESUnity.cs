@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,11 +41,12 @@ public class TESUnity : MonoBehaviour
 
 		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 
-		var LANDS = MWDataReader.MWESMFile.GetRecordsOfType<ESM.LANDRecord>();
-
-		for(int i = 0; i < 500; i++)
+		for(int x = 0; x < 15; x++)
 		{
-			InstantiateLAND(LANDS[i]);
+			for(int y = 0; y < 15; y++)
+			{
+				MWDataReader.InstantiateExteriorCell(x, y);
+			}
 		}
 
 		//GUIUtils.CreateScrollView(canvasObject);
@@ -56,12 +58,17 @@ public class TESUnity : MonoBehaviour
 		//var parserGenerator = new NIFParserGenerator();
 		//parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
 	}
+	private void OnDestroy()
+	{
+		MWDataReader.Close();
+	}
+
 	private void Update()
 	{
 		if(Input.GetKeyDown(KeyCode.K))
 		{
 			var fileName = Path.GetFileName(testObjPath);
-			var fileBytes = MWDataReader.MWBSAFile.LoadFileData(testObjPath);
+			var fileBytes = MWDataReader.MorrowindBSAFile.LoadFileData(testObjPath);
 			File.WriteAllBytes("C:/Users/Cole/Desktop/" + fileName, fileBytes);
 		}
 	}
@@ -75,7 +82,7 @@ public class TESUnity : MonoBehaviour
 
 	private void CreateBSABrowser()
 	{
-		var MWArchiveFile = MWDataReader.MWBSAFile;
+		var MWArchiveFile = MWDataReader.MorrowindBSAFile;
 
 		var scrollView = GUIUtils.CreateScrollView(canvasObject);
 		scrollView.GetComponent<RectTransform>().sizeDelta = new Vector2(480, 400);
@@ -130,49 +137,31 @@ public class TESUnity : MonoBehaviour
 			}
 		}
 	}
-	private void InstantiateLAND(ESM.LANDRecord LAND)
+	private void WriteBSAFilePaths()
 	{
-		if(LAND.VHGT == null)
+		using(var writer = new StreamWriter(new FileStream("C:/Users/Cole/Desktop/MorrowindBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
 		{
-			return;
-		}
-
-		int LAND_SIZE = 65;
-
-		var heights = new float[LAND_SIZE, LAND_SIZE];
-		float rowOffset = LAND.VHGT.referenceHeight;
-
-		for(int y = 0; y < LAND_SIZE; y++)
-		{
-			rowOffset += LAND.VHGT.heightOffsets[y * LAND_SIZE];
-
-			heights[y, 0] = rowOffset;
-
-			float colOffset = rowOffset;
-			for(int x = 1; x < LAND_SIZE; x++)
+			foreach(var fileMetadata in MWDataReader.MorrowindBSAFile.fileMetadatas)
 			{
-				colOffset += LAND.VHGT.heightOffsets[(y * LAND_SIZE) + x];
-				heights[y, x] = colOffset;
+				writer.WriteLine(fileMetadata.path);
 			}
 		}
 
-		float min, max;
-		Utils.GetMinMax(heights, out min, out max);
-
-		float range = max - min;
-
-		for(int i = 0; i < LAND_SIZE; i++)
+		using(var writer = new StreamWriter(new FileStream("C:/Users/Cole/Desktop/BloodmoonBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
 		{
-			for(int j = 0; j < LAND_SIZE; j++)
+			foreach(var fileMetadata in MWDataReader.BloodmoonBSAFile.fileMetadatas)
 			{
-				heights[i, j] = Utils.ChangeRange(heights[i, j], min, max, 0, 1);
+				writer.WriteLine(fileMetadata.path);
 			}
 		}
 
-		float heightScale = 1.0f / 8;
-		var maxHeight = (!Mathf.Approximately(range, 0)) ? (range * heightScale) : 1;
-		var terrain = GameObjectUtils.CreateTerrain(heights, maxHeight);
-		terrain.transform.position = new Vector3((LAND_SIZE - 1) * LAND.INTV.value0, min * heightScale, (LAND_SIZE - 1) * LAND.INTV.value1);
+		using(var writer = new StreamWriter(new FileStream("C:/Users/Cole/Desktop/TribunalBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
+		{
+			foreach(var fileMetadata in MWDataReader.TribunalBSAFile.fileMetadatas)
+			{
+				writer.WriteLine(fileMetadata.path);
+			}
+		}
 	}
 
 	/*

@@ -140,6 +140,13 @@ public static class BinaryReaderUtils
 	{
 		return System.Text.Encoding.ASCII.GetString(reader.ReadBytes(length));
 	}
+	public static string ReadPossiblyNullTerminatedASCIIString(BinaryReader reader, int lengthIncludingPossibleNullTerminator)
+	{
+		var bytes = reader.ReadBytes(lengthIncludingPossibleNullTerminator);
+		var charCount = (Utils.Last(bytes) != 0) ? bytes.Length : (bytes.Length - 1);
+
+		return System.Text.Encoding.ASCII.GetString(bytes, 0, charCount);
+	}
 	public static byte[] ReadLengthPrefixedBytes32(BinaryReader reader)
 	{
 		var length = reader.ReadUInt32();
@@ -253,6 +260,12 @@ public static class Utils
 		b = tmp;
 	}
 
+	public static T Last<T>(T[] array)
+	{
+		Debug.Assert(array.Length > 0);
+
+		return array[array.Length - 1];
+	}
 	public static T Last<T>(List<T> list)
 	{
 		Debug.Assert(list.Count > 0);

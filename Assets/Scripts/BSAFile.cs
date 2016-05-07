@@ -51,10 +51,12 @@ public class BSAFile : IDisposable
 		Close();
 	}
 
+	public bool ContainsFile(string filePath)
+	{
+		return fileMetadataHashTable.ContainsKey(HashFilePath(filePath));
+	}
 	public byte[] LoadFileData(string filePath)
 	{
-		filePath = filePath.ToLower();
-
 		var hash = HashFilePath(filePath);
 		FileMetadata metadata;
 
@@ -164,6 +166,7 @@ public class BSAFile : IDisposable
 	private FileNameHash HashFilePath(string filePath)
 	{
 		filePath = filePath.Replace('/', '\\');
+		filePath = filePath.ToLower();
 
 		FileNameHash hash = new FileNameHash();
 

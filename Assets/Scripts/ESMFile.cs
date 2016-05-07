@@ -151,6 +151,33 @@ namespace ESM
 		}
 	}
 
+	public class LTEXRecord : Record
+	{
+		public class DATASubRecord : STRVSubRecord {}
+
+		public NAMESubRecord NAME;
+		public INTVSubRecord INTV;
+		public DATASubRecord DATA;
+
+		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+		{
+			switch(subRecordName)
+			{
+				case "NAME":
+					NAME = new NAMESubRecord();
+					return NAME;
+				case "INTV":
+					INTV = new INTVSubRecord();
+					return INTV;
+				case "DATA":
+					DATA = new DATASubRecord();
+					return DATA;
+				default:
+					return null;
+			}
+		}
+	}
+
 	// TODO: implement DATA subrecord
 	public class LANDRecord : Record
 	{
@@ -231,15 +258,16 @@ namespace ESM
 		}
 		public class VTEXSubRecord : SubRecord
 		{
-			// 16 bit texture indices?
+			public ushort[] textureIndices;
 
 			public override void DeserializeData(BinaryReader reader)
 			{
-				var vertexCount = header.dataSize / 2;
+				var textureIndexCount = header.dataSize / 2;
+				textureIndices = new ushort[textureIndexCount];
 
-				for(int i = 0; i < vertexCount; i++)
+				for(int i = 0; i < textureIndexCount; i++)
 				{
-					var textureIndex = reader.ReadUInt16();
+					textureIndices[i] = reader.ReadUInt16();
 				}
 			}
 		}
@@ -489,7 +517,7 @@ namespace ESM
 
 		public override void DeserializeData(BinaryReader reader)
 		{
-			value = BinaryReaderUtils.ReadASCIIString(reader, (int)header.dataSize);
+			value = BinaryReaderUtils.ReadPossiblyNullTerminatedASCIIString(reader, (int)header.dataSize);
 		}
 	}
 
@@ -576,6 +604,7 @@ namespace ESM
 	{
 		/* Public */
 		public Record[] records;
+		public Dictionary<Type, List<Record>> recordsByType = new Dictionary<Type, List<Record>>();
 		
 		public ESMFile(string filePath)
 		{
@@ -590,20 +619,10 @@ namespace ESM
 		{
 			Close();
 		}
-
-		public List<T> GetRecordsOfType<T>() where T : Record
+		
+		public List<Record> GetRecordsOfType<T>() where T : Record
 		{
-			var results = new List<T>();
-
-			foreach(var record in records)
-			{
-				if(record is T)
-				{
-					results.Add((T)record);
-				}
-			}
-
-			return results;
+			return recordsByType[typeof(T)];
 		}
 
 		/* Private */
@@ -619,6 +638,8 @@ namespace ESM
 					return new TES3Record();
 				case "GMST":
 					return new GMSTRecord();
+				case "LTEX":
+					return new LTEXRecord();
 				case "CELL":
 					return new CELLRecord();
 				case "LAND":
@@ -646,6 +667,22 @@ namespace ESM
 					record.DeserializeData(reader);
 
 					recordList.Add(record);
+
+					// Add the record to the list for it's type.
+					var recordType = record.GetType();
+					List<Record> recordsOfSameType;
+
+					if(recordsByType.TryGetValue(recordType, out recordsOfSameType))
+					{
+						recordsOfSameType.Add(record);
+					}
+					else
+					{
+						recordsOfSameType = new List<Record>();
+						recordsOfSameType.Add(record);
+
+						recordsByType.Add(recordType, recordsOfSameType);
+					}
 				}
 				else
 				{
