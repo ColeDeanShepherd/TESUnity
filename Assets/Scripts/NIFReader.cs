@@ -103,6 +103,27 @@ namespace NIF
 
 				return data;
 			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiAlphaProperty"))
+			{
+				var prop = new NiAlphaProperty();
+				prop.Deserialize(reader);
+
+				return prop;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiZBufferProperty"))
+			{
+				var prop = new NiZBufferProperty();
+				prop.Deserialize(reader);
+
+				return prop;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiVertexColorProperty"))
+			{
+				var prop = new NiVertexColorProperty();
+				prop.Deserialize(reader);
+
+				return prop;
+			}
 			else
 			{
 				throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
@@ -182,6 +203,19 @@ namespace NIF
 		ALPHA_BINARY = 1,
 		ALPHA_SMOOTH = 2,
 		ALPHA_DEFAULT = 3
+	}
+
+	public enum VertMode : uint
+	{
+		VERT_MODE_SRC_IGNORE = 0,
+		VERT_MODE_SRC_EMISSIVE = 1,
+		VERT_MODE_SRC_AMB_DIF = 2
+	}
+
+	public enum LightMode : uint
+	{
+		LIGHT_MODE_EMISSIVE = 0,
+		LIGHT_MODE_EMI_AMB_DIF = 1
 	}
 
 	#endregion // Enums
@@ -760,6 +794,46 @@ namespace NIF
 				decal0Texture = new TexDesc();
 				decal0Texture.Deserialize(reader);
 			}
+		}
+	}
+	public class NiAlphaProperty : NiProperty
+	{
+		public ushort flags;
+		public byte threshold;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			flags = reader.ReadUInt16();
+			threshold = reader.ReadByte();
+		}
+	}
+	public class NiZBufferProperty : NiProperty
+	{
+		public ushort flags;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			flags = reader.ReadUInt16();
+		}
+	}
+
+	public class NiVertexColorProperty : NiProperty
+	{
+		public ushort flags;
+		public VertMode vertexMode;
+		public LightMode lightingMode;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			flags = reader.ReadUInt16();
+			vertexMode = (VertMode)reader.ReadUInt32();
+			lightingMode = (LightMode)reader.ReadUInt32();
 		}
 	}
 

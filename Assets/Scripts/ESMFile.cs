@@ -151,6 +151,73 @@ namespace ESM
 		}
 	}
 
+	public class STATRecord : Record
+	{
+		public NAMESubRecord NAME;
+		public MODLSubRecord MODL;
+
+		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+		{
+			switch(subRecordName)
+			{
+				case "NAME":
+					NAME = new NAMESubRecord();
+					return NAME;
+				case "MODL":
+					MODL = new MODLSubRecord();
+					return MODL;
+				default:
+					return null;
+			}
+		}
+	}
+
+	public class DOORRecord : Record
+	{
+		/*
+		NAME = door ID
+		FNAM = door name
+		MODL = NIF model filename
+		SCIP = Script (optional)
+		SNAM = Sound name open
+		ANAM = Sound name close
+		*/
+
+		public NAMESubRecord NAME; // door ID
+		public FNAMSubRecord FNAM; // door name
+		public MODLSubRecord MODL; // model filename
+		// public SCIPSubRecord SCIP; // script
+		public SNAMSubRecord SNAM;
+		public ANAMSubRecord ANAM;
+		
+		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+		{
+			switch(subRecordName)
+			{
+				case "NAME":
+					NAME = new NAMESubRecord();
+					return NAME;
+				case "FNAM":
+					FNAM = new FNAMSubRecord();
+					return FNAM;
+				case "MODL":
+					MODL = new MODLSubRecord();
+					return MODL;
+				/*case "SCIP":
+					SCIP = new SCIPSubRecord();
+					return SCIP;*/
+				case "SNAM":
+					SNAM = new SNAMSubRecord();
+					return SNAM;
+				case "ANAM":
+					ANAM = new ANAMSubRecord();
+					return ANAM;
+				default:
+					return null;
+			}
+		}
+	}
+
 	public class LTEXRecord : Record
 	{
 		public class DATASubRecord : STRVSubRecord {}
@@ -599,17 +666,23 @@ namespace ESM
 	}
 
 	public class NAMESubRecord : STRVSubRecord {}
+	public class FNAMSubRecord : STRVSubRecord {}
+	public class SNAMSubRecord : STRVSubRecord { }
+	public class ANAMSubRecord : STRVSubRecord { }
+	public class MODLSubRecord : STRVSubRecord {}
 
 	public class ESMFile : IDisposable
 	{
 		/* Public */
 		public Record[] records;
-		public Dictionary<Type, List<Record>> recordsByType = new Dictionary<Type, List<Record>>();
+		public Dictionary<Type, List<Record>> recordsByType;
+		public Dictionary<string, Record> objectsByIDString;
 		
 		public ESMFile(string filePath)
 		{
 			reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
 			ReadRecords();
+			PostProcessRecords();
 		}
 		public void Close()
 		{
@@ -638,6 +711,10 @@ namespace ESM
 					return new TES3Record();
 				case "GMST":
 					return new GMSTRecord();
+				case "STAT":
+					return new STATRecord();
+				case "DOOR":
+					return new DOORRecord();
 				case "LTEX":
 					return new LTEXRecord();
 				case "CELL":
@@ -667,22 +744,6 @@ namespace ESM
 					record.DeserializeData(reader);
 
 					recordList.Add(record);
-
-					// Add the record to the list for it's type.
-					var recordType = record.GetType();
-					List<Record> recordsOfSameType;
-
-					if(recordsByType.TryGetValue(recordType, out recordsOfSameType))
-					{
-						recordsOfSameType.Add(record);
-					}
-					else
-					{
-						recordsOfSameType = new List<Record>();
-						recordsOfSameType.Add(record);
-
-						recordsByType.Add(recordType, recordsOfSameType);
-					}
 				}
 				else
 				{
@@ -694,6 +755,45 @@ namespace ESM
 			}
 
 			records = recordList.ToArray();
+		}
+		private void PostProcessRecords()
+		{
+			recordsByType = new Dictionary<Type, List<Record>>();
+			objectsByIDString = new Dictionary<string, Record>();
+
+			foreach(var record in records)
+			{
+				if(record == null)
+				{
+					continue;
+				}
+
+				// Add the record to the list for it's type.
+				var recordType = record.GetType();
+				List<Record> recordsOfSameType;
+
+				if(recordsByType.TryGetValue(recordType, out recordsOfSameType))
+				{
+					recordsOfSameType.Add(record);
+				}
+				else
+				{
+					recordsOfSameType = new List<Record>();
+					recordsOfSameType.Add(record);
+
+					recordsByType.Add(recordType, recordsOfSameType);
+				}
+
+				// Add the record to the object dictionary if applicable.
+				if(record is STATRecord)
+				{
+					objectsByIDString.Add(((STATRecord)record).NAME.value, record);
+				}
+				else if(record is DOORRecord)
+				{
+					objectsByIDString.Add(((DOORRecord)record).NAME.value, record);
+				}
+			}
 		}
 	}
 }

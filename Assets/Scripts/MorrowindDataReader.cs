@@ -77,11 +77,21 @@ public class MorrowindDataReader : IDisposable
 	}
 	public void InstantiateExteriorCell(int x, int y)
 	{
+		var CELL = FindExteriorCellRecord(x, y);
 		var LAND = FindLANDRecord(x, y);
 
-		if(LAND != null)
+		if(CELL != null && LAND != null)
 		{
-			InstantiateLAND(LAND);
+			GameObject cellObj = new GameObject("cell");
+
+			var landObj = InstantiateLAND(LAND);
+
+			if(landObj != null)
+			{
+				landObj.transform.parent = cellObj.transform;
+			}
+
+			InstantiateCellObjects(CELL, cellObj);
 		}
 	}
 
@@ -115,12 +125,12 @@ public class MorrowindDataReader : IDisposable
 
 		return null;
 	}
-	private void InstantiateLAND(ESM.LANDRecord LAND)
+	private GameObject InstantiateLAND(LANDRecord LAND)
 	{
 		// Don't create anything if the LAND doesn't have height data.
 		if(LAND.VHGT == null)
 		{
-			return;
+			return null;
 		}
 
 		int LAND_SIZE = 65;
@@ -245,5 +255,72 @@ public class MorrowindDataReader : IDisposable
 		var heightRange = maxHeight - minHeight;
 		var terrainPosition = new Vector3((LAND_SIZE - 1) * LAND.INTV.value0, minHeight * HEIGHT_SCALE, (LAND_SIZE - 1) * LAND.INTV.value1);
 		var terrain = GameObjectUtils.CreateTerrain(heights, heightRange * HEIGHT_SCALE, 1, splatPrototypes, alphaMap, terrainPosition);
+
+		return terrain;
+	}
+
+	private CELLRecord FindExteriorCellRecord(int x, int y)
+	{
+		foreach(var record in MorrowindESMFile.GetRecordsOfType<CELLRecord>())
+		{
+			var CELL = (CELLRecord)record;
+
+			if((CELL.DATA.gridX == x) && (CELL.DATA.gridY == y))
+			{
+				return CELL;
+			}
+		}
+
+		return null;
+	}
+	private void InstantiateCellObjects(CELLRecord CELL, GameObject parent)
+	{
+		foreach(var refObjGroup in CELL.refObjDataGroups)
+		{
+			Record objRecord;
+
+			if(MorrowindESMFile.objectsByIDString.TryGetValue(refObjGroup.NAME.value, out objRecord))
+			{
+				string modelFileName = null;
+
+				if(objRecord is STATRecord)
+				{
+					var record = (STATRecord)objRecord;
+					modelFileName = record.MODL.value;
+				}
+				else if(objRecord is DOORRecord)
+				{
+					var record = (DOORRecord)objRecord;
+					modelFileName = record.MODL.value;
+				}
+
+				if(modelFileName != null)
+				{
+					var modelFilePath = "meshes\\" + modelFileName;
+
+					Debug.Log("Loading: " + modelFilePath);
+
+					var obj = InstantiateNIF(modelFilePath);
+
+					if(refObjGroup.XSCL != null)
+					{
+						obj.transform.localScale = Vector3.one * refObjGroup.XSCL.value;
+					}
+
+					obj.transform.position = NIFObjectBuilder.NifPointToUnityPoint(refObjGroup.DATA.position);
+					obj.transform.eulerAngles = NIFObjectBuilder.NifVector3ToUnityVector3(refObjGroup.DATA.eulerAngles) * Mathf.Rad2Deg;
+
+					obj.transform.parent = parent.transform;
+				}
+			}
+			else
+			{
+				Debug.Log("Unknown Object: " + refObjGroup.NAME.value);
+			}
+
+			//var objRecord = MorrowindESMFile.records[refObjGroup.FRMR.value - 1];
+
+			int j = 3;
+		}
 	}
 }

@@ -41,9 +41,9 @@ public class TESUnity : MonoBehaviour
 
 		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 
-		for(int x = 0; x < 15; x++)
+		for(int x = 0; x < 7; x++)
 		{
-			for(int y = 0; y < 15; y++)
+			for(int y = 0; y < 7; y++)
 			{
 				MWDataReader.InstantiateExteriorCell(x, y);
 			}
