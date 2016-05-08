@@ -31,7 +31,7 @@ public static class GameObjectUtils
 			terrainData.SetAlphamaps(0, 0, alphaMap);
 		}
 
-		GameObject terrainObject = new GameObject();
+		GameObject terrainObject = new GameObject("terrain");
 
 		var terrain = terrainObject.AddComponent<Terrain>();
 		terrain.terrainData = terrainData;

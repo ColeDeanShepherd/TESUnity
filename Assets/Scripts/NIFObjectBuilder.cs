@@ -99,7 +99,21 @@ public class NIFObjectBuilder
 	}
 	public GameObject BuildObject()
 	{
-		return InstantiateNiObject(file.blocks[0], null);
+		if(file.footer.rootRefs.Length == 1)
+		{
+			return InstantiateNiObject(file.blocks[file.footer.rootRefs[0]], null);
+		}
+		else
+		{
+			GameObject NIFObj = new GameObject("NIF Object");
+
+			foreach(var rootRef in file.footer.rootRefs)
+			{
+				InstantiateNiObject(file.blocks[rootRef], null).transform.parent = NIFObj.transform;
+			}
+
+			return NIFObj;
+		}
 	}
 	
 	private NiFile file;
@@ -152,8 +166,11 @@ public class NIFObjectBuilder
 		var obj = new GameObject(System.Text.Encoding.ASCII.GetString(triShape.name));
 		obj.AddComponent<MeshFilter>().mesh = mesh;
 		obj.AddComponent<MeshRenderer>().material = material;
-
-		obj.transform.parent = parent.transform;
+		
+		if(parent != null) // Some NIF files have an NiTriShape as the root node.
+		{
+			obj.transform.parent = parent.transform;
+		}
 
 		obj.transform.localPosition = NifPointToUnityPoint(triShape.translation);
 		obj.transform.localRotation = NifMatrix4x4ToUnityQuaternion(triShape.rotation);

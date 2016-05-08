@@ -164,6 +164,15 @@ public static class BinaryReaderUtils
 
 		return new Vector3(x, y, z);
 	}
+	public static Vector4 ReadVector4(BinaryReader reader)
+	{
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		float z = reader.ReadSingle();
+		float w = reader.ReadSingle();
+
+		return new Vector4(x, y, z, w);
+	}
 	public static Matrix4x4 ReadMatrix3x3(BinaryReader reader)
 	{
 		var mat = new Matrix4x4();
@@ -184,6 +193,15 @@ public static class BinaryReaderUtils
 		}
 
 		return mat;
+	}
+	public static Quaternion ReadQuaternionWFirst(BinaryReader reader)
+	{
+		float w = reader.ReadSingle();
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		float z = reader.ReadSingle();
+
+		return new Quaternion(x, y, z, w);
 	}
 }
 

@@ -44,13 +44,39 @@ public class MorrowindDataReader : IDisposable
 
 	public GameObject InstantiateNIF(string filePath)
 	{
-		var fileData = MorrowindBSAFile.LoadFileData(filePath);
+		NIF.NiFile file;
 
-		var file = new NIF.NiFile();
-		file.Deserialize(new BinaryReader(new MemoryStream(fileData)));
+		if(!loadedNIFs.TryGetValue(filePath, out file))
+		{
+			//Debug.Log("Loading: " + filePath);
 
-		var objBuilder = new NIFObjectBuilder(file, this);
-		return objBuilder.BuildObject();
+			var fileData = MorrowindBSAFile.LoadFileData(filePath);
+
+			file = new NIF.NiFile();
+			file.Deserialize(new BinaryReader(new MemoryStream(fileData)));
+
+			loadedNIFs[filePath] = file;
+		}
+
+		if(prefabObj == null)
+		{
+			prefabObj = new GameObject("Prefabs");
+			prefabObj.SetActive(false);
+		}
+
+		GameObject prefab;
+
+		if(!loadedNIFObjects.TryGetValue(filePath, out prefab))
+		{
+			var objBuilder = new NIFObjectBuilder(file, this);
+			prefab = objBuilder.BuildObject();
+
+			prefab.transform.parent = prefabObj.transform;
+
+			loadedNIFObjects[filePath] = prefab;
+		}
+
+		return GameObject.Instantiate(prefab);
 	}
 	public Texture2D LoadTexture(string textureName)
 	{
@@ -96,6 +122,10 @@ public class MorrowindDataReader : IDisposable
 	}
 
 	private Dictionary<string, Texture2D> loadedTextures = new Dictionary<string, Texture2D>();
+	private Dictionary<string, NIF.NiFile> loadedNIFs = new Dictionary<string, NIF.NiFile>();
+	private Dictionary<string, GameObject> loadedNIFObjects = new Dictionary<string, GameObject>();
+
+	private GameObject prefabObj;
 
 	private LTEXRecord FindLTEXRecord(int index)
 	{
@@ -293,12 +323,25 @@ public class MorrowindDataReader : IDisposable
 					var record = (DOORRecord)objRecord;
 					modelFileName = record.MODL.value;
 				}
+				else if(objRecord is CONTRecord)
+				{
+					var record = (CONTRecord)objRecord;
+					modelFileName = record.MODL.value;
+				}
+				else if(objRecord is MISCRecord)
+				{
+					var record = (MISCRecord)objRecord;
+					modelFileName = record.MODL.value;
+				}
+				/*else if(objRecord is ACTIRecord)
+				{
+					var record = (ACTIRecord)objRecord;
+					modelFileName = record.MODL.value;
+				}*/
 
 				if(modelFileName != null)
 				{
 					var modelFilePath = "meshes\\" + modelFileName;
-
-					Debug.Log("Loading: " + modelFilePath);
 
 					var obj = InstantiateNIF(modelFilePath);
 

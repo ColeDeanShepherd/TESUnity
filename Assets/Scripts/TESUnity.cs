@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// cells are 8192 world units across
+// TODO: fix rotation errors
+// TODO: load mipmaps
+// TODO: reenable ACTI
 
-// TODO: read & use NIF footer
 public class TESUnity : MonoBehaviour
 {
 	const string MorrowindDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
@@ -41,9 +42,9 @@ public class TESUnity : MonoBehaviour
 
 		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 
-		for(int x = 0; x < 7; x++)
+		for(int x = 10; x < 15; x++)
 		{
-			for(int y = 0; y < 7; y++)
+			for(int y = 15; y < 20; y++)
 			{
 				MWDataReader.InstantiateExteriorCell(x, y);
 			}
@@ -162,6 +163,10 @@ public class TESUnity : MonoBehaviour
 				writer.WriteLine(fileMetadata.path);
 			}
 		}
+	}
+	private void ExtractFileFromMorrowind(string filePath)
+	{
+		File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(filePath), MWDataReader.MorrowindBSAFile.LoadFileData(filePath));
 	}
 
 	/*

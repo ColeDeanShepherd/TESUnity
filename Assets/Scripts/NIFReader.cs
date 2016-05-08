@@ -124,6 +124,48 @@ namespace NIF
 
 				return prop;
 			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiBSParticleNode"))
+			{
+				var node = new NiBSParticleNode();
+				node.Deserialize(reader);
+
+				return node;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticles"))
+			{
+				var node = new NiParticles();
+				node.Deserialize(reader);
+
+				return node;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticlesData"))
+			{
+				var data = new NiParticlesData();
+				data.Deserialize(reader);
+
+				return data;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiRotatingParticles"))
+			{
+				var node = new NiRotatingParticles();
+				node.Deserialize(reader);
+
+				return node;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiRotatingParticlesData"))
+			{
+				var data = new NiRotatingParticlesData();
+				data.Deserialize(reader);
+
+				return data;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiAutoNormalParticlesData"))
+			{
+				var data = new NiAutoNormalParticlesData();
+				data.Deserialize(reader);
+
+				return data;
+			}
 			else
 			{
 				throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
@@ -135,6 +177,7 @@ namespace NIF
 	{
 		public NiHeader header;
 		public NiObject[] blocks;
+		public NiFooter footer;
 
 		public void Deserialize(BinaryReader reader)
 		{
@@ -146,6 +189,9 @@ namespace NIF
 			{
 				blocks[i] = NiUtils.ReadNiObject(reader);
 			}
+
+			footer = new NiFooter();
+			footer.Deserialize(reader);
 		}
 	}
 
@@ -363,6 +409,23 @@ namespace NIF
 		}
 	}
 
+	public class NiFooter
+	{
+		public uint numRoots;
+		public int[] rootRefs;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			numRoots = reader.ReadUInt32();
+
+			rootRefs = new int[numRoots];
+			for(int i = 0; i < numRoots; i++)
+			{
+				rootRefs[i] = reader.ReadInt32();
+			}
+		}
+	}
+
 	public class NiObject
 	{
 		public virtual void Deserialize(BinaryReader reader)
@@ -433,6 +496,94 @@ namespace NIF
 			effects = NiUtils.ReadLengthPrefixedRefs32(reader);
 		}
 	}
+
+	public class NiBSParticleNode : NiNode {}
+
+	public class NiParticles : NiGeometry {}
+
+	public class NiParticlesData : NiGeometryData
+	{
+		public ushort numParticles;
+		public float particleRadius;
+		public ushort numActive;
+		public bool hasSizes;
+		public float[] sizes;
+		public byte unknownByte1;
+		public int unknownLink;
+		public float[] rotationAngles;
+		public bool hasUVQuadrants;
+		public byte numUVQuadrants;
+		public Vector4[] UVQuadrants;
+		public byte unknownByte2;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			numParticles = reader.ReadUInt16();
+			particleRadius = reader.ReadSingle();
+			numActive = reader.ReadUInt16();
+			hasSizes = BinaryReaderUtils.ReadBool32(reader);
+
+			if(hasSizes)
+			{
+				sizes = new float[numVertices];
+				for(int i = 0; i < sizes.Length; i++)
+				{
+					sizes[i] = reader.ReadSingle();
+				}
+			}
+
+			unknownByte1 = reader.ReadByte();
+			unknownLink = NiUtils.ReadRef(reader);
+
+			rotationAngles = new float[numVertices];
+			for(int i = 0; i < rotationAngles.Length; i++)
+			{
+				rotationAngles[i] = reader.ReadSingle();
+			}
+
+			hasUVQuadrants = BinaryReaderUtils.ReadBool32(reader);
+			numUVQuadrants = reader.ReadByte();
+
+			if(hasUVQuadrants)
+			{
+				UVQuadrants = new Vector4[numUVQuadrants];
+
+				for(int i = 0; i < UVQuadrants.Length; i++)
+				{
+					UVQuadrants[i] = BinaryReaderUtils.ReadVector4(reader);
+				}
+			}
+
+			unknownByte2 = reader.ReadByte();
+		}
+	}
+
+	public class NiRotatingParticles : NiParticles {}
+
+	public class NiRotatingParticlesData : NiParticlesData
+	{
+		public bool hasRotations;
+		public Quaternion[] rotations;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			hasRotations = BinaryReaderUtils.ReadBool32(reader);
+
+			if(hasRotations)
+			{
+				rotations = new Quaternion[numVertices];
+				for(int i = 0; i < rotations.Length; i++)
+				{
+					rotations[i] = BinaryReaderUtils.ReadQuaternionWFirst(reader);
+				}
+			}
+		}
+	}
+	public class NiAutoNormalParticlesData : NiParticlesData {}
 
 	public class RootCollisionNode : NiNode
 	{

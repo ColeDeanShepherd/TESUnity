@@ -172,17 +172,35 @@ namespace ESM
 		}
 	}
 
+	public class LTEXRecord : Record
+	{
+		public class DATASubRecord : STRVSubRecord {}
+
+		public NAMESubRecord NAME;
+		public INTVSubRecord INTV;
+		public DATASubRecord DATA;
+
+		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+		{
+			switch(subRecordName)
+			{
+				case "NAME":
+					NAME = new NAMESubRecord();
+					return NAME;
+				case "INTV":
+					INTV = new INTVSubRecord();
+					return INTV;
+				case "DATA":
+					DATA = new DATASubRecord();
+					return DATA;
+				default:
+					return null;
+			}
+		}
+	}
+
 	public class DOORRecord : Record
 	{
-		/*
-		NAME = door ID
-		FNAM = door name
-		MODL = NIF model filename
-		SCIP = Script (optional)
-		SNAM = Sound name open
-		ANAM = Sound name close
-		*/
-
 		public NAMESubRecord NAME; // door ID
 		public FNAMSubRecord FNAM; // door name
 		public MODLSubRecord MODL; // model filename
@@ -218,13 +236,29 @@ namespace ESM
 		}
 	}
 
-	public class LTEXRecord : Record
+	public class MISCRecord : Record
 	{
-		public class DATASubRecord : STRVSubRecord {}
+		public class MCDTSubRecord : SubRecord
+		{
+			public float weight;
+			public uint value;
+			public uint unknown;
 
-		public NAMESubRecord NAME;
-		public INTVSubRecord INTV;
-		public DATASubRecord DATA;
+			public override void DeserializeData(BinaryReader reader)
+			{
+				weight = reader.ReadSingle();
+				value = reader.ReadUInt32();
+				unknown = reader.ReadUInt32();
+			}
+		}
+
+		public NAMESubRecord NAME; // door ID
+		public MODLSubRecord MODL; // model filename
+		public FNAMSubRecord FNAM; // item name
+		public MCDTSubRecord MCDT; // misc data
+		public ITEXSubRecord ITEX; // inventory icon filename
+		public ENAMSubRecord ENAM; // enchantment ID string
+		public SCRISubRecord SCRI; // script ID string
 
 		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
 		{
@@ -233,14 +267,308 @@ namespace ESM
 				case "NAME":
 					NAME = new NAMESubRecord();
 					return NAME;
-				case "INTV":
-					INTV = new INTVSubRecord();
-					return INTV;
-				case "DATA":
-					DATA = new DATASubRecord();
-					return DATA;
+				case "MODL":
+					MODL = new MODLSubRecord();
+					return MODL;
+				case "FNAM":
+					FNAM = new FNAMSubRecord();
+					return FNAM;
+				case "MCDT":
+					MCDT = new MCDTSubRecord();
+					return MCDT;
+				case "ITEX":
+					ITEX = new ITEXSubRecord();
+					return ITEX;
+				case "ENAM":
+					ENAM = new ENAMSubRecord();
+					return ENAM;
+				case "SCRI":
+					SCRI = new SCRISubRecord();
+					return SCRI;
 				default:
 					return null;
+			}
+		}
+	}
+
+	public class CONTRecord : Record
+	{
+		public class CNDTSubRecord : FLTVSubRecord {}
+		public class FLAGSubRecord : UInt32SubRecord {}
+		public class NPCOSubRecord : SubRecord
+		{
+			public uint itemCount;
+			public string itemName;
+
+			public override void DeserializeData(BinaryReader reader)
+			{
+				itemCount = reader.ReadUInt32();
+				itemName = BinaryReaderUtils.ReadPossiblyNullTerminatedASCIIString(reader, 32);
+			}
+		}
+
+		public NAMESubRecord NAME;
+		public MODLSubRecord MODL;
+		public FNAMSubRecord FNAM; // container name
+		public CNDTSubRecord CNDT; // weight
+		public FLAGSubRecord FLAG; // flags
+		public List<NPCOSubRecord> NPCOs = new List<NPCOSubRecord>();
+		
+		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+		{
+			switch(subRecordName)
+			{
+				case "NAME":
+					NAME = new NAMESubRecord();
+					return NAME;
+				case "MODL":
+					MODL = new MODLSubRecord();
+					return MODL;
+				case "FNAM":
+					FNAM = new FNAMSubRecord();
+					return FNAM;
+				case "CNDT":
+					CNDT = new CNDTSubRecord();
+					return CNDT;
+				case "FLAG":
+					FLAG = new FLAGSubRecord();
+					return FLAG;
+				case "NPCO":
+					var NPCO = new NPCOSubRecord();
+
+					NPCOs.Add(NPCO);
+
+					return NPCO;
+				default:
+					return null;
+			}
+		}
+	}
+
+	public class ACTIRecord : Record
+	{
+		public NAMESubRecord NAME; // door ID
+		public MODLSubRecord MODL; // model filename
+		public FNAMSubRecord FNAM; // item name
+		public SCRISubRecord SCRI; // script ID string
+
+		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+		{
+			switch(subRecordName)
+			{
+				case "NAME":
+					NAME = new NAMESubRecord();
+					return NAME;
+				case "MODL":
+					MODL = new MODLSubRecord();
+					return MODL;
+				case "FNAM":
+					FNAM = new FNAMSubRecord();
+					return FNAM;
+				case "SCRI":
+					SCRI = new SCRISubRecord();
+					return SCRI;
+				default:
+					return null;
+			}
+		}
+	}
+
+	// TODO: add support for strange INTV before object data?
+	public class CELLRecord : Record
+	{
+		public class CELLDATASubRecord : SubRecord
+		{
+			public uint flags;
+			public int gridX;
+			public int gridY;
+
+			public override void DeserializeData(BinaryReader reader)
+			{
+				flags = reader.ReadUInt32();
+				gridX = reader.ReadInt32();
+				gridY = reader.ReadInt32();
+			}
+		}
+		public class RGNNSubRecord : NAMESubRecord { }
+		public class NAM0SubRecord : UInt32SubRecord { }
+		public class NAM5SubRecord : Int32SubRecord { } // map color (COLORREF)
+		public class WHGTSubRecord : FLTVSubRecord { }
+		public class AMBISubRecord : SubRecord
+		{
+			public uint ambientColor;
+			public uint sunlightColor;
+			public uint fogColor;
+			public float fogDensity;
+
+			public override void DeserializeData(BinaryReader reader)
+			{
+				ambientColor = reader.ReadUInt32();
+				sunlightColor = reader.ReadUInt32();
+				fogColor = reader.ReadUInt32();
+				fogDensity = reader.ReadSingle();
+			}
+		}
+		public class RefObjDataGroup
+		{
+			public class FRMRSubRecord : UInt32SubRecord { }
+			public class XSCLSubRecord : FLTVSubRecord { }
+			public class DODTSubRecord : SubRecord
+			{
+				public Vector3 position;
+				public Vector3 eulerAngles;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					position = BinaryReaderUtils.ReadVector3(reader);
+					eulerAngles = BinaryReaderUtils.ReadVector3(reader);
+				}
+			}
+			public class DNAMSubRecord : NAMESubRecord { }
+			public class KNAMSubRecord : NAMESubRecord { }
+			public class TNAMSubRecord : NAMESubRecord { }
+			public class UNAMSubRecord : ByteSubRecord { }
+			public class ANAMSubRecord : NAMESubRecord { }
+			public class BNAMSubRecord : NAMESubRecord { }
+			public class NAM9SubRecord : UInt32SubRecord { }
+			public class XSOLSubRecord : NAMESubRecord { }
+			public class DATASubRecord : SubRecord
+			{
+				public Vector3 position;
+				public Vector3 eulerAngles;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					position = BinaryReaderUtils.ReadVector3(reader);
+					eulerAngles = BinaryReaderUtils.ReadVector3(reader);
+				}
+			}
+
+			public FRMRSubRecord FRMR;
+			public NAMESubRecord NAME;
+			public XSCLSubRecord XSCL;
+			public DODTSubRecord DODT;
+			public DNAMSubRecord DNAM;
+			public FLTVSubRecord FLTV;
+			public KNAMSubRecord KNAM;
+			public TNAMSubRecord TNAM;
+			public UNAMSubRecord UNAM;
+			public ANAMSubRecord ANAM;
+			public BNAMSubRecord BNAM;
+			public INTVSubRecord INTV;
+			public NAM9SubRecord NAM9;
+			public XSOLSubRecord XSOL;
+			public DATASubRecord DATA;
+		}
+
+		public NAMESubRecord NAME;
+
+		public bool isReadingObjectDataGroups = false;
+		public CELLDATASubRecord DATA;
+
+		public RGNNSubRecord RGNN;
+		public NAM0SubRecord NAM0;
+
+		// Exterior Cells
+		public NAM5SubRecord NAM5;
+
+		// Interior Cells
+		public WHGTSubRecord WHGT;
+		public AMBISubRecord AMBI;
+
+		public List<RefObjDataGroup> refObjDataGroups = new List<RefObjDataGroup>();
+
+		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+		{
+			if(!isReadingObjectDataGroups && subRecordName == "FRMR")
+			{
+				isReadingObjectDataGroups = true;
+			}
+
+			if(!isReadingObjectDataGroups)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "DATA":
+						DATA = new CELLDATASubRecord();
+						return DATA;
+					case "RGNN":
+						RGNN = new RGNNSubRecord();
+						return RGNN;
+					case "NAM0":
+						NAM0 = new NAM0SubRecord();
+						return NAM0;
+					case "NAM5":
+						NAM5 = new NAM5SubRecord();
+						return NAM5;
+					case "WHGT":
+						WHGT = new WHGTSubRecord();
+						return WHGT;
+					case "AMBI":
+						AMBI = new AMBISubRecord();
+						return AMBI;
+					default:
+						return null;
+				}
+			}
+			else
+			{
+				switch(subRecordName)
+				{
+					// RefObjDataGroup sub-records
+					case "FRMR":
+						refObjDataGroups.Add(new RefObjDataGroup());
+
+						Utils.Last(refObjDataGroups).FRMR = new RefObjDataGroup.FRMRSubRecord();
+						return Utils.Last(refObjDataGroups).FRMR;
+					case "NAME":
+						Utils.Last(refObjDataGroups).NAME = new NAMESubRecord();
+						return Utils.Last(refObjDataGroups).NAME;
+					case "XSCL":
+						Utils.Last(refObjDataGroups).XSCL = new RefObjDataGroup.XSCLSubRecord();
+						return Utils.Last(refObjDataGroups).XSCL;
+					case "DODT":
+						Utils.Last(refObjDataGroups).DODT = new RefObjDataGroup.DODTSubRecord();
+						return Utils.Last(refObjDataGroups).DODT;
+					case "DNAM":
+						Utils.Last(refObjDataGroups).DNAM = new RefObjDataGroup.DNAMSubRecord();
+						return Utils.Last(refObjDataGroups).DNAM;
+					case "FLTV":
+						Utils.Last(refObjDataGroups).FLTV = new FLTVSubRecord();
+						return Utils.Last(refObjDataGroups).FLTV;
+					case "KNAM":
+						Utils.Last(refObjDataGroups).KNAM = new RefObjDataGroup.KNAMSubRecord();
+						return Utils.Last(refObjDataGroups).KNAM;
+					case "TNAM":
+						Utils.Last(refObjDataGroups).TNAM = new RefObjDataGroup.TNAMSubRecord();
+						return Utils.Last(refObjDataGroups).TNAM;
+					case "UNAM":
+						Utils.Last(refObjDataGroups).UNAM = new RefObjDataGroup.UNAMSubRecord();
+						return Utils.Last(refObjDataGroups).UNAM;
+					case "ANAM":
+						Utils.Last(refObjDataGroups).ANAM = new RefObjDataGroup.ANAMSubRecord();
+						return Utils.Last(refObjDataGroups).ANAM;
+					case "BNAM":
+						Utils.Last(refObjDataGroups).BNAM = new RefObjDataGroup.BNAMSubRecord();
+						return Utils.Last(refObjDataGroups).BNAM;
+					case "INTV":
+						Utils.Last(refObjDataGroups).INTV = new INTVSubRecord();
+						return Utils.Last(refObjDataGroups).INTV;
+					case "NAM9":
+						Utils.Last(refObjDataGroups).NAM9 = new RefObjDataGroup.NAM9SubRecord();
+						return Utils.Last(refObjDataGroups).NAM9;
+					case "XSOL":
+						Utils.Last(refObjDataGroups).XSOL = new RefObjDataGroup.XSOLSubRecord();
+						return Utils.Last(refObjDataGroups).XSOL;
+					case "DATA":
+						Utils.Last(refObjDataGroups).DATA = new RefObjDataGroup.DATASubRecord();
+						return Utils.Last(refObjDataGroups).DATA;
+					default:
+						return null;
+				}
 			}
 		}
 	}
@@ -377,206 +705,7 @@ namespace ESM
 			}
 		}
 	}
-
-	// TODO: add support for strange INTV before object data?
-	public class CELLRecord : Record
-	{
-		public class CELLDATASubRecord : SubRecord
-		{
-			public uint flags;
-			public int gridX;
-			public int gridY;
-
-			public override void DeserializeData(BinaryReader reader)
-			{
-				flags = reader.ReadUInt32();
-				gridX = reader.ReadInt32();
-				gridY = reader.ReadInt32();
-			}
-		}
-		public class RGNNSubRecord : NAMESubRecord {}
-		public class NAM0SubRecord : UInt32SubRecord {}
-		public class NAM5SubRecord : Int32SubRecord {} // map color (COLORREF)
-		public class WHGTSubRecord : FLTVSubRecord {}
-		public class AMBISubRecord : SubRecord
-		{
-			public uint ambientColor;
-			public uint sunlightColor;
-			public uint fogColor;
-			public float fogDensity;
-
-			public override void DeserializeData(BinaryReader reader)
-			{
-				ambientColor = reader.ReadUInt32();
-				sunlightColor = reader.ReadUInt32();
-				fogColor = reader.ReadUInt32();
-				fogDensity = reader.ReadSingle();
-			}
-		}
-		public class RefObjDataGroup
-		{
-			public class FRMRSubRecord : UInt32SubRecord {}
-			public class XSCLSubRecord : FLTVSubRecord {}
-			public class DODTSubRecord : SubRecord
-			{
-				public Vector3 position;
-				public Vector3 eulerAngles;
-
-				public override void DeserializeData(BinaryReader reader)
-				{
-					position = BinaryReaderUtils.ReadVector3(reader);
-					eulerAngles = BinaryReaderUtils.ReadVector3(reader);
-				}
-			}
-			public class DNAMSubRecord : NAMESubRecord {}
-			public class KNAMSubRecord : NAMESubRecord {}
-			public class TNAMSubRecord : NAMESubRecord {}
-			public class UNAMSubRecord : ByteSubRecord {}
-			public class ANAMSubRecord : NAMESubRecord {}
-			public class BNAMSubRecord : NAMESubRecord {}
-			public class NAM9SubRecord : UInt32SubRecord {}
-			public class XSOLSubRecord : NAMESubRecord {}
-			public class DATASubRecord : SubRecord
-			{
-				public Vector3 position;
-				public Vector3 eulerAngles;
-
-				public override void DeserializeData(BinaryReader reader)
-				{
-					position = BinaryReaderUtils.ReadVector3(reader);
-					eulerAngles = BinaryReaderUtils.ReadVector3(reader);
-				}
-			}
-
-			public FRMRSubRecord FRMR;
-			public NAMESubRecord NAME;
-			public XSCLSubRecord XSCL;
-			public DODTSubRecord DODT;
-			public DNAMSubRecord DNAM;
-			public FLTVSubRecord FLTV;
-			public KNAMSubRecord KNAM;
-			public TNAMSubRecord TNAM;
-			public UNAMSubRecord UNAM;
-			public ANAMSubRecord ANAM;
-			public BNAMSubRecord BNAM;
-			public INTVSubRecord INTV;
-			public NAM9SubRecord NAM9;
-			public XSOLSubRecord XSOL;
-			public DATASubRecord DATA;
-		}
-
-		public NAMESubRecord NAME;
-
-		public bool isReadingObjectDataGroups = false;
-		public CELLDATASubRecord DATA;
-
-		public RGNNSubRecord RGNN;
-		public NAM0SubRecord NAM0;
-
-		// Exterior Cells
-		public NAM5SubRecord NAM5;
-
-		// Interior Cells
-		public WHGTSubRecord WHGT;
-		public AMBISubRecord AMBI;
-
-		public List<RefObjDataGroup> refObjDataGroups = new List<RefObjDataGroup>();
-		
-		public override SubRecord CreateUninitializedSubRecord(string subRecordName)
-		{
-			if(!isReadingObjectDataGroups && subRecordName == "FRMR")
-			{
-				isReadingObjectDataGroups = true;
-			}
-
-			if(!isReadingObjectDataGroups)
-			{
-				switch(subRecordName)
-				{
-					case "NAME":
-						NAME = new NAMESubRecord();
-						return NAME;
-					case "DATA":
-						DATA = new CELLDATASubRecord();
-						return DATA;
-					case "RGNN":
-						RGNN = new RGNNSubRecord();
-						return RGNN;
-					case "NAM0":
-						NAM0 = new NAM0SubRecord();
-						return NAM0;
-					case "NAM5":
-						NAM5 = new NAM5SubRecord();
-						return NAM5;
-					case "WHGT":
-						WHGT = new WHGTSubRecord();
-						return WHGT;
-					case "AMBI":
-						AMBI = new AMBISubRecord();
-						return AMBI;
-					default:
-						return null;
-				}
-			}
-			else
-			{
-				switch(subRecordName)
-				{
-					// RefObjDataGroup sub-records
-					case "FRMR":
-						refObjDataGroups.Add(new RefObjDataGroup());
-
-						Utils.Last(refObjDataGroups).FRMR = new RefObjDataGroup.FRMRSubRecord();
-						return Utils.Last(refObjDataGroups).FRMR;
-					case "NAME":
-						Utils.Last(refObjDataGroups).NAME = new NAMESubRecord();
-						return Utils.Last(refObjDataGroups).NAME;
-					case "XSCL":
-						Utils.Last(refObjDataGroups).XSCL = new RefObjDataGroup.XSCLSubRecord();
-						return Utils.Last(refObjDataGroups).XSCL;
-					case "DODT":
-						Utils.Last(refObjDataGroups).DODT = new RefObjDataGroup.DODTSubRecord();
-						return Utils.Last(refObjDataGroups).DODT;
-					case "DNAM":
-						Utils.Last(refObjDataGroups).DNAM = new RefObjDataGroup.DNAMSubRecord();
-						return Utils.Last(refObjDataGroups).DNAM;
-					case "FLTV":
-						Utils.Last(refObjDataGroups).FLTV = new FLTVSubRecord();
-						return Utils.Last(refObjDataGroups).FLTV;
-					case "KNAM":
-						Utils.Last(refObjDataGroups).KNAM = new RefObjDataGroup.KNAMSubRecord();
-						return Utils.Last(refObjDataGroups).KNAM;
-					case "TNAM":
-						Utils.Last(refObjDataGroups).TNAM = new RefObjDataGroup.TNAMSubRecord();
-						return Utils.Last(refObjDataGroups).TNAM;
-					case "UNAM":
-						Utils.Last(refObjDataGroups).UNAM = new RefObjDataGroup.UNAMSubRecord();
-						return Utils.Last(refObjDataGroups).UNAM;
-					case "ANAM":
-						Utils.Last(refObjDataGroups).ANAM = new RefObjDataGroup.ANAMSubRecord();
-						return Utils.Last(refObjDataGroups).ANAM;
-					case "BNAM":
-						Utils.Last(refObjDataGroups).BNAM = new RefObjDataGroup.BNAMSubRecord();
-						return Utils.Last(refObjDataGroups).BNAM;
-					case "INTV":
-						Utils.Last(refObjDataGroups).INTV = new INTVSubRecord();
-						return Utils.Last(refObjDataGroups).INTV;
-					case "NAM9":
-						Utils.Last(refObjDataGroups).NAM9 = new RefObjDataGroup.NAM9SubRecord();
-						return Utils.Last(refObjDataGroups).NAM9;
-					case "XSOL":
-						Utils.Last(refObjDataGroups).XSOL = new RefObjDataGroup.XSOLSubRecord();
-						return Utils.Last(refObjDataGroups).XSOL;
-					case "DATA":
-						Utils.Last(refObjDataGroups).DATA = new RefObjDataGroup.DATASubRecord();
-						return Utils.Last(refObjDataGroups).DATA;
-					default:
-						return null;
-				}
-			}
-		}
-	}
-
+	
 	// Common sub-records.
 	public class STRVSubRecord : SubRecord
 	{
@@ -667,8 +796,11 @@ namespace ESM
 
 	public class NAMESubRecord : STRVSubRecord {}
 	public class FNAMSubRecord : STRVSubRecord {}
-	public class SNAMSubRecord : STRVSubRecord { }
-	public class ANAMSubRecord : STRVSubRecord { }
+	public class SNAMSubRecord : STRVSubRecord {}
+	public class ANAMSubRecord : STRVSubRecord {}
+	public class ITEXSubRecord : STRVSubRecord {}
+	public class ENAMSubRecord : STRVSubRecord {}
+	public class SCRISubRecord : STRVSubRecord {}
 	public class MODLSubRecord : STRVSubRecord {}
 
 	public class ESMFile : IDisposable
@@ -713,10 +845,16 @@ namespace ESM
 					return new GMSTRecord();
 				case "STAT":
 					return new STATRecord();
-				case "DOOR":
-					return new DOORRecord();
 				case "LTEX":
 					return new LTEXRecord();
+				case "DOOR":
+					return new DOORRecord();
+				case "MISC":
+					return new MISCRecord();
+				case "CONT":
+					return new CONTRecord();
+				case "ACTI":
+					return new ACTIRecord();
 				case "CELL":
 					return new CELLRecord();
 				case "LAND":
@@ -792,6 +930,18 @@ namespace ESM
 				else if(record is DOORRecord)
 				{
 					objectsByIDString.Add(((DOORRecord)record).NAME.value, record);
+				}
+				else if(record is MISCRecord)
+				{
+					objectsByIDString.Add(((MISCRecord)record).NAME.value, record);
+				}
+				else if(record is CONTRecord)
+				{
+					objectsByIDString.Add(((CONTRecord)record).NAME.value, record);
+				}
+				else if(record is ACTIRecord)
+				{
+					objectsByIDString.Add(((ACTIRecord)record).NAME.value, record);
 				}
 			}
 		}
