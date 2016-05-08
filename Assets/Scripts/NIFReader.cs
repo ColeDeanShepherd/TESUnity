@@ -124,6 +124,13 @@ namespace NIF
 
 				return prop;
 			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiBSAnimationNode"))
+			{
+				var node = new NiBSAnimationNode();
+				node.Deserialize(reader);
+
+				return node;
+			}
 			else if(StringUtils.Equals(nodeTypeBytes, "NiBSParticleNode"))
 			{
 				var node = new NiBSParticleNode();
@@ -165,6 +172,34 @@ namespace NIF
 				data.Deserialize(reader);
 
 				return data;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiTimeController"))
+			{
+				var controller = new NiTimeController();
+				controller.Deserialize(reader);
+
+				return controller;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiUVController"))
+			{
+				var controller = new NiUVController();
+				controller.Deserialize(reader);
+
+				return controller;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiUVData"))
+			{
+				var data = new NiUVData();
+				data.Deserialize(reader);
+
+				return data;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiTextureEffect"))
+			{
+				var effect = new NiTextureEffect();
+				effect.Deserialize(reader);
+
+				return effect;
 			}
 			else
 			{
@@ -264,6 +299,31 @@ namespace NIF
 		LIGHT_MODE_EMI_AMB_DIF = 1
 	}
 
+	public enum KeyType : uint
+	{
+		LINEAR_KEY = 1,
+		QUADRATIC_KEY = 2,
+		TBC_KEY = 3,
+		XYZ_ROTATION_KEY = 4,
+		CONST_KEY = 5
+	}
+
+	public enum EffectType : uint
+	{
+		EFFECT_PROJECTED_LIGHT = 0,
+		EFFECT_PROJECTED_SHADOW = 1,
+		EFFECT_ENVIRONMENT_MAP = 2,
+		EFFECT_FOG_MAP = 3
+	}
+
+	public enum CoordGenType : uint
+	{
+		CG_WORLD_PARALLEL = 0,
+		CG_WORLD_PERSPECTIVE = 1,
+		CG_SPHERE_MAP = 2,
+		CG_SPECULAR_CUBE_MAP = 3,
+		CG_DIFFUSE_CUBE_MAP = 4
+	}
 	#endregion // Enums
 
 	#region Misc Classes
@@ -393,6 +453,69 @@ namespace NIF
 		}
 	}
 
+	public class TBC
+	{
+		public float t;
+		public float b;
+		public float c;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			t = reader.ReadSingle();
+			b = reader.ReadSingle();
+			c = reader.ReadSingle();
+		}
+	}
+
+	public class Key<T>
+	{
+		public float time;
+		public T value;
+		public T forward;
+		public T backward;
+		public TBC TBC;
+
+		public void Deserialize(BinaryReader reader, KeyType keyType)
+		{
+			time = reader.ReadSingle();
+			value = BinaryReaderUtils.Read<T>(reader);
+
+			if(keyType == KeyType.QUADRATIC_KEY)
+			{
+				forward = BinaryReaderUtils.Read<T>(reader);
+				backward = BinaryReaderUtils.Read<T>(reader);
+			}
+			else if(keyType == KeyType.TBC_KEY)
+			{
+				TBC = new TBC();
+				TBC.Deserialize(reader);
+			}
+		}
+	}
+	public class KeyGroup<T>
+	{
+		public uint numKeys;
+		public KeyType interpolation;
+		public Key<T>[] keys;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			numKeys = reader.ReadUInt32();
+
+			if(numKeys != 0)
+			{
+				interpolation = (KeyType)reader.ReadUInt32();
+			}
+
+			keys = new Key<T>[numKeys];
+			for(int i = 0; i < keys.Length; i++)
+			{
+				keys[i] = new Key<T>();
+				keys[i].Deserialize(reader, interpolation);
+			}
+		}
+	}
+
 	#endregion // Misc Classes
 
 	public class NiHeader
@@ -496,6 +619,8 @@ namespace NIF
 			effects = NiUtils.ReadLengthPrefixedRefs32(reader);
 		}
 	}
+
+	public class NiBSAnimationNode : NiNode {}
 
 	public class NiBSParticleNode : NiNode {}
 
@@ -699,6 +824,117 @@ namespace NIF
 		{
 			index = reader.ReadUInt16();
 			weight = reader.ReadSingle();
+		}
+	}
+
+	public class NiTimeController : NiObject
+	{
+		public int nextController; // NiTimeController
+		public ushort flags;
+		public float frequency;
+		public float phase;
+		public float startTime;
+		public float stopTime;
+		public int target; // NiObjectNET
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			nextController = NiUtils.ReadRef(reader);
+			flags = reader.ReadUInt16();
+			frequency = reader.ReadSingle();
+			phase = reader.ReadSingle();
+			startTime = reader.ReadSingle();
+			stopTime = reader.ReadSingle();
+			target = NiUtils.ReadPtr(reader);
+		}
+	}
+
+	public class NiUVController : NiTimeController
+	{
+		public ushort unknownShort;
+		public int dataRef; // NiUVData
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			unknownShort = reader.ReadUInt16();
+			dataRef = NiUtils.ReadRef(reader);
+		}
+	}
+
+	public class NiUVData : NiObject
+	{
+		public KeyGroup<float>[] UVGroups;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			UVGroups = new KeyGroup<float>[4];
+
+			for(int i = 0; i < UVGroups.Length; i++)
+			{
+				UVGroups[i] = new KeyGroup<float>();
+				UVGroups[i].Deserialize(reader);
+			}
+		}
+	}
+
+	public class NiDynamicEffect : NiAVObject
+	{
+		uint numAffectedNodeListPointers;
+		uint[] affectedNodeListPointers;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			numAffectedNodeListPointers = reader.ReadUInt32();
+
+			affectedNodeListPointers = new uint[numAffectedNodeListPointers];
+			for(int i = 0; i < affectedNodeListPointers.Length; i++)
+			{
+				affectedNodeListPointers[i] = reader.ReadUInt32();
+			}
+		}
+	}
+
+	public class NiTextureEffect : NiDynamicEffect
+	{
+		public Matrix4x4 modelProjectionMatrix;
+		public Vector3 modelProjectionTransform;
+		public TexFilterMode textureFiltering;
+		public TexClampMode textureClamping;
+		public EffectType textureType;
+		public CoordGenType coordinateGenerationType;
+		public int sourceTextureRef; // NiSourceTexture
+		public byte clippingPlane;
+		public Vector3 unknownVector;
+		public float unknownFloat;
+		public short PS2L;
+		public short PS2K;
+		public ushort unknownShort;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			modelProjectionMatrix = BinaryReaderUtils.ReadMatrix3x3(reader);
+			modelProjectionTransform = BinaryReaderUtils.ReadVector3(reader);
+			textureFiltering = (TexFilterMode)reader.ReadUInt32();
+			textureClamping = (TexClampMode)reader.ReadUInt32();
+			textureType = (EffectType)reader.ReadUInt32();
+			coordinateGenerationType = (CoordGenType)reader.ReadUInt32();
+			sourceTextureRef = reader.ReadInt32();
+			clippingPlane = reader.ReadByte();
+			unknownVector = BinaryReaderUtils.ReadVector3(reader);
+			unknownFloat = reader.ReadSingle();
+			PS2L = reader.ReadInt16();
+			PS2K = reader.ReadInt16();
+			unknownShort = reader.ReadUInt16();
 		}
 	}
 

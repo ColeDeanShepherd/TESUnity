@@ -133,6 +133,14 @@ public class NIFObjectBuilder
 		{
 			return null;
 		}
+		else if(NIFObj.GetType() == typeof(NiTextureEffect))
+		{
+			return null;
+		}
+		else if(NIFObj.GetType() == typeof(NiBSAnimationNode))
+		{
+			return InstantiateNiNode((NiBSAnimationNode)NIFObj, parent);
+		}
 		else
 		{
 			throw new NotImplementedException("Tried to instantiate an unsupported NiObject (" + NIFObj.GetType().Name + ").");
@@ -240,6 +248,7 @@ public class NIFObjectBuilder
 		// Find relevant properties.
 		NiTexturingProperty texturingProperty = null;
 		NiMaterialProperty materialProperty = null;
+		NiAlphaProperty alphaProperty = null;
 
 		foreach(var propRef in obj.propertyRefs)
 		{
@@ -253,12 +262,37 @@ public class NIFObjectBuilder
 			{
 				materialProperty = (NiMaterialProperty)prop;
 			}
+			else if(prop is NiAlphaProperty)
+			{
+				alphaProperty = (NiAlphaProperty)prop;
+			}
 		}
 
 		// Create the material.
-		var material = new Material(TESUnity.instance.defaultMaterial);
+		Material material;
 
-		if(texturingProperty.hasBaseTexture)
+		if(alphaProperty != null)
+		{
+			if(Utils.ContainsBitFlags(alphaProperty.flags, 1))
+			{
+				material = new Material(TESUnity.instance.fadeMaterial);
+			}
+			else if(Utils.ContainsBitFlags(alphaProperty.flags, 0x100))
+			{
+				material = new Material(TESUnity.instance.cutoutMaterial);
+				material.SetFloat("alphaCutoff", (float)alphaProperty.threshold / 255);
+			}
+			else
+			{
+				material = new Material(TESUnity.instance.defaultMaterial);
+			}
+		}
+		else
+		{
+			material = new Material(TESUnity.instance.defaultMaterial);
+		}
+
+		if(texturingProperty != null && texturingProperty.hasBaseTexture)
 		{
 			var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.sourceRef];
 			var fileNameWithExt = System.Text.Encoding.ASCII.GetString(srcTexture.fileName);

@@ -89,6 +89,7 @@
     <Compile Include="Assets\Scripts\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
     <Compile Include="Assets\Scripts\Utils.cs" />
+    <Compile Include="Assets\Scripts\Vector2i.cs" />
     <Compile Include="Assets\Scripts\VirtualFileSystem.cs" />
   </ItemGroup>
   <ItemGroup>

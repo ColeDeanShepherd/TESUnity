@@ -101,7 +101,7 @@ public class MorrowindDataReader : IDisposable
 
 		return loadedTexture;
 	}
-	public void InstantiateExteriorCell(int x, int y)
+	public GameObject InstantiateExteriorCell(int x, int y)
 	{
 		var CELL = FindExteriorCellRecord(x, y);
 		var LAND = FindLANDRecord(x, y);
@@ -118,7 +118,11 @@ public class MorrowindDataReader : IDisposable
 			}
 
 			InstantiateCellObjects(CELL, cellObj);
+
+			return cellObj;
 		}
+
+		return null;
 	}
 
 	private Dictionary<string, Texture2D> loadedTextures = new Dictionary<string, Texture2D>();

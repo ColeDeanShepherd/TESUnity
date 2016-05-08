@@ -6,6 +6,7 @@ using UnityEngine.UI;
 // TODO: fix rotation errors
 // TODO: load mipmaps
 // TODO: reenable ACTI
+// TODO: redesign destructors/idisposable
 
 public class TESUnity : MonoBehaviour
 {
@@ -23,6 +24,8 @@ public class TESUnity : MonoBehaviour
 	public GameObject togglePrefab;
 
 	public Material defaultMaterial;
+	public Material cutoutMaterial;
+	public Material fadeMaterial;
 
 	private GameObject canvasObject;
 
@@ -30,6 +33,9 @@ public class TESUnity : MonoBehaviour
 	private Texture2D testImg;
 	private GameObject testObj;
 	private string testObjPath;
+
+	private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
+	private int cellRadius = 2;
 
 	private void Awake()
 	{
@@ -42,13 +48,7 @@ public class TESUnity : MonoBehaviour
 
 		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 
-		for(int x = 10; x < 15; x++)
-		{
-			for(int y = 15; y < 20; y++)
-			{
-				MWDataReader.InstantiateExteriorCell(x, y);
-			}
-		}
+		ExtractFileFromMorrowind("meshes\\f\\flora_tree_wg_05.nif");
 
 		//GUIUtils.CreateScrollView(canvasObject);
 		//var UIObj = GameObject.Instantiate(dropdownPrefab);
@@ -59,6 +59,68 @@ public class TESUnity : MonoBehaviour
 		//var parserGenerator = new NIFParserGenerator();
 		//parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
 	}
+	private Vector2i GetCellIndices(Vector3 point)
+	{
+		float CELL_LENGTH = 64;
+
+		return new Vector2i(Mathf.FloorToInt(point.x / CELL_LENGTH), Mathf.FloorToInt(point.z / CELL_LENGTH));
+	}
+	private void UpdateCells()
+	{
+		var cameraCellIndices = GetCellIndices(Camera.main.transform.position);
+		var minCellX = cameraCellIndices.x - cellRadius;
+		var maxCellX = cameraCellIndices.x + cellRadius;
+		var minCellY = cameraCellIndices.y - cellRadius;
+		var maxCellY = cameraCellIndices.y + cellRadius;
+
+		// Destroy out of range cells.
+		var outOfRangeCellIndices = new List<Vector2i>();
+
+		foreach(var KVPair in cellObjects)
+		{
+			if((KVPair.Key.x < minCellX) || (KVPair.Key.x > maxCellX) || (KVPair.Key.y < minCellY) || (KVPair.Key.y > maxCellY))
+			{
+				outOfRangeCellIndices.Add(KVPair.Key);
+			}
+		}
+
+		foreach(var cellIndices in outOfRangeCellIndices)
+		{
+			DestroyCell(cellIndices);
+		}
+
+		// Create new cells.
+		for(int x = minCellX; x <= maxCellX; x++)
+		{
+			for(int y = minCellY; y <= maxCellY; y++)
+			{
+				var cellIndices = new Vector2i(x, y);
+
+				if(!cellObjects.ContainsKey(cellIndices))
+				{
+					CreateCell(cellIndices);
+				}
+			}
+		}
+	}
+	private void CreateCell(Vector2i indices)
+	{
+		cellObjects[indices] = MWDataReader.InstantiateExteriorCell(indices.x, indices.y);
+	}
+	private void DestroyCell(Vector2i indices)
+	{
+		GameObject cellObj;
+
+		if(cellObjects.TryGetValue(indices, out cellObj))
+		{
+			cellObjects.Remove(indices);
+			Destroy(cellObj);
+		}
+		else
+		{
+			Debug.LogError("Tried to destroy a cell that isn't created.");
+		}
+	}
 	private void OnDestroy()
 	{
 		MWDataReader.Close();
@@ -66,6 +128,8 @@ public class TESUnity : MonoBehaviour
 
 	private void Update()
 	{
+		UpdateCells();
+
 		if(Input.GetKeyDown(KeyCode.K))
 		{
 			var fileName = Path.GetFileName(testObjPath);
