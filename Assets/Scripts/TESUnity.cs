@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 // TODO: fix rotation errors
 // TODO: load mipmaps
-// TODO: reenable ACTI
 // TODO: redesign destructors/idisposable
 
 public class TESUnity : MonoBehaviour
@@ -49,6 +48,9 @@ public class TESUnity : MonoBehaviour
 		MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 
 		ExtractFileFromMorrowind("meshes\\f\\flora_tree_wg_05.nif");
+
+		//MWDataReader.InstantiateInteriorCell("Helan Ancestral Tomb");
+		//MWDataReader.InstantiateInteriorCell("Suran, Ibarnadad Assirnarari: Apothecary");
 
 		//GUIUtils.CreateScrollView(canvasObject);
 		//var UIObj = GameObject.Instantiate(dropdownPrefab);

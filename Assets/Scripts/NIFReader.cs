@@ -31,7 +31,7 @@ namespace NIF
 		}
 		public static NiObject ReadNiObject(BinaryReader reader)
 		{
-			var nodeTypeBytes = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader); // "NiNode"
+			var nodeTypeBytes = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader); // "NiNode"
 
 			if(StringUtils.Equals(nodeTypeBytes, "NiNode"))
 			{
@@ -338,9 +338,9 @@ namespace NIF
 		public void Deserialize(BinaryReader reader)
 		{
 			unknownInt = reader.ReadUInt32();
-			translation = BinaryReaderUtils.ReadVector3(reader);
-			rotation = BinaryReaderUtils.ReadMatrix3x3(reader);
-			radius = BinaryReaderUtils.ReadVector3(reader);
+			translation = BinaryReaderExtensions.ReadVector3(reader);
+			rotation = BinaryReaderExtensions.ReadMatrix3x3(reader);
+			radius = BinaryReaderExtensions.ReadVector3(reader);
 		}
 	}
 
@@ -447,8 +447,8 @@ namespace NIF
 
 		public void Deserialize(BinaryReader reader)
 		{
-			rotation = BinaryReaderUtils.ReadMatrix3x3(reader);
-			translation = BinaryReaderUtils.ReadVector3(reader);
+			rotation = BinaryReaderExtensions.ReadMatrix3x3(reader);
+			translation = BinaryReaderExtensions.ReadVector3(reader);
 			scale = reader.ReadSingle();
 		}
 	}
@@ -478,12 +478,12 @@ namespace NIF
 		public void Deserialize(BinaryReader reader, KeyType keyType)
 		{
 			time = reader.ReadSingle();
-			value = BinaryReaderUtils.Read<T>(reader);
+			value = BinaryReaderExtensions.Read<T>(reader);
 
 			if(keyType == KeyType.QUADRATIC_KEY)
 			{
-				forward = BinaryReaderUtils.Read<T>(reader);
-				backward = BinaryReaderUtils.Read<T>(reader);
+				forward = BinaryReaderExtensions.Read<T>(reader);
+				backward = BinaryReaderExtensions.Read<T>(reader);
 			}
 			else if(keyType == KeyType.TBC_KEY)
 			{
@@ -566,7 +566,7 @@ namespace NIF
 		{
 			base.Deserialize(reader);
 
-			name = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader);
+			name = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader);
 			extraDataRef = NiUtils.ReadRef(reader);
 			controllerRef = NiUtils.ReadRef(reader);
 		}
@@ -589,12 +589,12 @@ namespace NIF
 			base.Deserialize(reader);
 
 			flags = NiUtils.ReadFlags(reader);
-			translation = BinaryReaderUtils.ReadVector3(reader);
-			rotation = BinaryReaderUtils.ReadMatrix3x3(reader);
+			translation = BinaryReaderExtensions.ReadVector3(reader);
+			rotation = BinaryReaderExtensions.ReadMatrix3x3(reader);
 			scale = reader.ReadSingle();
-			velocity = BinaryReaderUtils.ReadVector3(reader);
+			velocity = BinaryReaderExtensions.ReadVector3(reader);
 			propertyRefs = NiUtils.ReadLengthPrefixedRefs32(reader);
-			hasBoundingBox = BinaryReaderUtils.ReadBool32(reader);
+			hasBoundingBox = BinaryReaderExtensions.ReadBool32(reader);
 
 			if(hasBoundingBox)
 			{
@@ -648,7 +648,7 @@ namespace NIF
 			numParticles = reader.ReadUInt16();
 			particleRadius = reader.ReadSingle();
 			numActive = reader.ReadUInt16();
-			hasSizes = BinaryReaderUtils.ReadBool32(reader);
+			hasSizes = BinaryReaderExtensions.ReadBool32(reader);
 
 			if(hasSizes)
 			{
@@ -668,7 +668,7 @@ namespace NIF
 				rotationAngles[i] = reader.ReadSingle();
 			}
 
-			hasUVQuadrants = BinaryReaderUtils.ReadBool32(reader);
+			hasUVQuadrants = BinaryReaderExtensions.ReadBool32(reader);
 			numUVQuadrants = reader.ReadByte();
 
 			if(hasUVQuadrants)
@@ -677,7 +677,7 @@ namespace NIF
 
 				for(int i = 0; i < UVQuadrants.Length; i++)
 				{
-					UVQuadrants[i] = BinaryReaderUtils.ReadVector4(reader);
+					UVQuadrants[i] = BinaryReaderExtensions.ReadVector4(reader);
 				}
 			}
 
@@ -696,14 +696,14 @@ namespace NIF
 		{
 			base.Deserialize(reader);
 
-			hasRotations = BinaryReaderUtils.ReadBool32(reader);
+			hasRotations = BinaryReaderExtensions.ReadBool32(reader);
 
 			if(hasRotations)
 			{
 				rotations = new Quaternion[numVertices];
 				for(int i = 0; i < rotations.Length; i++)
 				{
-					rotations[i] = BinaryReaderUtils.ReadQuaternionWFirst(reader);
+					rotations[i] = BinaryReaderExtensions.ReadQuaternionWFirst(reader);
 				}
 			}
 		}
@@ -735,7 +735,7 @@ namespace NIF
 			base.Deserialize(reader);
 
 			bytesRemaining = reader.ReadUInt32();
-			stringData = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader);
+			stringData = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader);
 		}
 	}
 
@@ -802,7 +802,7 @@ namespace NIF
 			skinTransform = new SkinTransform();
 			skinTransform.Deserialize(reader);
 
-			boundingSphereOffset = BinaryReaderUtils.ReadVector3(reader);
+			boundingSphereOffset = BinaryReaderExtensions.ReadVector3(reader);
 			boundingSphereRadius = reader.ReadSingle();
 			numVertices = reader.ReadUInt16();
 
@@ -922,15 +922,15 @@ namespace NIF
 		{
 			base.Deserialize(reader);
 
-			modelProjectionMatrix = BinaryReaderUtils.ReadMatrix3x3(reader);
-			modelProjectionTransform = BinaryReaderUtils.ReadVector3(reader);
+			modelProjectionMatrix = BinaryReaderExtensions.ReadMatrix3x3(reader);
+			modelProjectionTransform = BinaryReaderExtensions.ReadVector3(reader);
 			textureFiltering = (TexFilterMode)reader.ReadUInt32();
 			textureClamping = (TexClampMode)reader.ReadUInt32();
 			textureType = (EffectType)reader.ReadUInt32();
 			coordinateGenerationType = (CoordGenType)reader.ReadUInt32();
 			sourceTextureRef = reader.ReadInt32();
 			clippingPlane = reader.ReadByte();
-			unknownVector = BinaryReaderUtils.ReadVector3(reader);
+			unknownVector = BinaryReaderExtensions.ReadVector3(reader);
 			unknownFloat = reader.ReadSingle();
 			PS2L = reader.ReadInt16();
 			PS2K = reader.ReadInt16();
@@ -989,31 +989,31 @@ namespace NIF
 			base.Deserialize(reader);
 
 			numVertices = reader.ReadUInt16();
-			hasVertices = BinaryReaderUtils.ReadBool32(reader);
+			hasVertices = BinaryReaderExtensions.ReadBool32(reader);
 
 			if(hasVertices)
 			{
 				vertices = new Vector3[numVertices];
 				for(int i = 0; i < vertices.Length; i++)
 				{
-					vertices[i] = BinaryReaderUtils.ReadVector3(reader);
+					vertices[i] = BinaryReaderExtensions.ReadVector3(reader);
 				}
 			}
 
-			hasNormals = BinaryReaderUtils.ReadBool32(reader);
+			hasNormals = BinaryReaderExtensions.ReadBool32(reader);
 
 			if(hasNormals)
 			{
 				normals = new Vector3[numVertices];
 				for(int i = 0; i < normals.Length; i++)
 				{
-					normals[i] = BinaryReaderUtils.ReadVector3(reader);
+					normals[i] = BinaryReaderExtensions.ReadVector3(reader);
 				}
 			}
 
-			center = BinaryReaderUtils.ReadVector3(reader);
+			center = BinaryReaderExtensions.ReadVector3(reader);
 			radius = reader.ReadSingle();
-			hasVertexColors = BinaryReaderUtils.ReadBool32(reader);
+			hasVertexColors = BinaryReaderExtensions.ReadBool32(reader);
 
 			if(hasVertexColors)
 			{
@@ -1026,7 +1026,7 @@ namespace NIF
 			}
 
 			numUVSets = reader.ReadUInt16();
-			hasUV = BinaryReaderUtils.ReadBool32(reader);
+			hasUV = BinaryReaderExtensions.ReadBool32(reader);
 
 			if(hasUV)
 			{
@@ -1133,49 +1133,49 @@ namespace NIF
 			applyMode = (ApplyMode)reader.ReadUInt32();
 			textureCount = reader.ReadUInt32();
 
-			hasBaseTexture = BinaryReaderUtils.ReadBool32(reader);
+			hasBaseTexture = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasBaseTexture)
 			{
 				baseTexture = new TexDesc();
 				baseTexture.Deserialize(reader);
 			}
 
-			hasDarkTexture = BinaryReaderUtils.ReadBool32(reader);
+			hasDarkTexture = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasDarkTexture)
 			{
 				darkTexture = new TexDesc();
 				darkTexture.Deserialize(reader);
 			}
 
-			hasDetailTexture = BinaryReaderUtils.ReadBool32(reader);
+			hasDetailTexture = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasDetailTexture)
 			{
 				detailTexture = new TexDesc();
 				detailTexture.Deserialize(reader);
 			}
 
-			hasGlossTexture = BinaryReaderUtils.ReadBool32(reader);
+			hasGlossTexture = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasGlossTexture)
 			{
 				glossTexture = new TexDesc();
 				glossTexture.Deserialize(reader);
 			}
 
-			hasGlowTexture = BinaryReaderUtils.ReadBool32(reader);
+			hasGlowTexture = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasGlowTexture)
 			{
 				glowTexture = new TexDesc();
 				glowTexture.Deserialize(reader);
 			}
 
-			hasBumpMapTexture = BinaryReaderUtils.ReadBool32(reader);
+			hasBumpMapTexture = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasBumpMapTexture)
 			{
 				bumpMapTexture = new TexDesc();
 				bumpMapTexture.Deserialize(reader);
 			}
 
-			hasDecal0Texture = BinaryReaderUtils.ReadBool32(reader);
+			hasDecal0Texture = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasDecal0Texture)
 			{
 				decal0Texture = new TexDesc();
@@ -1246,7 +1246,7 @@ namespace NIF
 			base.Deserialize(reader);
 
 			useExternal = reader.ReadByte();
-			fileName = BinaryReaderUtils.ReadLengthPrefixedBytes32(reader);
+			fileName = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader);
 			pixelLayout = (PixelLayout)reader.ReadUInt32();
 			useMipMaps = (MipMapFormat)reader.ReadUInt32();
 			alphaFormat = (AlphaFormat)reader.ReadUInt32();

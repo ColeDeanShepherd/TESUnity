@@ -130,7 +130,7 @@ public static class StringUtils
 	}
 }
 
-public static class BinaryReaderUtils
+public static class BinaryReaderExtensions
 {
 	public static bool ReadBool32(BinaryReader reader)
 	{
@@ -230,17 +230,19 @@ public static class Utils
 		return (x & encodedBitFlags) == encodedBitFlags;
 	}
 
-	public static void Flip2DArrayVertically<T>(ref T[] arr, uint rowCount, uint columnCount)
+	public static void Flip2DArrayVertically<T>(ref T[] arr, int rowCount, int columnCount)
 	{
+		Debug.Assert((rowCount >= 0) && (columnCount >= 0));
+
 		var tmpRow = new T[columnCount];
 		var lastRowIndex = rowCount - 1;
 
-		for(uint rowIndex = 0; rowIndex < (rowCount / 2); rowIndex++)
+		for(int rowIndex = 0; rowIndex < (rowCount / 2); rowIndex++)
 		{
-			uint otherRowIndex = lastRowIndex - rowIndex;
+			var otherRowIndex = lastRowIndex - rowIndex;
 
-			uint rowStartIndex = rowIndex * columnCount;
-			uint otherRowStartIndex = otherRowIndex * columnCount;
+			var rowStartIndex = rowIndex * columnCount;
+			var otherRowStartIndex = otherRowIndex * columnCount;
 
 			Array.Copy(arr, otherRowStartIndex, tmpRow, 0, columnCount); // other -> tmp
 			Array.Copy(arr, rowStartIndex, arr, otherRowStartIndex, columnCount); // row -> other
@@ -312,7 +314,7 @@ public static class Utils
 		return min1 + (xPct * range1);
 	}
 
-	public static void GetMinMax(float[,] array, out float min, out float max)
+	public static void GetExtrema(float[,] array, out float min, out float max)
 	{
 		min = float.MaxValue;
 		max = float.MinValue;
