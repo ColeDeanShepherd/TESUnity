@@ -14,7 +14,7 @@ namespace ESM
 
 		public virtual void Deserialize(BinaryReader reader)
 		{
-			name = BinaryReaderUtils.ReadASCIIString(reader, 4);
+			name = BinaryReaderExtensions.ReadASCIIString(reader, 4);
 			dataSize = reader.ReadUInt32();
 			unknown0 = reader.ReadUInt32();
 			flags = reader.ReadUInt32();
@@ -27,7 +27,7 @@ namespace ESM
 
 		public virtual void Deserialize(BinaryReader reader)
 		{
-			name = BinaryReaderUtils.ReadASCIIString(reader, 4);
+			name = BinaryReaderExtensions.ReadASCIIString(reader, 4);
 			dataSize = reader.ReadUInt32();
 		}
 	}
@@ -90,8 +90,8 @@ namespace ESM
 			{
 				version = reader.ReadSingle();
 				fileType = reader.ReadUInt32();
-				companyName = BinaryReaderUtils.ReadASCIIString(reader, 32);
-				fileDescription = BinaryReaderUtils.ReadASCIIString(reader, 256);
+				companyName = BinaryReaderExtensions.ReadASCIIString(reader, 32);
+				fileDescription = BinaryReaderExtensions.ReadASCIIString(reader, 256);
 				numRecords = reader.ReadUInt32();
 			}
 		}
@@ -303,7 +303,7 @@ namespace ESM
 			public override void DeserializeData(BinaryReader reader)
 			{
 				itemCount = reader.ReadUInt32();
-				itemName = BinaryReaderUtils.ReadPossiblyNullTerminatedASCIIString(reader, 32);
+				itemName = BinaryReaderExtensions.ReadPossiblyNullTerminatedASCIIString(reader, 32);
 			}
 		}
 
@@ -420,8 +420,8 @@ namespace ESM
 
 				public override void DeserializeData(BinaryReader reader)
 				{
-					position = BinaryReaderUtils.ReadVector3(reader);
-					eulerAngles = BinaryReaderUtils.ReadVector3(reader);
+					position = BinaryReaderExtensions.ReadVector3(reader);
+					eulerAngles = BinaryReaderExtensions.ReadVector3(reader);
 				}
 			}
 			public class DNAMSubRecord : NAMESubRecord { }
@@ -439,8 +439,8 @@ namespace ESM
 
 				public override void DeserializeData(BinaryReader reader)
 				{
-					position = BinaryReaderUtils.ReadVector3(reader);
-					eulerAngles = BinaryReaderUtils.ReadVector3(reader);
+					position = BinaryReaderExtensions.ReadVector3(reader);
+					eulerAngles = BinaryReaderExtensions.ReadVector3(reader);
 				}
 			}
 
@@ -713,7 +713,7 @@ namespace ESM
 
 		public override void DeserializeData(BinaryReader reader)
 		{
-			value = BinaryReaderUtils.ReadPossiblyNullTerminatedASCIIString(reader, (int)header.dataSize);
+			value = BinaryReaderExtensions.ReadPossiblyNullTerminatedASCIIString(reader, (int)header.dataSize);
 		}
 	}
 

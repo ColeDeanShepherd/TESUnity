@@ -1,7 +1,6 @@
 ﻿public struct Vector2i
 {
-	public int x;
-	public int y;
+	public int x, y;
 
 	public Vector2i(int x, int y)
 	{

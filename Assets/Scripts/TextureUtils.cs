@@ -8,7 +8,7 @@ public static class TextureUtils
 	{
 		var pixels = texture2D.GetPixels32();
 
-		Utils.Flip2DArrayVertically<Color32>(ref pixels, (uint)texture2D.height, (uint)texture2D.width);
+		Utils.Flip2DArrayVertically<Color32>(ref pixels, texture2D.height, texture2D.width);
 
 		texture2D.SetPixels32(pixels);
 		texture2D.Apply();
@@ -89,7 +89,7 @@ public static class TextureUtils
 
 				uint dataSize = dwPitchOrLinearSize * dwHeight;
 				textureData = reader.ReadBytes((int)dataSize);
-				Utils.Flip2DArrayVertically(ref textureData, dwHeight, dwPitchOrLinearSize);
+				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)dwPitchOrLinearSize);
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT1"))
 			{
@@ -98,13 +98,13 @@ public static class TextureUtils
 
 				textureFormat = TextureFormat.ARGB32;
 				textureData = DecodeDXT1ToARGB(dwWidth, dwHeight, pixelFormat, reader.ReadBytes((int)dwPitchOrLinearSize));
-				Utils.Flip2DArrayVertically<byte>(ref textureData, dwHeight, 4 * dwWidth);
+				Utils.Flip2DArrayVertically<byte>(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT3"))
 			{
 				textureFormat = TextureFormat.ARGB32;
 				textureData = DecodeDXT3ToARGB(dwWidth, dwHeight, reader.ReadBytes((int)dwPitchOrLinearSize));
-				Utils.Flip2DArrayVertically<byte>(ref textureData, dwHeight, 4 * dwWidth);
+				Utils.Flip2DArrayVertically<byte>(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT5"))
 			{
@@ -113,7 +113,7 @@ public static class TextureUtils
 
 				textureFormat = TextureFormat.ARGB32;
 				textureData = DecodeDXT5ToARGB(dwWidth, dwHeight, reader.ReadBytes((int)dwPitchOrLinearSize));
-				Utils.Flip2DArrayVertically<byte>(ref textureData, dwHeight, 4 * dwWidth);
+				Utils.Flip2DArrayVertically<byte>(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
 			}
 			else
 			{
@@ -126,25 +126,6 @@ public static class TextureUtils
 
 			return texture;
 		}
-	}
-
-	public static Color R5G6B5ToColor(ushort R5G6B5)
-	{
-		// compressed components
-		var rC = ((R5G6B5 >> 11) & 31);
-		var gC = ((R5G6B5 >> 5) & 63);
-		var bC = (R5G6B5 & 31);
-
-		// float components
-		var r = (float)rC / 31;
-		var g = (float)gC / 63;
-		var b = (float)bC / 31;
-
-		return new Color(r, g, b, 1);
-	}
-	public static Color32 R5G6B5ToColor32(ushort R5G6B5)
-	{
-		return R5G6B5ToColor(R5G6B5);
 	}
 
 	private enum DDSFlags
@@ -213,8 +194,8 @@ public static class TextureUtils
 			{
 				// Create the color table.
 				var colorTable = new Color[4];
-				colorTable[0] = R5G6B5ToColor(reader.ReadUInt16());
-				colorTable[1] = R5G6B5ToColor(reader.ReadUInt16());
+				colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+				colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 
 				if(!containsAlpha)
 				{
@@ -304,8 +285,8 @@ public static class TextureUtils
 
 				// Create the color table.
 				var colorTable = new Color[4];
-				colorTable[0] = R5G6B5ToColor(reader.ReadUInt16());
-				colorTable[1] = R5G6B5ToColor(reader.ReadUInt16());
+				colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+				colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 				colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
 				colorTable[3] = Color.Lerp(colorTable[0], colorTable[1], 2.0f / 3);
 
@@ -414,8 +395,8 @@ public static class TextureUtils
 
 				// Create the color table.
 				var colorTable = new Color[4];
-				colorTable[0] = R5G6B5ToColor(reader.ReadUInt16());
-				colorTable[1] = R5G6B5ToColor(reader.ReadUInt16());
+				colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+				colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 				colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
 				colorTable[3] = Color.Lerp(colorTable[0], colorTable[1], 2.0f / 3);
 

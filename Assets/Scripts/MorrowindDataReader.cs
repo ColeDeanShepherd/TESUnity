@@ -124,6 +124,21 @@ public class MorrowindDataReader : IDisposable
 
 		return null;
 	}
+	public GameObject InstantiateInteriorCell(string cellName)
+	{
+		var CELL = FindInteriorCellRecord(cellName);
+
+		if(CELL != null)
+		{
+			GameObject cellObj = new GameObject("cell");
+
+			InstantiateCellObjects(CELL, cellObj);
+
+			return cellObj;
+		}
+
+		return null;
+	}
 
 	private Dictionary<string, Texture2D> loadedTextures = new Dictionary<string, Texture2D>();
 	private Dictionary<string, NIF.NiFile> loadedNIFs = new Dictionary<string, NIF.NiFile>();
@@ -193,7 +208,7 @@ public class MorrowindDataReader : IDisposable
 
 		// Change the heights to percentages.
 		float minHeight, maxHeight;
-		Utils.GetMinMax(heights, out minHeight, out maxHeight);
+		Utils.GetExtrema(heights, out minHeight, out maxHeight);
 
 		for(int y = 0; y < LAND_SIZE; y++)
 		{
@@ -300,6 +315,20 @@ public class MorrowindDataReader : IDisposable
 			var CELL = (CELLRecord)record;
 
 			if((CELL.DATA.gridX == x) && (CELL.DATA.gridY == y))
+			{
+				return CELL;
+			}
+		}
+
+		return null;
+	}
+	private CELLRecord FindInteriorCellRecord(string cellName)
+	{
+		foreach(var record in MorrowindESMFile.GetRecordsOfType<CELLRecord>())
+		{
+			var CELL = (CELLRecord)record;
+
+			if(CELL.NAME.value == cellName)
 			{
 				return CELL;
 			}
