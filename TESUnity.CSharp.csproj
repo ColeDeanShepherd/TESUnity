@@ -73,24 +73,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\ArrayRange.cs" />
-    <Compile Include="Assets\Scripts\AudioUtils.cs" />
-    <Compile Include="Assets\Scripts\AutoNIFReader.cs" />
-    <Compile Include="Assets\Scripts\BSAFile.cs" />
+    <Compile Include="Assets\Scripts\Audio\AudioUtils.cs" />
+    <Compile Include="Assets\Scripts\Audio\OneShotAudioSourceComponent.cs" />
+    <Compile Include="Assets\Scripts\Audio\OneShotAudioStreamComponent.cs" />
     <Compile Include="Assets\Scripts\BinaryReaderExtensions.cs" />
     <Compile Include="Assets\Scripts\ColorUtils.cs" />
     <Compile Include="Assets\Scripts\DDSReader.cs" />
-    <Compile Include="Assets\Scripts\ESMFile.cs" />
     <Compile Include="Assets\Scripts\FlyingCameraComponent.cs" />
     <Compile Include="Assets\Scripts\GUIUtils.cs" />
     <Compile Include="Assets\Scripts\GameObjectUtils.cs" />
-    <Compile Include="Assets\Scripts\MorrowindDataReader.cs" />
-    <Compile Include="Assets\Scripts\NIFObjectBuilder.cs" />
-    <Compile Include="Assets\Scripts\NIFParserGenerator.cs" />
-    <Compile Include="Assets\Scripts\NIFReader.cs" />
-    <Compile Include="Assets\Scripts\OneShotAudioSourceComponent.cs" />
-    <Compile Include="Assets\Scripts\OneShotAudioStreamComponent.cs" />
     <Compile Include="Assets\Scripts\SerialBin.cs" />
-    <Compile Include="Assets\Scripts\TESUnity.cs" />
+    <Compile Include="Assets\Scripts\TES\AutoNIFReader.cs" />
+    <Compile Include="Assets\Scripts\TES\BSAFile.cs" />
+    <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
+    <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
+    <Compile Include="Assets\Scripts\TES\NIFObjectBuilder.cs" />
+    <Compile Include="Assets\Scripts\TES\NIFParserGenerator.cs" />
+    <Compile Include="Assets\Scripts\TES\NIFReader.cs" />
+    <Compile Include="Assets\Scripts\TES\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
     <Compile Include="Assets\Scripts\Utils.cs" />
     <Compile Include="Assets\Scripts\Vector2i.cs" />
