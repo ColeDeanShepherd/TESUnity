@@ -72,9 +72,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\ArrayRange.cs" />
     <Compile Include="Assets\Scripts\AudioUtils.cs" />
     <Compile Include="Assets\Scripts\AutoNIFReader.cs" />
     <Compile Include="Assets\Scripts\BSAFile.cs" />
+    <Compile Include="Assets\Scripts\BinaryReaderExtensions.cs" />
     <Compile Include="Assets\Scripts\ColorUtils.cs" />
     <Compile Include="Assets\Scripts\DDSReader.cs" />
     <Compile Include="Assets\Scripts\ESMFile.cs" />
