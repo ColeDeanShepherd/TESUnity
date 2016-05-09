@@ -1,1 +1,427 @@
-﻿
+﻿using System;
+using System.IO;
+using UnityEngine;
+
+public static class DDSReader
+{
+	public static Texture2D LoadDDSTexture(string filePath)
+	{
+		return LoadDDSTexture(File.Open(filePath, FileMode.Open, FileAccess.Read));
+	}
+	public static Texture2D LoadDDSTexture(Stream inputStream)
+	{
+		using(BinaryReader reader = new BinaryReader(inputStream))
+		{
+			var magicString = reader.ReadBytes(4); // "DDS "
+			if(!StringUtils.Equals(magicString, "DDS "))
+			{
+				throw new FileFormatException("Invalid DDS file magic string: \"" + System.Text.Encoding.ASCII.GetString(magicString) + "\".");
+			}
+
+			var dwSize = reader.ReadUInt32();
+			if(dwSize != 124)
+			{
+				throw new FileFormatException("Invalid DDS file header size: " + dwSize.ToString() + '.');
+			}
+
+			var dwFlags = reader.ReadUInt32();
+			if(!Utils.ContainsBitFlags(dwFlags, (uint)DDSFlags.CAPS, (uint)DDSFlags.HEIGHT, (uint)DDSFlags.WIDTH, (uint)DDSFlags.PIXELFORMAT))
+			{
+				throw new FileFormatException("Invalid DDS file flags: " + dwFlags.ToString() + '.');
+			}
+
+			var dwHeight = reader.ReadUInt32();
+			var dwWidth = reader.ReadUInt32();
+			var dwPitchOrLinearSize = reader.ReadUInt32();
+			var dwDepth = reader.ReadUInt32();
+			var dwMipMapCount = reader.ReadUInt32();
+
+			var dwReserved1 = new uint[11];
+
+			for(int i = 0; i < dwReserved1.Length; i++)
+			{
+				dwReserved1[i] = reader.ReadUInt32();
+			}
+
+			var pixelFormat = new DDSPixelFormat();
+			pixelFormat.size = reader.ReadUInt32();
+			if(pixelFormat.size != 32)
+			{
+				throw new FileFormatException("Invalid DDS file pixel format size: " + pixelFormat.size.ToString() + '.');
+			}
+
+			pixelFormat.flags = reader.ReadUInt32();
+			pixelFormat.fourCC = reader.ReadBytes(4);
+			pixelFormat.RGBBitCount = reader.ReadUInt32();
+			pixelFormat.RBitMask = reader.ReadUInt32();
+			pixelFormat.GBitMask = reader.ReadUInt32();
+			pixelFormat.BBitMask = reader.ReadUInt32();
+			pixelFormat.ABitMask = reader.ReadUInt32();
+
+			var dwCaps = reader.ReadUInt32();
+			if(!Utils.ContainsBitFlags(dwCaps, (uint)DDSCaps.TEXTURE))
+			{
+				throw new FileFormatException("Invalid DDS file caps: " + dwCaps.ToString() + '.');
+			}
+
+			var dwCaps2 = reader.ReadUInt32();
+			var dwCaps3 = reader.ReadUInt32();
+			var dwCaps4 = reader.ReadUInt32();
+			var dwReserved2 = reader.ReadUInt32();
+
+			// Figure out the texture format and load the texture data.
+			TextureFormat textureFormat;
+			byte[] textureData;
+
+			// If the DDS file contains uncompressed data.
+			if(Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.RGB))
+			{
+				if(!Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.ALPHAPIXELS)) // RGB
+				{
+					throw new NotImplementedException("Unsupported DDS file pixel format.");
+				}
+				else // RGBA
+				{
+					if(pixelFormat.RGBBitCount != 32)
+					{
+						throw new FileFormatException("Invalid DDS file pixel format.");
+					}
+
+					if((pixelFormat.BBitMask == 0x000000FF) && (pixelFormat.GBitMask == 0x0000FF00) && (pixelFormat.RBitMask == 0x00FF0000) && (pixelFormat.ABitMask == 0xFF000000))
+					{
+						textureFormat = TextureFormat.BGRA32;
+					}
+					else if((pixelFormat.ABitMask == 0x000000FF) && (pixelFormat.RBitMask == 0x0000FF00) && (pixelFormat.GBitMask == 0x00FF0000) && (pixelFormat.BBitMask == 0xFF000000))
+					{
+						textureFormat = TextureFormat.ARGB32;
+					}
+					else
+					{
+						throw new NotImplementedException("Unsupported DDS file pixel format.");
+					}
+
+					uint dataSize = dwPitchOrLinearSize * dwHeight;
+					textureData = reader.ReadBytes((int)dataSize);
+					Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)dwPitchOrLinearSize);
+				}
+			}
+			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT1"))
+			{
+				//textureFormat = TextureFormat.DXT1;
+				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
+
+				textureFormat = TextureFormat.ARGB32;
+				textureData = DecodeDXT1ToARGB(dwWidth, dwHeight, pixelFormat, reader.ReadBytes((int)dwPitchOrLinearSize));
+				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
+			}
+			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT3"))
+			{
+				textureFormat = TextureFormat.ARGB32;
+				textureData = DecodeDXT3ToARGB(dwWidth, dwHeight, reader.ReadBytes((int)dwPitchOrLinearSize));
+				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
+			}
+			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT5"))
+			{
+				//textureFormat = TextureFormat.DXT5;
+				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
+
+				textureFormat = TextureFormat.ARGB32;
+				textureData = DecodeDXT5ToARGB(dwWidth, dwHeight, reader.ReadBytes((int)dwPitchOrLinearSize));
+				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
+			}
+			else
+			{
+				throw new NotImplementedException("Unsupported DDS file pixel format.");
+			}
+
+			var texture = new Texture2D((int)dwWidth, (int)dwHeight, textureFormat, false);
+			texture.LoadRawTextureData(textureData);
+			texture.Apply();
+
+			return texture;
+		}
+	}
+
+	private enum DDSFlags
+	{
+		CAPS = 0x1,
+		HEIGHT = 0x2,
+		WIDTH = 0x4,
+		PITCH = 0x8,
+		PIXELFORMAT = 0x1000,
+		MIPMAPCOUNT = 0x20000,
+		LINEARSIZE = 0x80000,
+		DEPTH = 0x800000
+	}
+	private enum DDSPixelFormatFlags
+	{
+		ALPHAPIXELS = 0x1,
+		ALPHA = 0x2,
+		FOURCC = 0x4,
+		RGB = 0x40,
+		YUV = 0x200,
+		LUMINANCE = 0x20000
+	}
+	private enum DDSCaps
+	{
+		COMPLEX = 0x8,
+		MIPMAP = 0x400000,
+		TEXTURE = 0x1000
+	}
+	private enum DDSCaps2
+	{
+		CUBEMAP = 0x200,
+		CUBEMAP_POSITIVEX = 0x400,
+		CUBEMAP_NEGATIVEX = 0x800,
+		CUBEMAP_POSITIVEY = 0x1000,
+		CUBEMAP_NEGATIVEY = 0x2000,
+		CUBEMAP_POSITIVEZ = 0x4000,
+		CUBEMAP_NEGATIVEZ = 0x8000,
+		VOLUME = 0x200000
+	}
+	private struct DDSPixelFormat
+	{
+		public uint size;
+		public uint flags;
+		public byte[] fourCC;
+		public uint RGBBitCount;
+		public uint RBitMask;
+		public uint GBitMask;
+		public uint BBitMask;
+		public uint ABitMask;
+	}
+
+	// Assumes the color table has already been built.
+	private static Color32[] DecodeDXT1TexelBlock(BinaryReader reader, Color[] colorTable)
+	{
+		Debug.Assert(colorTable.Length == 4);
+
+		// Read pixel color indices.
+		var colorIndices = new uint[16];
+		var colorIndexBytes = reader.ReadBytes(4);
+
+		for(uint i = 0; i < 4; i++) // row
+		{
+			for(uint j = 0; j < 4; j++) // column
+			{
+				var bitOffset = (8 * i) + (2 * (3 - j));
+
+				colorIndices[(4 * i) + j] = (uint)Utils.GetBits(bitOffset, 2, colorIndexBytes);
+			}
+		}
+
+		// Calculate pixel colors.
+		var colors = new Color32[16];
+
+		for(int i = 0; i < 16; i++)
+		{
+			colors[i] = colorTable[colorIndices[i]];
+		}
+
+		return colors;
+	}
+
+	private static Color32[] DecodeDXT1TexelBlock(BinaryReader reader, bool containsAlpha)
+	{
+		// Create the color table.
+		var colorTable = new Color[4];
+		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+
+		if(!containsAlpha)
+		{
+			colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
+			colorTable[3] = Color.Lerp(colorTable[0], colorTable[1], 2.0f / 3);
+		}
+		else
+		{
+			colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 2);
+			colorTable[3] = new Color(0, 0, 0, 0);
+		}
+
+		// Calculate pixel colors.
+		return DecodeDXT1TexelBlock(reader, colorTable);
+	}
+	private static Color32[] DecodeDXT3TexelBlock(BinaryReader reader)
+	{
+		// Read compressed pixel alphas.
+		var compressedAlphas = new byte[16];
+
+		for(int i = 0; i < 4; i++) // row
+		{
+			var compressedAlphaRow = reader.ReadUInt16();
+
+			for(int j = 0; j < 4; j++) // column
+			{
+				compressedAlphas[(4 * i) + j] = (byte)((compressedAlphaRow >> (j * 4)) & 0xF);
+			}
+		}
+
+		// Calculate pixel alphas.
+		var alphas = new byte[16];
+
+		for(int i = 0; i < 16; i++)
+		{
+			var alphaPercent = (float)compressedAlphas[i] / 15;
+			alphas[i] = (byte)Mathf.RoundToInt(alphaPercent * 255);
+		}
+
+		// Create the color table.
+		var colorTable = new Color[4];
+		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
+		colorTable[3] = Color.Lerp(colorTable[0], colorTable[1], 2.0f / 3);
+
+		// Calculate pixel colors.
+		var colors = DecodeDXT1TexelBlock(reader, colorTable);
+
+		for(int i = 0; i < 16; i++)
+		{
+			colors[i].a = alphas[i];
+		}
+
+		return colors;
+	}
+	private static Color32[] DecodeDXT5TexelBlock(BinaryReader reader)
+	{
+		// Create the alpha table.
+		var alphaTable = new float[8];
+		alphaTable[0] = reader.ReadByte();
+		alphaTable[1] = reader.ReadByte();
+
+		if(alphaTable[0] > alphaTable[1])
+		{
+			for(int i = 0; i < 6; i++)
+			{
+				alphaTable[2 + i] = Mathf.Lerp(alphaTable[0], alphaTable[1], (float)(1 + i) / 7);
+			}
+		}
+		else
+		{
+			for(int i = 0; i < 4; i++)
+			{
+				alphaTable[2 + i] = Mathf.Lerp(alphaTable[0], alphaTable[1], (float)(1 + i) / 5);
+			}
+
+			alphaTable[6] = 0;
+			alphaTable[7] = 255;
+		}
+
+		// Read pixel alpha indices.
+		var alphaIndices = new uint[16];
+
+		var alphaIndexBytesRow0 = reader.ReadBytes(3);
+		Array.Reverse(alphaIndexBytesRow0); // Take care of little-endianness.
+
+		var alphaIndexBytesRow1 = reader.ReadBytes(3);
+		Array.Reverse(alphaIndexBytesRow1); // Take care of little-endianness.
+
+		alphaIndices[0] = (uint)Utils.GetBits(21, 3, alphaIndexBytesRow0); // a
+		alphaIndices[1] = (uint)Utils.GetBits(18, 3, alphaIndexBytesRow0); // b
+		alphaIndices[2] = (uint)Utils.GetBits(15, 3, alphaIndexBytesRow0); // c
+		alphaIndices[3] = (uint)Utils.GetBits(12, 3, alphaIndexBytesRow0); // d
+		alphaIndices[4] = (uint)Utils.GetBits(9, 3, alphaIndexBytesRow0); // e
+		alphaIndices[5] = (uint)Utils.GetBits(6, 3, alphaIndexBytesRow0); // f
+		alphaIndices[6] = (uint)Utils.GetBits(3, 3, alphaIndexBytesRow0); // g
+		alphaIndices[7] = (uint)Utils.GetBits(0, 3, alphaIndexBytesRow0); // h
+		alphaIndices[8] = (uint)Utils.GetBits(21, 3, alphaIndexBytesRow1); // i
+		alphaIndices[9] = (uint)Utils.GetBits(18, 3, alphaIndexBytesRow1); // j
+		alphaIndices[10] = (uint)Utils.GetBits(15, 3, alphaIndexBytesRow1); // k
+		alphaIndices[11] = (uint)Utils.GetBits(12, 3, alphaIndexBytesRow1); // l
+		alphaIndices[12] = (uint)Utils.GetBits(9, 3, alphaIndexBytesRow1); // m
+		alphaIndices[13] = (uint)Utils.GetBits(6, 3, alphaIndexBytesRow1); // n
+		alphaIndices[14] = (uint)Utils.GetBits(3, 3, alphaIndexBytesRow1); // o
+		alphaIndices[15] = (uint)Utils.GetBits(0, 3, alphaIndexBytesRow1); // p
+
+		// Create the color table.
+		var colorTable = new Color[4];
+		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
+		colorTable[3] = Color.Lerp(colorTable[0], colorTable[1], 2.0f / 3);
+
+		// Read pixel color indices.
+		DecodeDXT1TexelBlock(reader, colorTable);
+
+		// Calculate pixel colors.
+		var colors = new Color32[16];
+
+		for(int i = 0; i < 16; i++)
+		{
+			colors[i].a = (byte)Mathf.Round(alphaTable[alphaIndices[i]]);
+		}
+
+		return colors;
+	}
+
+	private static void CopyDecodedTexelBlock(Color32[] decodedTexels, byte[] argb, int rowIndex, int columnIndex, int textureWidth)
+	{
+		var pixel0Index = (rowIndex * textureWidth) + columnIndex;
+
+		for(int i = 0; i < 4; i++) // row
+		{
+			for(int j = 0; j < 4; j++) // column
+			{
+				var color = decodedTexels[(i * 4) + j];
+				var pixelIndexOffset = (i * textureWidth) + j;
+				var byte0Index = 4 * (pixel0Index + pixelIndexOffset);
+
+				argb[byte0Index] = color.a;
+				argb[byte0Index + 1] = color.r;
+				argb[byte0Index + 2] = color.g;
+				argb[byte0Index + 3] = color.b;
+			}
+		}
+	}
+	private static byte[] DecodeDXT1ToARGB(uint width, uint height, DDSPixelFormat pixelFormat, byte[] compressedData)
+	{
+		var reader = new BinaryReader(new MemoryStream(compressedData));
+		var argb = new byte[4 * width * height];
+		bool alphaFlag = Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.ALPHAPIXELS);
+		bool containsAlpha = alphaFlag || ((pixelFormat.RGBBitCount == 32) && (pixelFormat.ABitMask != 0));
+
+		for(int rowIndex = 0; rowIndex < height; rowIndex += 4)
+		{
+			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
+			{
+				var colors = DecodeDXT1TexelBlock(reader, containsAlpha);
+				CopyDecodedTexelBlock(colors, argb, rowIndex, columnIndex, (int)width);
+			}
+		}
+
+		return argb;
+	}
+	private static byte[] DecodeDXT3ToARGB(uint width, uint height, byte[] compressedData)
+	{
+		var reader = new BinaryReader(new MemoryStream(compressedData));
+		var argb = new byte[4 * width * height];
+
+		for(int rowIndex = 0; rowIndex < height; rowIndex += 4)
+		{
+			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
+			{
+				var colors = DecodeDXT3TexelBlock(reader);
+				CopyDecodedTexelBlock(colors, argb, rowIndex, columnIndex, (int)width);
+			}
+		}
+
+		return argb;
+	}
+	private static byte[] DecodeDXT5ToARGB(uint width, uint height, byte[] compressedData)
+	{
+		var reader = new BinaryReader(new MemoryStream(compressedData));
+		var argb = new byte[4 * width * height];
+
+		for(int rowIndex = 0; rowIndex < height; rowIndex += 4)
+		{
+			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
+			{
+				var colors = DecodeDXT5TexelBlock(reader);
+				CopyDecodedTexelBlock(colors, argb, rowIndex, columnIndex, (int)width);
+			}
+		}
+
+		return argb;
+	}
+}

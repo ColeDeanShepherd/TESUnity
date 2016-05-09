@@ -90,7 +90,7 @@ public class MorrowindDataReader : IDisposable
 			{
 				var fileData = MorrowindBSAFile.LoadFileData(filePath);
 
-				loadedTexture = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
+				loadedTexture = DDSReader.LoadDDSTexture(new MemoryStream(fileData));
 				loadedTextures[textureName] = loadedTexture;
 			}
 			else
@@ -303,8 +303,9 @@ public class MorrowindDataReader : IDisposable
 		// Create the terrain.
 		var heightRange = maxHeight - minHeight;
 		var terrainPosition = new Vector3((LAND_SIZE - 1) * LAND.INTV.value0, minHeight * HEIGHT_SCALE, (LAND_SIZE - 1) * LAND.INTV.value1);
-		var terrain = GameObjectUtils.CreateTerrain(heights, heightRange * HEIGHT_SCALE, 1, splatPrototypes, alphaMap, terrainPosition);
 
+		var terrain = GameObjectUtils.CreateTerrain(heights, heightRange * HEIGHT_SCALE, 1, splatPrototypes, alphaMap, terrainPosition);
+		terrain.GetComponent<Terrain>().materialType = Terrain.MaterialType.BuiltInLegacyDiffuse;
 		return terrain;
 	}
 
@@ -389,14 +390,10 @@ public class MorrowindDataReader : IDisposable
 					obj.transform.parent = parent.transform;
 				}
 			}
-			else
+			/*else
 			{
 				Debug.Log("Unknown Object: " + refObjGroup.NAME.value);
-			}
-
-			//var objRecord = MorrowindESMFile.records[refObjGroup.FRMR.value - 1];
-
-			int j = 3;
+			}*/
 		}
 	}
 }
