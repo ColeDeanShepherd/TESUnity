@@ -31,7 +31,7 @@ namespace NIF
 		}
 		public static NiObject ReadNiObject(BinaryReader reader)
 		{
-			var nodeTypeBytes = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader); // "NiNode"
+			var nodeTypeBytes = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
 
 			if(StringUtils.Equals(nodeTypeBytes, "NiNode"))
 			{
@@ -166,6 +166,13 @@ namespace NIF
 
 				return data;
 			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiAutoNormalParticles"))
+			{
+				var node = new NiAutoNormalParticles();
+				node.Deserialize(reader);
+
+				return node;
+			}
 			else if(StringUtils.Equals(nodeTypeBytes, "NiAutoNormalParticlesData"))
 			{
 				var data = new NiAutoNormalParticlesData();
@@ -200,6 +207,13 @@ namespace NIF
 				effect.Deserialize(reader);
 
 				return effect;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiTextKeyExtraData"))
+			{
+				var data = new NiTextKeyExtraData();
+				data.Deserialize(reader);
+
+				return data;
 			}
 			else
 			{
@@ -701,6 +715,7 @@ namespace NIF
 	}
 
 	public class NiRotatingParticles : NiParticles {}
+	public class NiAutoNormalParticles : NiParticles {}
 
 	public class NiRotatingParticlesData : NiParticlesData
 	{
@@ -743,14 +758,35 @@ namespace NIF
 	public class NiStringExtraData : NiExtraData
 	{
 		public uint bytesRemaining;
-		public byte[] stringData;
+		public string stringData;
 
 		public override void Deserialize(BinaryReader reader)
 		{
 			base.Deserialize(reader);
 
 			bytesRemaining = reader.ReadUInt32();
-			stringData = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
+			stringData = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
+		}
+	}
+	public class NiTextKeyExtraData : NiExtraData
+	{
+		uint unknownInt1;
+		uint numTextKeys;
+		Key<string>[] textKeys;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			unknownInt1 = reader.ReadUInt32();
+			numTextKeys = reader.ReadUInt32();
+
+			textKeys = new Key<string>[numTextKeys];
+			for(int i = 0; i < textKeys.Length; i++)
+			{
+				textKeys[i] = new Key<string>();
+				textKeys[i].Deserialize(reader, KeyType.LINEAR_KEY);
+			}
 		}
 	}
 
