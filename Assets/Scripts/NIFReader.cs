@@ -31,7 +31,7 @@ namespace NIF
 		}
 		public static NiObject ReadNiObject(BinaryReader reader)
 		{
-			var nodeTypeBytes = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader); // "NiNode"
+			var nodeTypeBytes = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader); // "NiNode"
 
 			if(StringUtils.Equals(nodeTypeBytes, "NiNode"))
 			{
@@ -339,7 +339,7 @@ namespace NIF
 		{
 			unknownInt = reader.ReadUInt32();
 			translation = BinaryReaderExtensions.ReadVector3(reader);
-			rotation = BinaryReaderExtensions.ReadMatrix3x3(reader);
+			rotation = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
 			radius = BinaryReaderExtensions.ReadVector3(reader);
 		}
 	}
@@ -447,7 +447,7 @@ namespace NIF
 
 		public void Deserialize(BinaryReader reader)
 		{
-			rotation = BinaryReaderExtensions.ReadMatrix3x3(reader);
+			rotation = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
 			translation = BinaryReaderExtensions.ReadVector3(reader);
 			scale = reader.ReadSingle();
 		}
@@ -566,7 +566,7 @@ namespace NIF
 		{
 			base.Deserialize(reader);
 
-			name = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader);
+			name = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
 			extraDataRef = NiUtils.ReadRef(reader);
 			controllerRef = NiUtils.ReadRef(reader);
 		}
@@ -590,7 +590,7 @@ namespace NIF
 
 			flags = NiUtils.ReadFlags(reader);
 			translation = BinaryReaderExtensions.ReadVector3(reader);
-			rotation = BinaryReaderExtensions.ReadMatrix3x3(reader);
+			rotation = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
 			scale = reader.ReadSingle();
 			velocity = BinaryReaderExtensions.ReadVector3(reader);
 			propertyRefs = NiUtils.ReadLengthPrefixedRefs32(reader);
@@ -735,7 +735,7 @@ namespace NIF
 			base.Deserialize(reader);
 
 			bytesRemaining = reader.ReadUInt32();
-			stringData = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader);
+			stringData = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
 		}
 	}
 
@@ -922,7 +922,7 @@ namespace NIF
 		{
 			base.Deserialize(reader);
 
-			modelProjectionMatrix = BinaryReaderExtensions.ReadMatrix3x3(reader);
+			modelProjectionMatrix = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
 			modelProjectionTransform = BinaryReaderExtensions.ReadVector3(reader);
 			textureFiltering = (TexFilterMode)reader.ReadUInt32();
 			textureClamping = (TexClampMode)reader.ReadUInt32();
@@ -1246,7 +1246,7 @@ namespace NIF
 			base.Deserialize(reader);
 
 			useExternal = reader.ReadByte();
-			fileName = BinaryReaderExtensions.ReadLengthPrefixedBytes32(reader);
+			fileName = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
 			pixelLayout = (PixelLayout)reader.ReadUInt32();
 			useMipMaps = (MipMapFormat)reader.ReadUInt32();
 			alphaFormat = (AlphaFormat)reader.ReadUInt32();

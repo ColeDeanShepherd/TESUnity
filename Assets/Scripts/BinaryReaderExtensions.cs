@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using UnityEngine;
 
 public static class BinaryReaderExtensions
@@ -8,6 +9,13 @@ public static class BinaryReaderExtensions
 	{
 		return reader.ReadUInt32() != 0;
 	}
+
+	public static byte[] ReadLength32PrefixedBytes(BinaryReader reader)
+	{
+		var length = reader.ReadUInt32();
+		return reader.ReadBytes((int)length);
+	}
+
 	public static string ReadASCIIString(BinaryReader reader, int length)
 	{
 		return System.Text.Encoding.ASCII.GetString(reader.ReadBytes(length));
@@ -19,15 +27,11 @@ public static class BinaryReaderExtensions
 
 		return System.Text.Encoding.ASCII.GetString(bytes, 0, charCount);
 	}
-	public static byte[] ReadLengthPrefixedBytes32(BinaryReader reader)
+	public static string ReadLength32PrefixedASCIIString(BinaryReader reader)
 	{
-		var length = reader.ReadUInt32();
-		return reader.ReadBytes((int)length);
+		return System.Text.Encoding.ASCII.GetString(ReadLength32PrefixedBytes(reader));
 	}
-	public static string ReadLengthPrefixedASCIIString32(BinaryReader reader)
-	{
-		return System.Text.Encoding.ASCII.GetString(ReadLengthPrefixedBytes32(reader));
-	}
+
 	public static Vector3 ReadVector3(BinaryReader reader)
 	{
 		float x = reader.ReadSingle();
@@ -45,7 +49,8 @@ public static class BinaryReaderExtensions
 
 		return new Vector4(x, y, z, w);
 	}
-	public static Matrix4x4 ReadMatrix3x3(BinaryReader reader)
+
+	public static Matrix4x4 ReadColumnMajorMatrix3x3(BinaryReader reader)
 	{
 		var mat = new Matrix4x4();
 
@@ -66,6 +71,7 @@ public static class BinaryReaderExtensions
 
 		return mat;
 	}
+
 	public static Quaternion ReadQuaternionWFirst(BinaryReader reader)
 	{
 		float w = reader.ReadSingle();
@@ -75,6 +81,7 @@ public static class BinaryReaderExtensions
 
 		return new Quaternion(x, y, z, w);
 	}
+
 	public static T Read<T>(BinaryReader reader)
 	{
 		if(typeof(T) == typeof(float))
