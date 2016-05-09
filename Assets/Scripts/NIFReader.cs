@@ -478,17 +478,32 @@ namespace NIF
 		public void Deserialize(BinaryReader reader, KeyType keyType)
 		{
 			time = reader.ReadSingle();
-			value = BinaryReaderExtensions.Read<T>(reader);
+			value = ReadT(reader);
 
 			if(keyType == KeyType.QUADRATIC_KEY)
 			{
-				forward = BinaryReaderExtensions.Read<T>(reader);
-				backward = BinaryReaderExtensions.Read<T>(reader);
+				forward = ReadT(reader);
+				backward = ReadT(reader);
 			}
 			else if(keyType == KeyType.TBC_KEY)
 			{
 				TBC = new TBC();
 				TBC.Deserialize(reader);
+			}
+		}
+		public T ReadT(BinaryReader reader)
+		{
+			if(typeof(T) == typeof(float))
+			{
+				return (T)((object)reader.ReadSingle());
+			}
+			else if(typeof(T) == typeof(string))
+			{
+				return (T)((object)BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader));
+			}
+			else
+			{
+				throw new NotImplementedException("Tried to read an unsupported type.");
 			}
 		}
 	}

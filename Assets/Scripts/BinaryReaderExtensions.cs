@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using UnityEngine;
 
@@ -159,17 +158,5 @@ public static class BinaryReaderExtensions
 		float w = reader.ReadSingle();
 
 		return new Quaternion(x, y, z, w);
-	}
-
-	public static T Read<T>(BinaryReader reader)
-	{
-		if(typeof(T) == typeof(float))
-		{
-			return (T)((object)reader.ReadSingle());
-		}
-		else
-		{
-			throw new NotImplementedException("Tried to read an unsupported type.");
-		}
 	}
 }
