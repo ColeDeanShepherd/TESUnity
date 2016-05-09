@@ -25,7 +25,7 @@ public static class DDSReader
 			}
 
 			var dwFlags = reader.ReadUInt32();
-			if(!Utils.ContainsBitFlags(dwFlags, (uint)DDSFlags.CAPS, (uint)DDSFlags.HEIGHT, (uint)DDSFlags.WIDTH, (uint)DDSFlags.PIXELFORMAT))
+			if(!Utils.ContainsBitFlags(dwFlags, (uint)DDSFlags.HEIGHT, (uint)DDSFlags.WIDTH))
 			{
 				throw new FileFormatException("Invalid DDS file flags: " + dwFlags.ToString() + '.');
 			}
@@ -72,6 +72,7 @@ public static class DDSReader
 			// Figure out the texture format and load the texture data.
 			TextureFormat textureFormat;
 			byte[] textureData;
+			bool hasMipMaps = Utils.ContainsBitFlags(dwCaps, (uint)DDSCaps.MIPMAP);
 
 			// If the DDS file contains uncompressed data.
 			if(Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.RGB))
@@ -111,13 +112,19 @@ public static class DDSReader
 				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
 
 				textureFormat = TextureFormat.ARGB32;
-				textureData = DecodeDXT1ToARGB(dwWidth, dwHeight, pixelFormat, reader.ReadBytes((int)dwPitchOrLinearSize));
+
+				var compressedTextureData = reader.ReadBytes((int)dwPitchOrLinearSize);
+				textureData = DecodeDXT1ToARGB(compressedTextureData, dwWidth, dwHeight, pixelFormat);
+
 				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT3"))
 			{
 				textureFormat = TextureFormat.ARGB32;
-				textureData = DecodeDXT3ToARGB(dwWidth, dwHeight, reader.ReadBytes((int)dwPitchOrLinearSize));
+
+				var compressedTextureData = reader.ReadBytes((int)dwPitchOrLinearSize);
+				textureData = DecodeDXT3ToARGB(compressedTextureData, dwWidth, dwHeight);
+
 				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT5"))
@@ -126,15 +133,19 @@ public static class DDSReader
 				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
 
 				textureFormat = TextureFormat.ARGB32;
-				textureData = DecodeDXT5ToARGB(dwWidth, dwHeight, reader.ReadBytes((int)dwPitchOrLinearSize));
+
+				var compressedTextureData = reader.ReadBytes((int)dwPitchOrLinearSize);
+				textureData = DecodeDXT5ToARGB(compressedTextureData, dwWidth, dwHeight);
+
 				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
 			}
 			else
 			{
 				throw new NotImplementedException("Unsupported DDS file pixel format.");
 			}
-
-			var texture = new Texture2D((int)dwWidth, (int)dwHeight, textureFormat, false);
+			
+			hasMipMaps = false; /////////////////////////
+			var texture = new Texture2D((int)dwWidth, (int)dwHeight, textureFormat, hasMipMaps);
 			texture.LoadRawTextureData(textureData);
 			texture.Apply();
 
@@ -355,7 +366,7 @@ public static class DDSReader
 		return colors;
 	}
 
-	private static void CopyDecodedTexelBlock(Color32[] decodedTexels, byte[] argb, int rowIndex, int columnIndex, int textureWidth)
+	private static void CopyDecodedTexelBlock(Color32[] decodedTexels, byte[] argb, int baseARGBIndex, int rowIndex, int columnIndex, int textureWidth, int textureHeight)
 	{
 		var pixel0Index = (rowIndex * textureWidth) + columnIndex;
 
@@ -374,7 +385,7 @@ public static class DDSReader
 			}
 		}
 	}
-	private static byte[] DecodeDXT1ToARGB(uint width, uint height, DDSPixelFormat pixelFormat, byte[] compressedData)
+	private static byte[] DecodeDXT1ToARGB(byte[] compressedData, uint width, uint height, DDSPixelFormat pixelFormat)
 	{
 		var reader = new BinaryReader(new MemoryStream(compressedData));
 		var argb = new byte[4 * width * height];
@@ -386,13 +397,13 @@ public static class DDSReader
 			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
 			{
 				var colors = DecodeDXT1TexelBlock(reader, containsAlpha);
-				CopyDecodedTexelBlock(colors, argb, rowIndex, columnIndex, (int)width);
+				CopyDecodedTexelBlock(colors, argb, 0, rowIndex, columnIndex, (int)width, (int)height);
 			}
 		}
 
 		return argb;
 	}
-	private static byte[] DecodeDXT3ToARGB(uint width, uint height, byte[] compressedData)
+	private static byte[] DecodeDXT3ToARGB(byte[] compressedData, uint width, uint height)
 	{
 		var reader = new BinaryReader(new MemoryStream(compressedData));
 		var argb = new byte[4 * width * height];
@@ -402,13 +413,13 @@ public static class DDSReader
 			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
 			{
 				var colors = DecodeDXT3TexelBlock(reader);
-				CopyDecodedTexelBlock(colors, argb, rowIndex, columnIndex, (int)width);
+				CopyDecodedTexelBlock(colors, argb, 0, rowIndex, columnIndex, (int)width, (int)height);
 			}
 		}
 
 		return argb;
 	}
-	private static byte[] DecodeDXT5ToARGB(uint width, uint height, byte[] compressedData)
+	private static byte[] DecodeDXT5ToARGB(byte[] compressedData, uint width, uint height)
 	{
 		var reader = new BinaryReader(new MemoryStream(compressedData));
 		var argb = new byte[4 * width * height];
@@ -418,7 +429,7 @@ public static class DDSReader
 			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
 			{
 				var colors = DecodeDXT5TexelBlock(reader);
-				CopyDecodedTexelBlock(colors, argb, rowIndex, columnIndex, (int)width);
+				CopyDecodedTexelBlock(colors, argb, 0, rowIndex, columnIndex, (int)width, (int)height);
 			}
 		}
 
