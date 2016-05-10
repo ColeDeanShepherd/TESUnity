@@ -72,6 +72,12 @@ public struct ArrayRange<T> : IEnumerable<T>
 		}
 	}
 
+	public ArrayRange(T[] array)
+	{
+		_array = array;
+		_offset = 0;
+		_length = array.Length;
+	}
 	public ArrayRange(T[] array, int offset, int length)
 	{
 		Debug.Assert((offset >= 0) && (length >= 0) && ((offset + length) <= array.Length));

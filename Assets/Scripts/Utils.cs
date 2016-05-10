@@ -160,9 +160,13 @@ public static class Utils
 		}
 	}
 
-	public static void Flip2DArrayVertically<T>(ref T[] arr, int rowCount, int columnCount)
+	public static void Flip2DArrayVertically<T>(T[] arr, int rowCount, int columnCount)
 	{
-		Debug.Assert((rowCount >= 0) && (columnCount >= 0));
+		Flip2DSubArrayVertically(arr, 0, rowCount, columnCount);
+	}
+	public static void Flip2DSubArrayVertically<T>(T[] arr, int startIndex, int rowCount, int columnCount)
+	{
+		Debug.Assert((startIndex >= 0) && (rowCount >= 0) && (columnCount >= 0) && ((startIndex + (rowCount * columnCount)) <= arr.Length));
 
 		var tmpRow = new T[columnCount];
 		var lastRowIndex = rowCount - 1;
@@ -171,8 +175,8 @@ public static class Utils
 		{
 			var otherRowIndex = lastRowIndex - rowIndex;
 
-			var rowStartIndex = rowIndex * columnCount;
-			var otherRowStartIndex = otherRowIndex * columnCount;
+			var rowStartIndex = startIndex + (rowIndex * columnCount);
+			var otherRowStartIndex = startIndex + (otherRowIndex * columnCount);
 
 			Array.Copy(arr, otherRowStartIndex, tmpRow, 0, columnCount); // other -> tmp
 			Array.Copy(arr, rowStartIndex, arr, otherRowStartIndex, columnCount); // row -> other

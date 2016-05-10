@@ -4,6 +4,21 @@ using UnityEngine;
 
 public static class BinaryReaderExtensions
 {
+	public static byte[] ReadRestOfBytes(BinaryReader reader)
+	{
+		var remainingByteCount = reader.BaseStream.Length - reader.BaseStream.Position;
+
+		return reader.ReadBytes((int)remainingByteCount);
+	}
+	public static void ReadRestOfBytes(BinaryReader reader, byte[] buffer, int startIndex)
+	{
+		var remainingByteCount = reader.BaseStream.Length - reader.BaseStream.Position;
+
+		Debug.Assert((startIndex >= 0) && ((startIndex + remainingByteCount) <= buffer.Length));
+
+		reader.Read(buffer, startIndex, (int)remainingByteCount);
+	}
+
 	public static bool ReadBool32(BinaryReader reader)
 	{
 		return reader.ReadUInt32() != 0;
