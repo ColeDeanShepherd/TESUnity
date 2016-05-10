@@ -4,11 +4,11 @@ using UnityEngine;
 
 public static class DDSReader
 {
-	public static Texture2D LoadDDSTexture(string filePath)
+	public static Texture2D LoadDDSTexture(string filePath, bool flipVertically = false)
 	{
-		return LoadDDSTexture(File.Open(filePath, FileMode.Open, FileAccess.Read));
+		return LoadDDSTexture(File.Open(filePath, FileMode.Open, FileAccess.Read), flipVertically);
 	}
-	public static Texture2D LoadDDSTexture(Stream inputStream)
+	public static Texture2D LoadDDSTexture(Stream inputStream, bool flipVertically = false)
 	{
 		using(BinaryReader reader = new BinaryReader(inputStream))
 		{
@@ -70,12 +70,15 @@ public static class DDSReader
 			var dwReserved2 = reader.ReadUInt32();
 
 			// Figure out the texture format and load the texture data.
-			TextureFormat textureFormat;
-			byte[] textureData;
 			bool hasMipMaps = Utils.ContainsBitFlags(dwCaps, (uint)DDSCaps.MIPMAP);
+			uint DDSMipMapCount = hasMipMaps ? dwMipMapCount : 1;
 
-			// If the DDS file contains uncompressed data.
-			if(Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.RGB))
+			TextureFormat textureFormat;
+			int bytesPerPixel;
+			byte[] textureData;
+
+			// Set textureFormat, bytesPerPixel, and textureData.
+			if(Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.RGB)) // If the DDS file contains uncompressed data.
 			{
 				if(!Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.ALPHAPIXELS)) // RGB
 				{
@@ -91,19 +94,28 @@ public static class DDSReader
 					if((pixelFormat.BBitMask == 0x000000FF) && (pixelFormat.GBitMask == 0x0000FF00) && (pixelFormat.RBitMask == 0x00FF0000) && (pixelFormat.ABitMask == 0xFF000000))
 					{
 						textureFormat = TextureFormat.BGRA32;
+						bytesPerPixel = 4;
 					}
 					else if((pixelFormat.ABitMask == 0x000000FF) && (pixelFormat.RBitMask == 0x0000FF00) && (pixelFormat.GBitMask == 0x00FF0000) && (pixelFormat.BBitMask == 0xFF000000))
 					{
 						textureFormat = TextureFormat.ARGB32;
+						bytesPerPixel = 4;
 					}
 					else
 					{
 						throw new NotImplementedException("Unsupported DDS file pixel format.");
 					}
 
-					uint dataSize = dwPitchOrLinearSize * dwHeight;
-					textureData = reader.ReadBytes((int)dataSize);
-					Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)dwPitchOrLinearSize);
+					if(!hasMipMaps)
+					{
+						textureData = new byte[dwPitchOrLinearSize * dwHeight];
+					}
+					else // if(hasMipMaps)
+					{
+						textureData = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)dwWidth, (int)dwHeight, bytesPerPixel)];
+					}
+					
+					BinaryReaderExtensions.ReadRestOfBytes(reader, textureData, 0);
 				}
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT1"))
@@ -112,20 +124,18 @@ public static class DDSReader
 				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
 
 				textureFormat = TextureFormat.ARGB32;
+				bytesPerPixel = 4;
 
-				var compressedTextureData = reader.ReadBytes((int)dwPitchOrLinearSize);
-				textureData = DecodeDXT1ToARGB(compressedTextureData, dwWidth, dwHeight, pixelFormat);
-
-				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
+				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
+				textureData = DecodeDXT1ToARGB(compressedTextureData, dwWidth, dwHeight, pixelFormat, DDSMipMapCount);
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT3"))
 			{
 				textureFormat = TextureFormat.ARGB32;
+				bytesPerPixel = 4;
 
-				var compressedTextureData = reader.ReadBytes((int)dwPitchOrLinearSize);
-				textureData = DecodeDXT3ToARGB(compressedTextureData, dwWidth, dwHeight);
-
-				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
+				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
+				textureData = DecodeDXT3ToARGB(compressedTextureData, dwWidth, dwHeight, DDSMipMapCount);
 			}
 			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT5"))
 			{
@@ -133,18 +143,52 @@ public static class DDSReader
 				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
 
 				textureFormat = TextureFormat.ARGB32;
+				bytesPerPixel = 4;
 
-				var compressedTextureData = reader.ReadBytes((int)dwPitchOrLinearSize);
-				textureData = DecodeDXT5ToARGB(compressedTextureData, dwWidth, dwHeight);
-
-				Utils.Flip2DArrayVertically(ref textureData, (int)dwHeight, (int)(4 * dwWidth));
+				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
+				textureData = DecodeDXT5ToARGB(compressedTextureData, dwWidth, dwHeight, DDSMipMapCount);
 			}
 			else
 			{
 				throw new NotImplementedException("Unsupported DDS file pixel format.");
 			}
-			
-			hasMipMaps = false; /////////////////////////
+
+			// Flip mip-maps if necessary and generate missing mip-map levels.
+			if(hasMipMaps)
+			{
+				int mipMapIndex = 0;
+				int currentWidth = (int)dwWidth;
+				int currentHeight = (int)dwHeight;
+				int mipMapStartIndex = 0;
+
+				while(true)
+				{
+					var mipMapDataSize = (currentWidth * currentHeight * bytesPerPixel);
+
+					// Flip the current mip-map if necessary.
+					if(flipVertically && (mipMapIndex < DDSMipMapCount))
+					{
+						Utils.Flip2DSubArrayVertically(textureData, mipMapStartIndex, currentHeight, currentWidth * bytesPerPixel);
+					}
+					
+					if((currentWidth == 1) && (currentHeight == 1))
+					{
+						break;
+					}
+					else if((mipMapIndex + 1) >= DDSMipMapCount) // Generate the next mip-map if necessary.
+					{
+						TextureUtils.Downscale4Component32BitPixelsX2(textureData, mipMapStartIndex, currentHeight, currentWidth, textureData, mipMapStartIndex + mipMapDataSize);
+					}
+
+					mipMapIndex++;
+
+					currentWidth = (currentWidth > 1) ? (currentWidth / 2) : currentWidth;
+					currentHeight = (currentHeight > 1) ? (currentHeight / 2) : currentHeight;
+
+					mipMapStartIndex += mipMapDataSize;
+				}
+			}
+
 			var texture = new Texture2D((int)dwWidth, (int)dwHeight, textureFormat, hasMipMaps);
 			texture.LoadRawTextureData(textureData);
 			texture.Apply();
@@ -366,71 +410,115 @@ public static class DDSReader
 		return colors;
 	}
 
-	private static void CopyDecodedTexelBlock(Color32[] decodedTexels, byte[] argb, int baseARGBIndex, int rowIndex, int columnIndex, int textureWidth, int textureHeight)
+	private static void CopyDecodedTexelBlock(Color32[] decodedTexels, byte[] argb, int baseARGBIndex, int baseRowIndex, int baseColumnIndex, int textureWidth, int textureHeight)
 	{
-		var pixel0Index = (rowIndex * textureWidth) + columnIndex;
-
 		for(int i = 0; i < 4; i++) // row
 		{
 			for(int j = 0; j < 4; j++) // column
 			{
-				var color = decodedTexels[(i * 4) + j];
-				var pixelIndexOffset = (i * textureWidth) + j;
-				var byte0Index = 4 * (pixel0Index + pixelIndexOffset);
+				var rowIndex = baseRowIndex + i;
+				var columnIndex = baseColumnIndex + j;
 
-				argb[byte0Index] = color.a;
-				argb[byte0Index + 1] = color.r;
-				argb[byte0Index + 2] = color.g;
-				argb[byte0Index + 3] = color.b;
+				// Don't copy padding on mipmaps.
+				if((rowIndex < textureHeight) && (columnIndex < textureWidth))
+				{
+					var decodedTexelIndex = (4 * i) + j;
+					var color = decodedTexels[decodedTexelIndex];
+
+					var ARGBPixelOffset = (textureWidth * rowIndex) + columnIndex;
+					var basePixelARGBIndex = baseARGBIndex + (4 * ARGBPixelOffset);
+
+					argb[basePixelARGBIndex] = color.a;
+					argb[basePixelARGBIndex + 1] = color.r;
+					argb[basePixelARGBIndex + 2] = color.g;
+					argb[basePixelARGBIndex + 3] = color.b;
+				}
 			}
 		}
 	}
-	private static byte[] DecodeDXT1ToARGB(byte[] compressedData, uint width, uint height, DDSPixelFormat pixelFormat)
+	private static byte[] DecodeDXT1ToARGB(byte[] compressedData, uint width, uint height, DDSPixelFormat pixelFormat, uint mipmapCount)
 	{
-		var reader = new BinaryReader(new MemoryStream(compressedData));
-		var argb = new byte[4 * width * height];
 		bool alphaFlag = Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.ALPHAPIXELS);
 		bool containsAlpha = alphaFlag || ((pixelFormat.RGBBitCount == 32) && (pixelFormat.ABitMask != 0));
 
-		for(int rowIndex = 0; rowIndex < height; rowIndex += 4)
+		var reader = new BinaryReader(new MemoryStream(compressedData));
+		var argb = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)width, (int)height, 4)];
+
+		int mipMapWidth = (int)width;
+		int mipMapHeight = (int)height;
+		int baseARGBIndex = 0;
+
+		for(int mipMapIndex = 0; mipMapIndex < mipmapCount; mipMapIndex++)
 		{
-			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
+			for(int rowIndex = 0; rowIndex < mipMapHeight; rowIndex += 4)
 			{
-				var colors = DecodeDXT1TexelBlock(reader, containsAlpha);
-				CopyDecodedTexelBlock(colors, argb, 0, rowIndex, columnIndex, (int)width, (int)height);
+				for(int columnIndex = 0; columnIndex < mipMapWidth; columnIndex += 4)
+				{
+					var colors = DecodeDXT1TexelBlock(reader, containsAlpha);
+					CopyDecodedTexelBlock(colors, argb, baseARGBIndex, rowIndex, columnIndex, mipMapWidth, mipMapHeight);
+				}
 			}
+
+			baseARGBIndex += (mipMapWidth * mipMapHeight * 4);
+
+			mipMapWidth /= 2;
+			mipMapHeight /= 2;
 		}
 
 		return argb;
 	}
-	private static byte[] DecodeDXT3ToARGB(byte[] compressedData, uint width, uint height)
+	private static byte[] DecodeDXT3ToARGB(byte[] compressedData, uint width, uint height, uint mipmapCount)
 	{
 		var reader = new BinaryReader(new MemoryStream(compressedData));
-		var argb = new byte[4 * width * height];
+		var argb = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)width, (int)height, 4)];
 
-		for(int rowIndex = 0; rowIndex < height; rowIndex += 4)
+		int mipMapWidth = (int)width;
+		int mipMapHeight = (int)height;
+		int baseARGBIndex = 0;
+
+		for(int mipMapIndex = 0; mipMapIndex < mipmapCount; mipMapIndex++)
 		{
-			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
+			for(int rowIndex = 0; rowIndex < mipMapHeight; rowIndex += 4)
 			{
-				var colors = DecodeDXT3TexelBlock(reader);
-				CopyDecodedTexelBlock(colors, argb, 0, rowIndex, columnIndex, (int)width, (int)height);
+				for(int columnIndex = 0; columnIndex < mipMapWidth; columnIndex += 4)
+				{
+					var colors = DecodeDXT3TexelBlock(reader);
+					CopyDecodedTexelBlock(colors, argb, baseARGBIndex, rowIndex, columnIndex, mipMapWidth, mipMapHeight);
+				}
 			}
+
+			baseARGBIndex += (mipMapWidth * mipMapHeight * 4);
+
+			mipMapWidth /= 2;
+			mipMapHeight /= 2;
 		}
 
 		return argb;
 	}
-	private static byte[] DecodeDXT5ToARGB(byte[] compressedData, uint width, uint height)
+	private static byte[] DecodeDXT5ToARGB(byte[] compressedData, uint width, uint height, uint mipmapCount)
 	{
 		var reader = new BinaryReader(new MemoryStream(compressedData));
-		var argb = new byte[4 * width * height];
+		var argb = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)width, (int)height, 4)];
 
-		for(int rowIndex = 0; rowIndex < height; rowIndex += 4)
+		int mipMapWidth = (int)width;
+		int mipMapHeight = (int)height;
+		int baseARGBIndex = 0;
+
+		for(int mipMapIndex = 0; mipMapIndex < mipmapCount; mipMapIndex++)
 		{
-			for(int columnIndex = 0; columnIndex < width; columnIndex += 4)
+			for(int rowIndex = 0; rowIndex < mipMapHeight; rowIndex += 4)
 			{
-				var colors = DecodeDXT5TexelBlock(reader);
-				CopyDecodedTexelBlock(colors, argb, 0, rowIndex, columnIndex, (int)width, (int)height);
+				for(int columnIndex = 0; columnIndex < mipMapWidth; columnIndex += 4)
+				{
+					var colors = DecodeDXT5TexelBlock(reader);
+					CopyDecodedTexelBlock(colors, argb, baseARGBIndex, rowIndex, columnIndex, mipMapWidth, mipMapHeight);
+				}
 			}
+
+			baseARGBIndex += (mipMapWidth * mipMapHeight * 4);
+
+			mipMapWidth /= 2;
+			mipMapHeight /= 2;
 		}
 
 		return argb;
