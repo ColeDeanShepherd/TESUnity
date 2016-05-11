@@ -461,6 +461,21 @@ namespace ESM
 			public DATASubRecord DATA;
 		}
 
+		public bool isInterior
+		{
+			get
+			{
+				return Utils.ContainsBitFlags(DATA.flags, 0x01);
+			}
+		}
+		public Vector2i gridCoords
+		{
+			get
+			{
+				return new Vector2i(DATA.gridX, DATA.gridY);
+			}
+		}
+
 		public NAMESubRecord NAME;
 
 		public bool isReadingObjectDataGroups = false;

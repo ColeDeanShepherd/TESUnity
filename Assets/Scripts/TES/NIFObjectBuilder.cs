@@ -141,6 +141,18 @@ public class NIFObjectBuilder
 		{
 			return InstantiateNiNode((NiBSAnimationNode)NIFObj, parent);
 		}
+		else if(NIFObj.GetType() == typeof(NiBSParticleNode))
+		{
+			return InstantiateNiNode((NiBSParticleNode)NIFObj, parent);
+		}
+		else if(NIFObj.GetType() == typeof(NiRotatingParticles))
+		{
+			return null;
+		}
+		else if(NIFObj.GetType() == typeof(NiAutoNormalParticles))
+		{
+			return null;
+		}
 		else
 		{
 			throw new NotImplementedException("Tried to instantiate an unsupported NiObject (" + NIFObj.GetType().Name + ").");

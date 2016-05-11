@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEngine;
 
+// TODO: Use abstract classes.
 namespace NIF
 {
 	public class NiUtils
@@ -28,6 +29,29 @@ namespace NIF
 		public static ushort ReadFlags(BinaryReader reader)
 		{
 			return reader.ReadUInt16();
+		}
+		public static T Read<T>(BinaryReader reader)
+		{
+			if(typeof(T) == typeof(float))
+			{
+				return (T)((object)reader.ReadSingle());
+			}
+			else if(typeof(T) == typeof(string))
+			{
+				return (T)((object)BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader));
+			}
+			else if(typeof(T) == typeof(Vector3))
+			{
+				return (T)((object)BinaryReaderExtensions.ReadVector3(reader));
+			}
+			else if(typeof(T) == typeof(Quaternion))
+			{
+				return (T)((object)BinaryReaderExtensions.ReadQuaternionWFirst(reader));
+			}
+			else
+			{
+				throw new NotImplementedException("Tried to read an unsupported type.");
+			}
 		}
 		public static NiObject ReadNiObject(BinaryReader reader)
 		{
@@ -215,6 +239,69 @@ namespace NIF
 
 				return data;
 			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticleSystemController"))
+			{
+				var controller = new NiParticleSystemController();
+				controller.Deserialize(reader);
+
+				return controller;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiGravity"))
+			{
+				var obj = new NiGravity();
+				obj.Deserialize(reader);
+
+				return obj;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticleBomb"))
+			{
+				var modifier = new NiParticleBomb();
+				modifier.Deserialize(reader);
+
+				return modifier;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticleColorModifier"))
+			{
+				var modifier = new NiParticleColorModifier();
+				modifier.Deserialize(reader);
+
+				return modifier;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticleGrowFade"))
+			{
+				var modifier = new NiParticleGrowFade();
+				modifier.Deserialize(reader);
+
+				return modifier;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticleMeshModifier"))
+			{
+				var modifier = new NiParticleMeshModifier();
+				modifier.Deserialize(reader);
+
+				return modifier;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiParticleRotation"))
+			{
+				var modifier = new NiParticleRotation();
+				modifier.Deserialize(reader);
+
+				return modifier;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiKeyframeController"))
+			{
+				var controller = new NiKeyframeController();
+				controller.Deserialize(reader);
+
+				return controller;
+			}
+			else if(StringUtils.Equals(nodeTypeBytes, "NiKeyframeData"))
+			{
+				var data = new NiKeyframeData();
+				data.Deserialize(reader);
+
+				return data;
+			}
 			else
 			{
 				throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
@@ -337,6 +424,19 @@ namespace NIF
 		CG_SPHERE_MAP = 2,
 		CG_SPECULAR_CUBE_MAP = 3,
 		CG_DIFFUSE_CUBE_MAP = 4
+	}
+
+	public enum FieldType : uint
+	{
+		FIELD_WIND = 0,
+		FIELD_POINT = 1
+	}
+
+	public enum DecayType : uint
+	{
+		DECAY_NONE = 0,
+		DECAY_LINEAR = 1,
+		DECAY_EXPONENTIAL = 2
 	}
 	#endregion // Enums
 
@@ -492,32 +592,17 @@ namespace NIF
 		public void Deserialize(BinaryReader reader, KeyType keyType)
 		{
 			time = reader.ReadSingle();
-			value = ReadT(reader);
+			value = NiUtils.Read<T>(reader);
 
 			if(keyType == KeyType.QUADRATIC_KEY)
 			{
-				forward = ReadT(reader);
-				backward = ReadT(reader);
+				forward = NiUtils.Read<T>(reader);
+				backward = NiUtils.Read<T>(reader);
 			}
 			else if(keyType == KeyType.TBC_KEY)
 			{
 				TBC = new TBC();
 				TBC.Deserialize(reader);
-			}
-		}
-		public T ReadT(BinaryReader reader)
-		{
-			if(typeof(T) == typeof(float))
-			{
-				return (T)((object)reader.ReadSingle());
-			}
-			else if(typeof(T) == typeof(string))
-			{
-				return (T)((object)BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader));
-			}
-			else
-			{
-				throw new NotImplementedException("Tried to read an unsupported type.");
 			}
 		}
 	}
@@ -545,6 +630,44 @@ namespace NIF
 		}
 	}
 
+	public class Particle
+	{
+		public Vector3 velocity;
+		public Vector3 unknownVector;
+		public float lifetime;
+		public float lifespan;
+		public float timestamp;
+		public ushort unknownShort;
+		public ushort vertexID;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			velocity = BinaryReaderExtensions.ReadVector3(reader);
+			unknownVector = BinaryReaderExtensions.ReadVector3(reader);
+			lifetime = reader.ReadSingle();
+			lifespan = reader.ReadSingle();
+			timestamp = reader.ReadSingle();
+			unknownShort = reader.ReadUInt16();
+			vertexID = reader.ReadUInt16();
+		}
+	}
+
+	public class QuatKey<T>
+	{
+		float time;
+		T value;
+		TBC TBC;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			time = reader.ReadSingle();
+			value = NiUtils.Read<T>(reader);
+
+			TBC = new TBC();
+			TBC.Deserialize(reader);
+		}
+	}
+
 	#endregion // Misc Classes
 
 	public class NiHeader
@@ -560,7 +683,6 @@ namespace NIF
 			numBlocks = reader.ReadUInt32();
 		}
 	}
-
 	public class NiFooter
 	{
 		public uint numRoots;
@@ -584,7 +706,6 @@ namespace NIF
 		{
 		}
 	}
-
 	public class NiObjectNET : NiObject
 	{
 		public byte[] name;
@@ -600,7 +721,6 @@ namespace NIF
 			controllerRef = NiUtils.ReadRef(reader);
 		}
 	}
-
 	public class NiAVObject : NiObjectNET
 	{
 		public ushort flags;
@@ -632,7 +752,6 @@ namespace NIF
 			}
 		}
 	}
-
 	public class NiNode : NiAVObject
 	{
 		//public uint numChildren;
@@ -654,7 +773,6 @@ namespace NIF
 	public class NiBSParticleNode : NiNode {}
 
 	public class NiParticles : NiGeometry {}
-
 	public class NiParticlesData : NiGeometryData
 	{
 		public ushort numParticles;
@@ -662,13 +780,6 @@ namespace NIF
 		public ushort numActive;
 		public bool hasSizes;
 		public float[] sizes;
-		public byte unknownByte1;
-		public int unknownLink;
-		public float[] rotationAngles;
-		public bool hasUVQuadrants;
-		public byte numUVQuadrants;
-		public Vector4[] UVQuadrants;
-		public byte unknownByte2;
 
 		public override void Deserialize(BinaryReader reader)
 		{
@@ -677,8 +788,8 @@ namespace NIF
 			numParticles = reader.ReadUInt16();
 			particleRadius = reader.ReadSingle();
 			numActive = reader.ReadUInt16();
-			hasSizes = BinaryReaderExtensions.ReadBool32(reader);
 
+			hasSizes = BinaryReaderExtensions.ReadBool32(reader);
 			if(hasSizes)
 			{
 				sizes = new float[numVertices];
@@ -687,33 +798,8 @@ namespace NIF
 					sizes[i] = reader.ReadSingle();
 				}
 			}
-
-			unknownByte1 = reader.ReadByte();
-			unknownLink = NiUtils.ReadRef(reader);
-
-			rotationAngles = new float[numVertices];
-			for(int i = 0; i < rotationAngles.Length; i++)
-			{
-				rotationAngles[i] = reader.ReadSingle();
-			}
-
-			hasUVQuadrants = BinaryReaderExtensions.ReadBool32(reader);
-			numUVQuadrants = reader.ReadByte();
-
-			if(hasUVQuadrants)
-			{
-				UVQuadrants = new Vector4[numUVQuadrants];
-
-				for(int i = 0; i < UVQuadrants.Length; i++)
-				{
-					UVQuadrants[i] = BinaryReaderExtensions.ReadVector4(reader);
-				}
-			}
-
-			unknownByte2 = reader.ReadByte();
 		}
 	}
-
 	public class NiRotatingParticles : NiParticles {}
 	public class NiAutoNormalParticles : NiParticles {}
 
@@ -739,6 +825,86 @@ namespace NIF
 		}
 	}
 	public class NiAutoNormalParticlesData : NiParticlesData {}
+
+	public class NiParticleSystemController : NiTimeController
+	{
+		public float speed;
+		public float speedRandom;
+		public float verticalDirection;
+		public float verticalAngle;
+		public float horizontalDirection;
+		public float horizontalAngle;
+		public Vector3 unknownNormal;
+		public Color4 unknownColor;
+		public float size;
+		public float emitStartTime;
+		public float emitStopTime;
+		public byte unknownByte;
+		public float emitRate;
+		public float lifetime;
+		public float lifetimeRandom;
+		public ushort emitFlags;
+		public Vector3 startRandom;
+		public int emitter;
+		public ushort unknownShort2;
+		public float unknownFloat13;
+		public uint unknownInt1;
+		public uint unknownInt2;
+		public ushort unknownShort3;
+		public ushort numParticles;
+		public ushort numValid;
+		public Particle[] particles;
+		public int unknownLink;
+		public int particleExtra;
+		public int unknownLink2;
+		public byte trailer;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			speed = reader.ReadSingle();
+			speedRandom = reader.ReadSingle();
+			verticalDirection = reader.ReadSingle();
+			verticalAngle = reader.ReadSingle();
+			horizontalDirection = reader.ReadSingle();
+			horizontalAngle = reader.ReadSingle();
+			unknownNormal = BinaryReaderExtensions.ReadVector3(reader);
+
+			unknownColor = new Color4();
+			unknownColor.Deserialize(reader);
+
+			size = reader.ReadSingle();
+			emitStartTime = reader.ReadSingle();
+			emitStopTime = reader.ReadSingle();
+			unknownByte = reader.ReadByte();
+			emitRate = reader.ReadSingle();
+			lifetime = reader.ReadSingle();
+			lifetimeRandom = reader.ReadSingle();
+			emitFlags = reader.ReadUInt16();
+			startRandom = BinaryReaderExtensions.ReadVector3(reader);
+			emitter = reader.ReadInt32();
+			unknownShort2 = reader.ReadUInt16();
+			unknownFloat13 = reader.ReadSingle();
+			unknownInt1 = reader.ReadUInt32();
+			unknownInt2 = reader.ReadUInt32();
+			unknownShort3 = reader.ReadUInt16();
+			numParticles = reader.ReadUInt16();
+			numValid = reader.ReadUInt16();
+
+			particles = new Particle[numParticles];
+			for(int i = 0; i < particles.Length; i++)
+			{
+				particles[i] = new Particle();
+				particles[i].Deserialize(reader);
+			}
+
+			unknownLink = NiUtils.ReadRef(reader);
+			particleExtra = reader.ReadInt32();
+			unknownLink2 = NiUtils.ReadRef(reader);
+			trailer = reader.ReadByte();
+		}
+	}
 
 	public class RootCollisionNode : NiNode
 	{
@@ -812,7 +978,6 @@ namespace NIF
 			}
 		}
 	}
-
 	public class NiSkinData : NiObject
 	{
 		public SkinTransform skinTransform;
@@ -865,7 +1030,6 @@ namespace NIF
 			}
 		}
 	}
-
 	public class SkinWeight
 	{
 		public ushort index;
@@ -915,7 +1079,6 @@ namespace NIF
 			dataRef = NiUtils.ReadRef(reader);
 		}
 	}
-
 	public class NiUVData : NiObject
 	{
 		public KeyGroup<float>[] UVGroups;
@@ -952,7 +1115,6 @@ namespace NIF
 			}
 		}
 	}
-
 	public class NiTextureEffect : NiDynamicEffect
 	{
 		public Matrix4x4 modelProjectionMatrix;
@@ -989,6 +1151,183 @@ namespace NIF
 		}
 	}
 
+	public class NiParticleModifier : NiObject
+	{
+		public int nextModifierRef; // NiParticleModifier
+		public int controllerRef; // NiParticleSystemController
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			nextModifierRef = NiUtils.ReadRef(reader);
+			controllerRef = NiUtils.ReadRef(reader);
+		}
+	}
+	public class NiGravity : NiParticleModifier
+	{
+		public float unknownFloat1;
+		public float force;
+		public FieldType type;
+		public Vector3 position;
+		public Vector3 direction;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			unknownFloat1 = reader.ReadSingle();
+			force = reader.ReadSingle();
+			type = (FieldType)reader.ReadUInt32();
+			position = BinaryReaderExtensions.ReadVector3(reader);
+			direction = BinaryReaderExtensions.ReadVector3(reader);
+		}
+	}
+	public class NiParticleBomb : NiParticleModifier
+	{
+		public float decay;
+		public float duration;
+		public float deltaV;
+		public float start;
+		public DecayType decayType;
+		public Vector3 position;
+		public Vector3 direction;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			decay = reader.ReadSingle();
+			duration = reader.ReadSingle();
+			deltaV = reader.ReadSingle();
+			start = reader.ReadSingle();
+			decayType = (DecayType)reader.ReadUInt32();
+			position = BinaryReaderExtensions.ReadVector3(reader);
+			direction = BinaryReaderExtensions.ReadVector3(reader);
+		}
+	}
+	public class NiParticleColorModifier : NiParticleModifier
+	{
+		public int colorDataRef; // NiColorData
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			colorDataRef = NiUtils.ReadRef(reader);
+		}
+	}
+	public class NiParticleGrowFade : NiParticleModifier
+	{
+		public float grow;
+		public float fade;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			grow = reader.ReadSingle();
+			fade = reader.ReadSingle();
+		}
+	}
+	public class NiParticleMeshModifier : NiParticleModifier
+	{
+		public uint numParticleMeshRefs;
+		public int[] particleMeshRefs; // NiAVObject
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			numParticleMeshRefs = reader.ReadUInt32();
+
+			particleMeshRefs = new int[numParticleMeshRefs];
+			for(int i = 0; i < particleMeshRefs.Length; i++)
+			{
+				particleMeshRefs[i] = NiUtils.ReadRef(reader);
+			}
+		}
+	}
+	public class NiParticleRotation : NiParticleModifier
+	{
+		public byte randomInitialAxis;
+		public Vector3 initialAxis;
+		public float rotationSpeed;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			randomInitialAxis = reader.ReadByte();
+			initialAxis = BinaryReaderExtensions.ReadVector3(reader);
+			rotationSpeed = reader.ReadSingle();
+		}
+	}
+
+	public class NiInterpController : NiTimeController {}
+	public class NiSingleInterpController : NiInterpController {}
+	public class NiKeyframeController : NiSingleInterpController
+	{
+		public int dataRef; // NiKeyframeData
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			dataRef = NiUtils.ReadRef(reader);
+		}
+	}
+
+	public class NiKeyframeData : NiObject
+	{
+		public uint numRotationKeys;
+		public KeyType rotationType;
+		public QuatKey<Quaternion>[] quaternionKeys;
+		public float unknownFloat;
+		public KeyGroup<float>[] XYZRotations;
+		public KeyGroup<Vector3> translations;
+		public KeyGroup<float> scales;
+
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+
+			numRotationKeys = reader.ReadUInt32();
+
+			if(numRotationKeys != 0)
+			{
+				rotationType = (KeyType)reader.ReadUInt32();
+
+				if(rotationType != KeyType.XYZ_ROTATION_KEY)
+				{
+					quaternionKeys = new QuatKey<Quaternion>[numRotationKeys];
+					for(int i = 0; i < quaternionKeys.Length; i++)
+					{
+						quaternionKeys[i] = new QuatKey<Quaternion>();
+						quaternionKeys[i].Deserialize(reader);
+					}
+				}
+				else
+				{
+					unknownFloat = reader.ReadSingle();
+
+					XYZRotations = new KeyGroup<float>[3];
+					for(int i = 0; i < XYZRotations.Length; i++)
+					{
+						XYZRotations[i] = new KeyGroup<float>();
+						XYZRotations[i].Deserialize(reader);
+					}
+				}
+			}
+
+			translations = new KeyGroup<Vector3>();
+			translations.Deserialize(reader);
+
+			scales = new KeyGroup<float>();
+			scales.Deserialize(reader);
+		}
+	}
+
 	// Geometry
 	public class NiGeometry : NiAVObject
 	{
@@ -1003,23 +1342,6 @@ namespace NIF
 			skinInstanceRef = reader.ReadInt32();
 		}
 	}
-
-	public class NiTriBasedGeom : NiGeometry
-	{
-		public override void Deserialize(BinaryReader reader)
-		{
-			base.Deserialize(reader);
-		}
-	}
-
-	public class NiTriShape : NiTriBasedGeom
-	{
-		public override void Deserialize(BinaryReader reader)
-		{
-			base.Deserialize(reader);
-		}
-	}
-
 	public class NiGeometryData : NiObject
 	{
 		public ushort numVertices;
@@ -1094,7 +1416,13 @@ namespace NIF
 			}
 		}
 	}
-
+	public class NiTriBasedGeom : NiGeometry
+	{
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+		}
+	}
 	public class NiTriBasedGeomData : NiGeometryData
 	{
 		public ushort numTriangles;
@@ -1106,7 +1434,13 @@ namespace NIF
 			numTriangles = reader.ReadUInt16();
 		}
 	}
-
+	public class NiTriShape : NiTriBasedGeom
+	{
+		public override void Deserialize(BinaryReader reader)
+		{
+			base.Deserialize(reader);
+		}
+	}
 	public class NiTriShapeData : NiTriBasedGeomData
 	{
 		public uint numTrianglePoints;
@@ -1137,7 +1471,7 @@ namespace NIF
 			}
 		}
 	}
-
+	
 	// Properties
 	public class NiProperty : NiObjectNET
 	{
@@ -1146,7 +1480,6 @@ namespace NIF
 			base.Deserialize(reader);
 		}
 	}
-	
 	public class NiTexturingProperty : NiProperty
 	{
 		public ushort flags;
@@ -1258,7 +1591,6 @@ namespace NIF
 			flags = reader.ReadUInt16();
 		}
 	}
-
 	public class NiVertexColorProperty : NiProperty
 	{
 		public ushort flags;
@@ -1282,7 +1614,6 @@ namespace NIF
 			base.Deserialize(reader);
 		}
 	}
-
 	public class NiSourceTexture : NiTexture
 	{
 		public byte useExternal;

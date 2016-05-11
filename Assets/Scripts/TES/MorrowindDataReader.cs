@@ -70,7 +70,7 @@ public class MorrowindDataReader : IDisposable
 		{
 			var objBuilder = new NIFObjectBuilder(file, this);
 			prefab = objBuilder.BuildObject();
-
+			
 			prefab.transform.parent = prefabObj.transform;
 
 			loadedNIFObjects[filePath] = prefab;
@@ -101,28 +101,55 @@ public class MorrowindDataReader : IDisposable
 
 		return loadedTexture;
 	}
-	public GameObject InstantiateExteriorCell(int x, int y)
+	public GameObject InstantiateCell(CELLRecord CELL)
 	{
-		var CELL = FindExteriorCellRecord(x, y);
-		var LAND = FindLANDRecord(x, y);
+		Debug.Assert(CELL != null);
 
-		if(CELL != null && LAND != null)
+		if(!CELL.isInterior)
 		{
-			GameObject cellObj = new GameObject("cell");
+			var cellIndices = new Vector2i(CELL.DATA.gridX, CELL.DATA.gridY);
+			var LAND = FindLANDRecord(cellIndices.x, cellIndices.y);
 
-			var landObj = InstantiateLAND(LAND);
-
-			if(landObj != null)
+			if(LAND != null)
 			{
-				landObj.transform.parent = cellObj.transform;
+				var cellObj = new GameObject("cell " + cellIndices.ToString());
+				var landObj = InstantiateLAND(LAND);
+
+				if(landObj != null)
+				{
+					landObj.transform.parent = cellObj.transform;
+				}
+
+				InstantiateCellObjects(CELL, cellObj);
+
+				return cellObj;
 			}
+			else
+			{
+				return null;
+			}
+		}
+		else
+		{
+			GameObject cellObj = new GameObject(CELL.NAME.value);
 
 			InstantiateCellObjects(CELL, cellObj);
 
 			return cellObj;
 		}
+	}
+	public GameObject InstantiateExteriorCell(int x, int y)
+	{
+		var CELL = FindExteriorCellRecord(x, y);
 
-		return null;
+		if(CELL != null)
+		{
+			return InstantiateCell(CELL);
+		}
+		else
+		{
+			return null;
+		}
 	}
 	public GameObject InstantiateInteriorCell(string cellName)
 	{
@@ -130,14 +157,12 @@ public class MorrowindDataReader : IDisposable
 
 		if(CELL != null)
 		{
-			GameObject cellObj = new GameObject("cell");
-
-			InstantiateCellObjects(CELL, cellObj);
-
-			return cellObj;
+			return InstantiateCell(CELL);
 		}
-
-		return null;
+		else
+		{
+			return null;
+		}
 	}
 
 	private Dictionary<string, Texture2D> loadedTextures = new Dictionary<string, Texture2D>();

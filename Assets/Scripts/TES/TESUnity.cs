@@ -132,11 +132,9 @@ public class TESUnity : MonoBehaviour
 	{
 		UpdateCells();
 
-		if(Input.GetKeyDown(KeyCode.K))
+		if(Input.GetKeyDown(KeyCode.P))
 		{
-			var fileName = Path.GetFileName(testObjPath);
-			var fileBytes = MWDataReader.MorrowindBSAFile.LoadFileData(testObjPath);
-			File.WriteAllBytes("C:/Users/Cole/Desktop/" + fileName, fileBytes);
+			Debug.Log(GetCellIndices(Camera.main.transform.position));
 		}
 	}
 	private void OnGUI()
@@ -233,6 +231,37 @@ public class TESUnity : MonoBehaviour
 	private void ExtractFileFromMorrowind(string filePath)
 	{
 		File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(filePath), MWDataReader.MorrowindBSAFile.LoadFileData(filePath));
+	}
+	private void TestAllCells()
+	{
+		using(StreamWriter writer = new StreamWriter("C:/Users/Cole/Desktop/cellresults.txt"))
+		{
+			foreach(var record in MWDataReader.MorrowindESMFile.GetRecordsOfType<ESM.CELLRecord>())
+			{
+				var CELL = (ESM.CELLRecord)record;
+
+				try
+				{
+					var cellObj = MWDataReader.InstantiateCell(CELL);
+					DestroyImmediate(cellObj);
+
+					writer.Write("Pass: ");
+				}
+				catch
+				{
+					writer.Write("Fail: ");
+				}
+
+				if(!CELL.isInterior)
+				{
+					writer.WriteLine(CELL.gridCoords.ToString());
+				}
+				else
+				{
+					writer.WriteLine(CELL.NAME.value);
+				}
+			}
+		}
 	}
 
 	/*
