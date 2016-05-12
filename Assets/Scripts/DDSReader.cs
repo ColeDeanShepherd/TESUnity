@@ -18,85 +18,37 @@ public static class DDSReader
 				throw new FileFormatException("Invalid DDS file magic string: \"" + System.Text.Encoding.ASCII.GetString(magicString) + "\".");
 			}
 
-			var dwSize = reader.ReadUInt32();
-			if(dwSize != 124)
-			{
-				throw new FileFormatException("Invalid DDS file header size: " + dwSize.ToString() + '.');
-			}
-
-			var dwFlags = reader.ReadUInt32();
-			if(!Utils.ContainsBitFlags(dwFlags, (uint)DDSFlags.HEIGHT, (uint)DDSFlags.WIDTH))
-			{
-				throw new FileFormatException("Invalid DDS file flags: " + dwFlags.ToString() + '.');
-			}
-
-			var dwHeight = reader.ReadUInt32();
-			var dwWidth = reader.ReadUInt32();
-			var dwPitchOrLinearSize = reader.ReadUInt32();
-			var dwDepth = reader.ReadUInt32();
-			var dwMipMapCount = reader.ReadUInt32();
-
-			var dwReserved1 = new uint[11];
-
-			for(int i = 0; i < dwReserved1.Length; i++)
-			{
-				dwReserved1[i] = reader.ReadUInt32();
-			}
-
-			var pixelFormat = new DDSPixelFormat();
-			pixelFormat.size = reader.ReadUInt32();
-			if(pixelFormat.size != 32)
-			{
-				throw new FileFormatException("Invalid DDS file pixel format size: " + pixelFormat.size.ToString() + '.');
-			}
-
-			pixelFormat.flags = reader.ReadUInt32();
-			pixelFormat.fourCC = reader.ReadBytes(4);
-			pixelFormat.RGBBitCount = reader.ReadUInt32();
-			pixelFormat.RBitMask = reader.ReadUInt32();
-			pixelFormat.GBitMask = reader.ReadUInt32();
-			pixelFormat.BBitMask = reader.ReadUInt32();
-			pixelFormat.ABitMask = reader.ReadUInt32();
-
-			var dwCaps = reader.ReadUInt32();
-			if(!Utils.ContainsBitFlags(dwCaps, (uint)DDSCaps.TEXTURE))
-			{
-				throw new FileFormatException("Invalid DDS file caps: " + dwCaps.ToString() + '.');
-			}
-
-			var dwCaps2 = reader.ReadUInt32();
-			var dwCaps3 = reader.ReadUInt32();
-			var dwCaps4 = reader.ReadUInt32();
-			var dwReserved2 = reader.ReadUInt32();
+			var header = new DDSHeader();
+			header.Deserialize(reader);
 
 			// Figure out the texture format and load the texture data.
-			bool hasMipMaps = Utils.ContainsBitFlags(dwCaps, (uint)DDSCaps.MIPMAP);
-			uint DDSMipMapCount = hasMipMaps ? dwMipMapCount : 1;
+			bool hasMipMaps = Utils.ContainsBitFlags(header.dwCaps, (uint)DDSCaps.MIPMAP);
+			uint DDSMipMapCount = hasMipMaps ? header.dwMipMapCount : 1;
 
 			TextureFormat textureFormat;
 			int bytesPerPixel;
 			byte[] textureData;
 
 			// Set textureFormat, bytesPerPixel, and textureData.
-			if(Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.RGB)) // If the DDS file contains uncompressed data.
+			if(Utils.ContainsBitFlags(header.pixelFormat.flags, (uint)DDSPixelFormatFlags.RGB)) // If the DDS file contains uncompressed data.
 			{
-				if(!Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.ALPHAPIXELS)) // RGB
+				if(!Utils.ContainsBitFlags(header.pixelFormat.flags, (uint)DDSPixelFormatFlags.ALPHAPIXELS)) // RGB
 				{
 					throw new NotImplementedException("Unsupported DDS file pixel format.");
 				}
 				else // RGBA
 				{
-					if(pixelFormat.RGBBitCount != 32)
+					if(header.pixelFormat.RGBBitCount != 32)
 					{
 						throw new FileFormatException("Invalid DDS file pixel format.");
 					}
 
-					if((pixelFormat.BBitMask == 0x000000FF) && (pixelFormat.GBitMask == 0x0000FF00) && (pixelFormat.RBitMask == 0x00FF0000) && (pixelFormat.ABitMask == 0xFF000000))
+					if((header.pixelFormat.BBitMask == 0x000000FF) && (header.pixelFormat.GBitMask == 0x0000FF00) && (header.pixelFormat.RBitMask == 0x00FF0000) && (header.pixelFormat.ABitMask == 0xFF000000))
 					{
 						textureFormat = TextureFormat.BGRA32;
 						bytesPerPixel = 4;
 					}
-					else if((pixelFormat.ABitMask == 0x000000FF) && (pixelFormat.RBitMask == 0x0000FF00) && (pixelFormat.GBitMask == 0x00FF0000) && (pixelFormat.BBitMask == 0xFF000000))
+					else if((header.pixelFormat.ABitMask == 0x000000FF) && (header.pixelFormat.RBitMask == 0x0000FF00) && (header.pixelFormat.GBitMask == 0x00FF0000) && (header.pixelFormat.BBitMask == 0xFF000000))
 					{
 						textureFormat = TextureFormat.ARGB32;
 						bytesPerPixel = 4;
@@ -108,17 +60,17 @@ public static class DDSReader
 
 					if(!hasMipMaps)
 					{
-						textureData = new byte[dwPitchOrLinearSize * dwHeight];
+						textureData = new byte[header.dwPitchOrLinearSize * header.dwHeight];
 					}
 					else // if(hasMipMaps)
 					{
-						textureData = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)dwWidth, (int)dwHeight, bytesPerPixel)];
+						textureData = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)header.dwWidth, (int)header.dwHeight, bytesPerPixel)];
 					}
 					
 					BinaryReaderExtensions.ReadRestOfBytes(reader, textureData, 0);
 				}
 			}
-			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT1"))
+			else if(StringUtils.Equals(header.pixelFormat.fourCC, "DXT1"))
 			{
 				//textureFormat = TextureFormat.DXT1;
 				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
@@ -127,17 +79,17 @@ public static class DDSReader
 				bytesPerPixel = 4;
 
 				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
-				textureData = DecodeDXT1ToARGB(compressedTextureData, dwWidth, dwHeight, pixelFormat, DDSMipMapCount);
+				textureData = DecodeDXT1ToARGB(compressedTextureData, header.dwWidth, header.dwHeight, header.pixelFormat, DDSMipMapCount);
 			}
-			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT3"))
+			else if(StringUtils.Equals(header.pixelFormat.fourCC, "DXT3"))
 			{
 				textureFormat = TextureFormat.ARGB32;
 				bytesPerPixel = 4;
 
 				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
-				textureData = DecodeDXT3ToARGB(compressedTextureData, dwWidth, dwHeight, DDSMipMapCount);
+				textureData = DecodeDXT3ToARGB(compressedTextureData, header.dwWidth, header.dwHeight, DDSMipMapCount);
 			}
-			else if(StringUtils.Equals(pixelFormat.fourCC, "DXT5"))
+			else if(StringUtils.Equals(header.pixelFormat.fourCC, "DXT5"))
 			{
 				//textureFormat = TextureFormat.DXT5;
 				//textureData = reader.ReadBytes((int)dwPitchOrLinearSize);
@@ -146,7 +98,7 @@ public static class DDSReader
 				bytesPerPixel = 4;
 
 				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
-				textureData = DecodeDXT5ToARGB(compressedTextureData, dwWidth, dwHeight, DDSMipMapCount);
+				textureData = DecodeDXT5ToARGB(compressedTextureData, header.dwWidth, header.dwHeight, DDSMipMapCount);
 			}
 			else
 			{
@@ -157,8 +109,8 @@ public static class DDSReader
 			if(hasMipMaps)
 			{
 				int mipMapIndex = 0;
-				int currentWidth = (int)dwWidth;
-				int currentHeight = (int)dwHeight;
+				int currentWidth = (int)header.dwWidth;
+				int currentHeight = (int)header.dwHeight;
 				int mipMapStartIndex = 0;
 
 				while(true)
@@ -189,7 +141,7 @@ public static class DDSReader
 				}
 			}
 
-			var texture = new Texture2D((int)dwWidth, (int)dwHeight, textureFormat, hasMipMaps);
+			var texture = new Texture2D((int)header.dwWidth, (int)header.dwHeight, textureFormat, hasMipMaps);
 			texture.LoadRawTextureData(textureData);
 			texture.Apply();
 
@@ -234,6 +186,65 @@ public static class DDSReader
 		CUBEMAP_NEGATIVEZ = 0x8000,
 		VOLUME = 0x200000
 	}
+	private struct DDSHeader
+	{
+		public uint dwSize;
+		public uint dwFlags;
+		public uint dwHeight;
+		public uint dwWidth;
+		public uint dwPitchOrLinearSize;
+		public uint dwDepth;
+		public uint dwMipMapCount;
+		public uint[] dwReserved1;
+		public DDSPixelFormat pixelFormat;
+		public uint dwCaps;
+		public uint dwCaps2;
+		public uint dwCaps3;
+		public uint dwCaps4;
+		public uint dwReserved2;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			dwSize = reader.ReadUInt32();
+			if(dwSize != 124)
+			{
+				throw new FileFormatException("Invalid DDS file header size: " + dwSize.ToString() + '.');
+			}
+
+			dwFlags = reader.ReadUInt32();
+			if(!Utils.ContainsBitFlags(dwFlags, (uint)DDSFlags.HEIGHT, (uint)DDSFlags.WIDTH))
+			{
+				throw new FileFormatException("Invalid DDS file flags: " + dwFlags.ToString() + '.');
+			}
+
+			dwHeight = reader.ReadUInt32();
+			dwWidth = reader.ReadUInt32();
+			dwPitchOrLinearSize = reader.ReadUInt32();
+			dwDepth = reader.ReadUInt32();
+			dwMipMapCount = reader.ReadUInt32();
+
+			dwReserved1 = new uint[11];
+
+			for(int i = 0; i < dwReserved1.Length; i++)
+			{
+				dwReserved1[i] = reader.ReadUInt32();
+			}
+
+			pixelFormat = new DDSPixelFormat();
+			pixelFormat.Deserialize(reader);
+
+			dwCaps = reader.ReadUInt32();
+			if(!Utils.ContainsBitFlags(dwCaps, (uint)DDSCaps.TEXTURE))
+			{
+				throw new FileFormatException("Invalid DDS file caps: " + dwCaps.ToString() + '.');
+			}
+
+			dwCaps2 = reader.ReadUInt32();
+			dwCaps3 = reader.ReadUInt32();
+			dwCaps4 = reader.ReadUInt32();
+			dwReserved2 = reader.ReadUInt32();
+		}
+	}
 	private struct DDSPixelFormat
 	{
 		public uint size;
@@ -244,6 +255,23 @@ public static class DDSReader
 		public uint GBitMask;
 		public uint BBitMask;
 		public uint ABitMask;
+
+		public void Deserialize(BinaryReader reader)
+		{
+			size = reader.ReadUInt32();
+			if(size != 32)
+			{
+				throw new FileFormatException("Invalid DDS file pixel format size: " + size.ToString() + '.');
+			}
+
+			flags = reader.ReadUInt32();
+			fourCC = reader.ReadBytes(4);
+			RGBBitCount = reader.ReadUInt32();
+			RBitMask = reader.ReadUInt32();
+			GBitMask = reader.ReadUInt32();
+			BBitMask = reader.ReadUInt32();
+			ABitMask = reader.ReadUInt32();
+		}
 	}
 
 	// Assumes the color table has already been built.

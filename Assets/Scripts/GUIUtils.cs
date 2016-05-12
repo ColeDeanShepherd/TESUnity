@@ -19,21 +19,21 @@ public static class GUIUtils
 	{
 		get
 		{
-			return TESUnity.instance.UIBackgroundImg;
+			return TESUnity.TESUnity.instance.UIBackgroundImg;
 		}
 	}
 	public static Sprite UISpriteImage
 	{
 		get
 		{
-			return TESUnity.instance.UISpriteImg;
+			return TESUnity.TESUnity.instance.UISpriteImg;
 		}
 	}
 	public static Sprite UIMaskImage
 	{
 		get
 		{
-			return TESUnity.instance.UIMaskImg;
+			return TESUnity.TESUnity.instance.UIMaskImg;
 		}
 	}
 

@@ -9,14 +9,7 @@ public class FlyingCameraComponent : MonoBehaviour
 	public float mouseSensitivity = 3;
 	public float minVerticalAngle = -90;
 	public float maxVerticalAngle = 90;
-
-	private Vector3 eulerAngles;
-
-	private void Start()
-	{
-		eulerAngles = transform.eulerAngles;
-		eulerAngles.z = 0;
-	}
+	
 	private void Update()
 	{
 		Rotate();
@@ -25,7 +18,16 @@ public class FlyingCameraComponent : MonoBehaviour
 
 	private void Rotate()
 	{
+		var eulerAngles = transform.eulerAngles;
+		eulerAngles.z = 0;
+
 		var deltaMouse = mouseSensitivity * (new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")));
+
+		// Make eulerAngles.x range from -180 to 180.
+		if(eulerAngles.x > 180)
+		{
+			eulerAngles.x = eulerAngles.x - 360;
+		}
 
 		eulerAngles.x = Mathf.Clamp(eulerAngles.x - deltaMouse.y, minVerticalAngle, maxVerticalAngle);
 		eulerAngles.y = Mathf.Repeat(eulerAngles.y + deltaMouse.x, 360);

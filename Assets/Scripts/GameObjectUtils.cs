@@ -57,4 +57,23 @@ public static class GameObjectUtils
 
 		return terrainObject;
 	}
+
+	public static Bounds GetLocalVisualBoundsOfParent(GameObject gameObject)
+	{
+		var childMeshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
+
+		if(childMeshFilters.Length == 0)
+		{
+			return new Bounds();
+		}
+
+		Bounds combinedBounds = childMeshFilters[0].mesh.bounds;
+
+		for(int i = 1; i < childMeshFilters.Length; i++)
+		{
+			combinedBounds.Encapsulate(childMeshFilters[i].mesh.bounds);
+		}
+
+		return combinedBounds;
+	}
 }

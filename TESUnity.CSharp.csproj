@@ -85,6 +85,8 @@
     <Compile Include="Assets\Scripts\SerialBin.cs" />
     <Compile Include="Assets\Scripts\TES\AutoNIFReader.cs" />
     <Compile Include="Assets\Scripts\TES\BSAFile.cs" />
+    <Compile Include="Assets\Scripts\TES\Convert.cs" />
+    <Compile Include="Assets\Scripts\TES\DoorComponent.cs" />
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
     <Compile Include="Assets\Scripts\TES\NIFObjectBuilder.cs" />

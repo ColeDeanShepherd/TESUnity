@@ -1,318 +1,267 @@
 ﻿using System;
 using UnityEngine;
-using NIF;
 
-public class NIFObjectBuilder
+namespace TESUnity
 {
-	public static float NIFScale = 1.0f / 128;
+	using NIF;
 
-	#region Helper Functions
-	public static Vector3 NifVector3ToUnityVector3(Vector3 NIFVector3)
+	// TODO: Investigate merging meshes.
+	public class NIFObjectBuilder
 	{
-		Utils.Swap(ref NIFVector3.y, ref NIFVector3.z);
-
-		return NIFVector3;
-	}
-	public static Vector3 NifPointToUnityPoint(Vector3 NIFPoint)
-	{
-		return NifVector3ToUnityVector3(NIFPoint) * NIFScale;
-	}
-	public static Quaternion NifMatrix4x4ToUnityQuaternion(Matrix4x4 NIFMatrix4x4)
-	{
-		var quat = RotationMatrixToQuaternion(NIFMatrix4x4);
-		Utils.Swap(ref quat.y, ref quat.z);
-
-		return Quaternion.Inverse(quat);
-	}
-	public static Quaternion RotationMatrixToQuaternion(Matrix4x4 matrix)
-	{
-		var fourXSquaredMinus1 = matrix[0, 0] - matrix[1, 1] - matrix[2, 2];
-		var fourYSquaredMinus1 = matrix[1, 1] - matrix[0, 0] - matrix[2, 2];
-		var fourZSquaredMinus1 = matrix[2, 2] - matrix[0, 0] - matrix[1, 1];
-		var fourWSquaredMinus1 = matrix[0, 0] + matrix[1, 1] + matrix[2, 2];
-
-		int biggestIndex = 0;
-		var fourBiggestSquaredMinus1 = fourWSquaredMinus1;
-
-		if(fourXSquaredMinus1 > fourBiggestSquaredMinus1)
+		public NIFObjectBuilder(NiFile file, MorrowindDataReader dataReader)
 		{
-			fourBiggestSquaredMinus1 = fourXSquaredMinus1;
-			biggestIndex = 1;
+			this.file = file;
+			this.dataReader = dataReader;
 		}
-
-		if(fourYSquaredMinus1 > fourBiggestSquaredMinus1)
+		public GameObject BuildObject()
 		{
-			fourBiggestSquaredMinus1 = fourYSquaredMinus1;
-			biggestIndex = 2;
-		}
+			Debug.Assert(file.name != null);
 
-		if(fourZSquaredMinus1 > fourBiggestSquaredMinus1)
-		{
-			fourBiggestSquaredMinus1 = fourZSquaredMinus1;
-			biggestIndex = 3;
-		}
+			// NIF files can have any number of root NiObjects.
+			// If there is only one root, instantiate that directly.
+			// If there are multiple roots, create a container GameObject and parent it to the roots.
 
-		var biggestVal = Mathf.Sqrt(fourBiggestSquaredMinus1 + 1) * 0.5f;
-		var mult = 0.25f / biggestVal;
-
-		Quaternion quat = new Quaternion();
-
-		switch(biggestIndex)
-		{
-			case 0:
-				quat.w = biggestVal;
-				quat.x = (matrix[1, 2] - matrix[2, 1]) * mult;
-				quat.y = (matrix[2, 0] - matrix[0, 2]) * mult;
-				quat.z = (matrix[0, 1] - matrix[1, 0]) * mult;
-				break;
-			case 1:
-				quat.w = (matrix[1, 2] - matrix[2, 1]) * mult;
-				quat.x = biggestVal;
-				quat.y = (matrix[0, 1] + matrix[1, 0]) * mult;
-				quat.z = (matrix[2, 0] + matrix[0, 2]) * mult;
-				break;
-			case 2:
-				quat.w = (matrix[2, 0] - matrix[0, 2]) * mult;
-				quat.x = (matrix[0, 1] + matrix[1, 0]) * mult;
-				quat.y = biggestVal;
-				quat.z = (matrix[1, 2] + matrix[2, 1]) * mult;
-				break;
-			case 3:
-				quat.w = (matrix[0, 1] - matrix[1, 0]) * mult;
-				quat.x = (matrix[2, 0] + matrix[0, 2]) * mult;
-				quat.y = (matrix[1, 2] + matrix[2, 1]) * mult;
-				quat.z = biggestVal;
-				break;
-			default:
-				Debug.Assert(false);
-				break;
-		}
-
-		return quat;
-	}
-	#endregion
-
-	public NIFObjectBuilder(NiFile file, MorrowindDataReader dataReader)
-	{
-		this.file = file;
-		this.dataReader = dataReader;
-	}
-	public GameObject BuildObject()
-	{
-		if(file.footer.rootRefs.Length == 1)
-		{
-			return InstantiateNiObject(file.blocks[file.footer.rootRefs[0]], null);
-		}
-		else
-		{
-			GameObject NIFObj = new GameObject("NIF Object");
-
-			foreach(var rootRef in file.footer.rootRefs)
+			if(file.footer.rootRefs.Length == 1)
 			{
-				InstantiateNiObject(file.blocks[rootRef], null).transform.parent = NIFObj.transform;
+				GameObject gameObject = InstantiateNiObject(file.blocks[file.footer.rootRefs[0]]);
+
+				if(gameObject == null)
+				{
+					gameObject = new GameObject(file.name);
+				}
+
+				return gameObject;
 			}
-
-			return NIFObj;
-		}
-	}
-	
-	private NiFile file;
-	private MorrowindDataReader dataReader;
-
-	private GameObject InstantiateNiObject(NiObject NIFObj, GameObject parent)
-	{
-		if(NIFObj.GetType() == typeof(NiNode))
-		{
-			return InstantiateNiNode((NiNode)NIFObj, parent);
-		}
-		else if(NIFObj.GetType() == typeof(NiTriShape))
-		{
-			return InstantiateNiTriShape((NiTriShape)NIFObj, parent);
-		}
-		else if(NIFObj.GetType() == typeof(RootCollisionNode))
-		{
-			return null;
-		}
-		else if(NIFObj.GetType() == typeof(NiTextureEffect))
-		{
-			return null;
-		}
-		else if(NIFObj.GetType() == typeof(NiBSAnimationNode))
-		{
-			return InstantiateNiNode((NiBSAnimationNode)NIFObj, parent);
-		}
-		else if(NIFObj.GetType() == typeof(NiBSParticleNode))
-		{
-			return InstantiateNiNode((NiBSParticleNode)NIFObj, parent);
-		}
-		else if(NIFObj.GetType() == typeof(NiRotatingParticles))
-		{
-			return null;
-		}
-		else if(NIFObj.GetType() == typeof(NiAutoNormalParticles))
-		{
-			return null;
-		}
-		else
-		{
-			throw new NotImplementedException("Tried to instantiate an unsupported NiObject (" + NIFObj.GetType().Name + ").");
-		}
-	}
-	private GameObject InstantiateNiNode(NiNode node, GameObject parent)
-	{
-		GameObject obj = new GameObject(System.Text.Encoding.ASCII.GetString(node.name));
-		obj.transform.parent = (parent != null) ? parent.transform : null;
-
-		obj.transform.localPosition = NifPointToUnityPoint(node.translation);
-		obj.transform.localRotation = NifMatrix4x4ToUnityQuaternion(node.rotation);
-
-		for(int i = 0; i < node.children.Length; i++)
-		{
-			var childIndex = node.children[i];
-
-			if(childIndex >= 0)
+			else
 			{
-				InstantiateNiObject(file.blocks[childIndex], obj);
+				GameObject gameObject = new GameObject(file.name);
+
+				foreach(var rootRef in file.footer.rootRefs)
+				{
+					var child = InstantiateNiObject(file.blocks[rootRef]);
+
+					if(child != null)
+					{
+						child.transform.SetParent(gameObject.transform, false);
+					}
+				}
+
+				return gameObject;
 			}
 		}
 
-		return obj;
-	}
-	private GameObject InstantiateNiTriShape(NiTriShape triShape, GameObject parent)
-	{
-		var mesh = NiTriShapeDataToMesh((NiTriShapeData)file.blocks[triShape.dataRef]);
-		var material = NiAVObjectPropertiesToMaterial(triShape);
+		private NiFile file;
+		private MorrowindDataReader dataReader;
 
-		var obj = new GameObject(System.Text.Encoding.ASCII.GetString(triShape.name));
-		obj.AddComponent<MeshFilter>().mesh = mesh;
-		obj.AddComponent<MeshRenderer>().material = material;
-		
-		if(parent != null) // Some NIF files have an NiTriShape as the root node.
+		/// <summary>
+		/// Creates a GameObject representation of an NiObject.
+		/// </summary>
+		/// <returns>Returns the created GameObject, or null if the NiObject does not need its own GameObject.</returns>
+		private GameObject InstantiateNiObject(NiObject obj)
 		{
-			obj.transform.parent = parent.transform;
-		}
-
-		obj.transform.localPosition = NifPointToUnityPoint(triShape.translation);
-		obj.transform.localRotation = NifMatrix4x4ToUnityQuaternion(triShape.rotation);
-
-		return obj;
-	}
-
-	private Mesh NiTriShapeDataToMesh(NiTriShapeData data)
-	{
-		var vertices = new Vector3[data.vertices.Length];
-		for(int i = 0; i < vertices.Length; i++)
-		{
-			vertices[i] = NifPointToUnityPoint(data.vertices[i]);
-		}
-
-		Vector3[] normals = null;
-		if(data.hasNormals)
-		{
-			normals = new Vector3[vertices.Length];
-
-			for(int i = 0; i < normals.Length; i++)
+			if(obj.GetType() == typeof(NiNode))
 			{
-				normals[i] = NifVector3ToUnityVector3(data.normals[i]);
+				return InstantiateNiNode((NiNode)obj);
+			}
+			else if(obj.GetType() == typeof(NiTriShape))
+			{
+				return InstantiateNiTriShape((NiTriShape)obj);
+			}
+			else if(obj.GetType() == typeof(RootCollisionNode))
+			{
+				return null;
+			}
+			else if(obj.GetType() == typeof(NiTextureEffect))
+			{
+				return null;
+			}
+			else if(obj.GetType() == typeof(NiBSAnimationNode))
+			{
+				return null;
+			}
+			else if(obj.GetType() == typeof(NiBSParticleNode))
+			{
+				return null;
+			}
+			else if(obj.GetType() == typeof(NiRotatingParticles))
+			{
+				return null;
+			}
+			else if(obj.GetType() == typeof(NiAutoNormalParticles))
+			{
+				return null;
+			}
+			else
+			{
+				throw new NotImplementedException("Tried to instantiate an unsupported NiObject (" + obj.GetType().Name + ").");
 			}
 		}
 
-		Vector2[] UVs = null;
-		if(data.hasUV)
+		private GameObject InstantiateNiNode(NiNode node)
 		{
-			UVs = new Vector2[vertices.Length];
+			GameObject obj = new GameObject(System.Text.Encoding.ASCII.GetString(node.name));
+			ApplyNiAVObject(node, obj);
 
-			for(int i = 0; i < UVs.Length; i++)
+			foreach(var childIndex in node.children)
 			{
-				var NiTexCoord = data.UVSets[0, i];
+				// NiNodes can have child references < 0 meaning null.
+				if(childIndex >= 0)
+				{
+					var child = InstantiateNiObject(file.blocks[childIndex]);
 
-				UVs[i] = new Vector2(NiTexCoord.u, NiTexCoord.v);
+					if(child != null)
+					{
+						child.transform.SetParent(obj.transform, false);
+					}
+				}
 			}
+
+			return obj;
+		}
+		private GameObject InstantiateNiTriShape(NiTriShape triShape)
+		{
+			var mesh = NiTriShapeDataToMesh((NiTriShapeData)file.blocks[triShape.dataRef]);
+			var material = NiAVObjectPropertiesToMaterial(triShape);
+
+			var obj = new GameObject(System.Text.Encoding.ASCII.GetString(triShape.name));
+			obj.AddComponent<MeshFilter>().mesh = mesh;
+			obj.AddComponent<MeshRenderer>().material = material;
+
+			ApplyNiAVObject(triShape, obj);
+
+			return obj;
 		}
 
-		var triangles = new int[data.numTrianglePoints];
-		for(int i = 0; i < data.triangles.Length; i++)
+		private void ApplyNiAVObject(NiAVObject anNiAVObject, GameObject obj)
 		{
-			int baseI = 3 * i;
-
-			triangles[baseI] = data.triangles[i].v1;
-			triangles[baseI + 1] = data.triangles[i].v3;
-			triangles[baseI + 2] = data.triangles[i].v2;
+			obj.transform.position = Convert.NifPointToUnityPoint(anNiAVObject.translation);
+			obj.transform.rotation = Convert.NifMatrix4x4ToUnityQuaternion(anNiAVObject.rotation);
+			obj.transform.localScale = anNiAVObject.scale * Vector3.one;
 		}
 
-		Mesh mesh = new Mesh();
-		mesh.vertices = vertices;
-		mesh.normals = normals;
-		mesh.uv = UVs;
-		mesh.triangles = triangles;
-
-		mesh.RecalculateBounds();
-
-		if(!data.hasNormals)
+		private Mesh NiTriShapeDataToMesh(NiTriShapeData data)
 		{
-			mesh.RecalculateNormals();
+			// vertex positions
+			var vertices = new Vector3[data.vertices.Length];
+			for(int i = 0; i < vertices.Length; i++)
+			{
+				vertices[i] = Convert.NifPointToUnityPoint(data.vertices[i]);
+			}
+
+			// vertex normals
+			Vector3[] normals = null;
+			if(data.hasNormals)
+			{
+				normals = new Vector3[vertices.Length];
+
+				for(int i = 0; i < normals.Length; i++)
+				{
+					normals[i] = Convert.NifVector3ToUnityVector3(data.normals[i]);
+				}
+			}
+
+			// vertex UV coordinates
+			Vector2[] UVs = null;
+			if(data.hasUV)
+			{
+				UVs = new Vector2[vertices.Length];
+
+				for(int i = 0; i < UVs.Length; i++)
+				{
+					var NiTexCoord = data.UVSets[0, i];
+
+					UVs[i] = new Vector2(NiTexCoord.u, NiTexCoord.v);
+				}
+			}
+
+			// triangle vertex indices
+			var triangles = new int[data.numTrianglePoints];
+			for(int i = 0; i < data.triangles.Length; i++)
+			{
+				int baseI = 3 * i;
+
+				// Reverse triangle winding order.
+				triangles[baseI] = data.triangles[i].v1;
+				triangles[baseI + 1] = data.triangles[i].v3;
+				triangles[baseI + 2] = data.triangles[i].v2;
+			}
+
+			// Create the mesh.
+			Mesh mesh = new Mesh();
+			mesh.vertices = vertices;
+			mesh.normals = normals;
+			mesh.uv = UVs;
+			mesh.triangles = triangles;
+
+			mesh.RecalculateBounds();
+
+			if(!data.hasNormals)
+			{
+				mesh.RecalculateNormals();
+			}
+
+			return mesh;
 		}
-
-		return mesh;
-	}
-	private Material NiAVObjectPropertiesToMaterial(NiAVObject obj)
-	{
-		// Find relevant properties.
-		NiTexturingProperty texturingProperty = null;
-		NiMaterialProperty materialProperty = null;
-		NiAlphaProperty alphaProperty = null;
-
-		foreach(var propRef in obj.propertyRefs)
+		private Material NiAVObjectPropertiesToMaterial(NiAVObject obj)
 		{
-			var prop = file.blocks[propRef];
+			// Find relevant properties.
+			NiTexturingProperty texturingProperty = null;
+			NiMaterialProperty materialProperty = null;
+			NiAlphaProperty alphaProperty = null;
 
-			if(prop is NiTexturingProperty)
+			foreach(var propRef in obj.propertyRefs)
 			{
-				texturingProperty = (NiTexturingProperty)prop;
-			}
-			else if(prop is NiMaterialProperty)
-			{
-				materialProperty = (NiMaterialProperty)prop;
-			}
-			else if(prop is NiAlphaProperty)
-			{
-				alphaProperty = (NiAlphaProperty)prop;
-			}
-		}
+				var prop = file.blocks[propRef];
 
-		// Create the material.
-		Material material;
-
-		if(alphaProperty != null)
-		{
-			if(Utils.ContainsBitFlags(alphaProperty.flags, 1))
-			{
-				material = new Material(TESUnity.instance.fadeMaterial);
+				if(prop is NiTexturingProperty)
+				{
+					texturingProperty = (NiTexturingProperty)prop;
+				}
+				else if(prop is NiMaterialProperty)
+				{
+					materialProperty = (NiMaterialProperty)prop;
+				}
+				else if(prop is NiAlphaProperty)
+				{
+					alphaProperty = (NiAlphaProperty)prop;
+				}
 			}
-			else if(Utils.ContainsBitFlags(alphaProperty.flags, 0x100))
+
+			// Create the material.
+			Material material;
+
+			if(alphaProperty != null)
 			{
-				material = new Material(TESUnity.instance.cutoutMaterial);
-				material.SetFloat("alphaCutoff", (float)alphaProperty.threshold / 255);
+				if(Utils.ContainsBitFlags(alphaProperty.flags, 1))
+				{
+					material = new Material(TESUnity.instance.fadeMaterial);
+				}
+				else if(Utils.ContainsBitFlags(alphaProperty.flags, 0x100))
+				{
+					material = new Material(TESUnity.instance.cutoutMaterial);
+					material.SetFloat("alphaCutoff", (float)alphaProperty.threshold / 255);
+				}
+				else
+				{
+					material = new Material(TESUnity.instance.defaultMaterial);
+				}
 			}
 			else
 			{
 				material = new Material(TESUnity.instance.defaultMaterial);
 			}
-		}
-		else
-		{
-			material = new Material(TESUnity.instance.defaultMaterial);
-		}
 
-		if(texturingProperty != null && texturingProperty.hasBaseTexture)
-		{
-			var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.sourceRef];
-			var fileNameWithExt = System.Text.Encoding.ASCII.GetString(srcTexture.fileName);
-			var fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileNameWithExt);
+			// Apply textures.
+			if(texturingProperty != null && texturingProperty.hasBaseTexture)
+			{
+				var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.sourceRef];
+				var fileNameWithExt = System.Text.Encoding.ASCII.GetString(srcTexture.fileName);
+				var fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileNameWithExt);
 
-			material.mainTexture = dataReader.LoadTexture(fileNameWithoutExt);
+				material.mainTexture = dataReader.LoadTexture(fileNameWithoutExt);
+			}
+
+			return material;
 		}
-
-		return material;
 	}
 }
