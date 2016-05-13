@@ -9,11 +9,28 @@ public class FlyingCameraComponent : MonoBehaviour
 	public float mouseSensitivity = 3;
 	public float minVerticalAngle = -90;
 	public float maxVerticalAngle = 90;
+
+	private Rigidbody rigidbody;
 	
+	private void Start()
+	{
+		rigidbody = GetComponent<Rigidbody>();
+	}
 	private void Update()
 	{
 		Rotate();
-		Translate();
+
+		if(rigidbody == null)
+		{
+			Translate();
+		}
+	}
+	private void FixedUpdate()
+	{
+		if(rigidbody != null)
+		{
+			UpdateVelocity();
+		}
 	}
 
 	private void Rotate()
@@ -36,7 +53,16 @@ public class FlyingCameraComponent : MonoBehaviour
 	}
 	private void Translate()
 	{
-		// Calculate the movement direction.
+		transform.Translate(Time.deltaTime * CalculateLocalVelocity());
+	}
+	private void UpdateVelocity()
+	{
+		rigidbody.velocity = transform.TransformVector(CalculateLocalVelocity());
+	}
+
+	private Vector3 CalculateLocalMovementDirection()
+	{
+		// Calculate the local movement direction.
 		var direction = Vector3.zero;
 
 		if(Input.GetKey(KeyCode.W))
@@ -69,9 +95,10 @@ public class FlyingCameraComponent : MonoBehaviour
 			direction += Vector3.up;
 		}
 
-		direction.Normalize();
-
-		// Calculate the speed.
+		return direction.normalized;
+	}
+	private float CalculateSpeed()
+	{
 		float speed;
 
 		if(Input.GetKey(KeyCode.LeftShift))
@@ -87,8 +114,10 @@ public class FlyingCameraComponent : MonoBehaviour
 			speed = normalSpeed;
 		}
 
-		// translate
-		var velocity = speed * direction;
-		transform.Translate(Time.deltaTime * velocity);
+		return speed;
+	}
+	private Vector3 CalculateLocalVelocity()
+	{
+		return CalculateSpeed() * CalculateLocalMovementDirection();
 	}
 }

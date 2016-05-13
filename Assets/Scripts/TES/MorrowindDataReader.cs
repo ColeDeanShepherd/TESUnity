@@ -262,21 +262,9 @@ namespace TESUnity
 					{
 						// Load terrain texture.
 						var LTEX = FindLTEXRecord(textureIndex);
-
-						if(textureIndex == 0)
-						{
-							int ii = 3;
-						}
-
 						var textureFileName = LTEX.DATA.value;
 						var textureName = Path.GetFileNameWithoutExtension(textureFileName);
 						var texture = LoadTexture(textureName);
-
-						if(texture == null)
-						{
-							Debug.Log("asdf");
-							texture = LoadTexture("tx_sand_01");
-						}
 
 						// Create the splat prototype.
 						var splat = new SplatPrototype();

@@ -6,6 +6,7 @@ namespace TESUnity
 	using NIF;
 
 	// TODO: Investigate merging meshes.
+	// TODO: Investigate merging collision nodes with visual nodes.
 	public class NIFObjectBuilder
 	{
 		public NIFObjectBuilder(NiFile file, MorrowindDataReader dataReader)
@@ -69,7 +70,7 @@ namespace TESUnity
 			}
 			else if(obj.GetType() == typeof(RootCollisionNode))
 			{
-				return null;
+				return InstantiateRootCollisionNode((RootCollisionNode)obj);
 			}
 			else if(obj.GetType() == typeof(NiTextureEffect))
 			{
@@ -128,6 +129,22 @@ namespace TESUnity
 			obj.AddComponent<MeshRenderer>().material = material;
 
 			ApplyNiAVObject(triShape, obj);
+
+			return obj;
+		}
+		private GameObject InstantiateRootCollisionNode(RootCollisionNode collisionNode)
+		{
+			GameObject obj = new GameObject("Root Collision Node");
+			ApplyNiAVObject(collisionNode, obj);
+
+			foreach(var childIndex in collisionNode.children)
+			{
+				// NiNodes can have child references < 0 meaning null.
+				if(childIndex >= 0)
+				{
+					AddColliderFromNiObject(file.blocks[childIndex], obj);
+				}
+			}
 
 			return obj;
 		}
@@ -262,6 +279,20 @@ namespace TESUnity
 			}
 
 			return material;
+		}
+
+		private void AddColliderFromNiObject(NiObject anNiObject, GameObject gameObject)
+		{
+			if(anNiObject.GetType() == typeof(NiTriShape))
+			{
+				var triShape = (NiTriShape)anNiObject;
+
+				gameObject.AddComponent<MeshCollider>().sharedMesh = NiTriShapeDataToMesh((NiTriShapeData)file.blocks[triShape.dataRef]);
+			}
+			else
+			{
+				Debug.Log("Unsupported collider NiObject: " + anNiObject.GetType().Name);
+			}
 		}
 	}
 }

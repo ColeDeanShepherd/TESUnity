@@ -51,29 +51,10 @@ public static class GameObjectUtils
 		var terrain = terrainObject.AddComponent<Terrain>();
 		terrain.terrainData = terrainData;
 
-		terrainObject.AddComponent<TerrainCollider>();
+		terrainObject.AddComponent<TerrainCollider>().terrainData = terrainData;
 
 		terrainObject.transform.position = position;
 
 		return terrainObject;
-	}
-
-	public static Bounds GetLocalVisualBoundsOfParent(GameObject gameObject)
-	{
-		var childMeshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
-
-		if(childMeshFilters.Length == 0)
-		{
-			return new Bounds();
-		}
-
-		Bounds combinedBounds = childMeshFilters[0].mesh.bounds;
-
-		for(int i = 1; i < childMeshFilters.Length; i++)
-		{
-			combinedBounds.Encapsulate(childMeshFilters[i].mesh.bounds);
-		}
-
-		return combinedBounds;
 	}
 }

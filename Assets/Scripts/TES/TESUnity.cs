@@ -53,7 +53,9 @@ namespace TESUnity
 			waterObj = GameObject.Find("Water");
 
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
-			ExtractFileFromMorrowind("meshes\\x\\ex_dae_mehrunesdagon.nif");
+			ExtractFileFromMorrowind("meshes\\Marker_Prison.nif");
+
+			CreatePlayer(Vector3.up * 50, Quaternion.identity);
 
 			//CreateExteriorCell(Vector2i.zero);
 
@@ -343,6 +345,17 @@ namespace TESUnity
 					}
 				}
 			}
+		}
+
+		private GameObject CreatePlayer(Vector3 position, Quaternion orientation)
+		{
+			GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+			player.AddComponent<Rigidbody>();
+
+			player.transform.position = position;
+			player.transform.rotation = orientation;
+
+			return player;
 		}
 
 		/*
