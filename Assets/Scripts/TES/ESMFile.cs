@@ -684,6 +684,14 @@ namespace TESUnity
 				}
 			}
 
+			public Vector2i gridCoords
+			{
+				get
+				{
+					return new Vector2i(INTV.value0, INTV.value1);
+				}
+			}
+
 			public INTVTwoI32SubRecord INTV;
 			//public DATASubRecord DATA;
 			public VNMLSubRecord VNML;

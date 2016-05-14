@@ -49,6 +49,7 @@ MonoBehaviour:
   defaultMaterial: {fileID: 2100000, guid: 4e698a26609eed141a2f8e60e7ab2993, type: 2}
   cutoutMaterial: {fileID: 2100000, guid: 0f5c23bddac50884b8dfe5bbb5728914, type: 2}
   fadeMaterial: {fileID: 2100000, guid: 7356246cb4b7e3141b93f7cb56e3e638, type: 2}
+  waterPrefab: {fileID: 121708, guid: e8e3a26facab0b742b401e1c0da419dc, type: 2}
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

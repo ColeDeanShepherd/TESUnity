@@ -4,7 +4,7 @@ namespace TESUnity
 {
 	public static class Convert
 	{
-		public static float MW2UnityScale = 1.0f / 128;
+		public const int exteriorCellSideLength = 8192;
 
 		public static Vector3 NifVector3ToUnityVector3(Vector3 NIFVector3)
 		{
@@ -14,7 +14,7 @@ namespace TESUnity
 		}
 		public static Vector3 NifPointToUnityPoint(Vector3 NIFPoint)
 		{
-			return NifVector3ToUnityVector3(NIFPoint) * MW2UnityScale;
+			return NifVector3ToUnityVector3(NIFPoint);
 		}
 		public static Quaternion NifMatrix4x4ToUnityQuaternion(Matrix4x4 NIFMatrix4x4)
 		{

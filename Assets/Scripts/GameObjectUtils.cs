@@ -2,6 +2,19 @@
 
 public static class GameObjectUtils
 {
+	public static GameObject CreateMainCamera()
+	{
+		GameObject cameraObject = new GameObject("Main Camera");
+		cameraObject.AddComponent<Camera>();
+		cameraObject.AddComponent<GUILayer>();
+		cameraObject.AddComponent<FlareLayer>();
+		cameraObject.AddComponent<AudioListener>();
+
+		cameraObject.tag = "MainCamera";
+
+		return cameraObject;
+	}
+
 	/// <summary>
 	/// Creates terrain from runtime data.
 	/// </summary>
@@ -38,10 +51,9 @@ public static class GameObjectUtils
 		if((splatPrototypes != null) && (alphaMap != null))
 		{
 			Debug.Assert(alphaMap.GetLength(0) == alphaMap.GetLength(1));
-
-			terrainData.splatPrototypes = splatPrototypes;
 			
 			terrainData.alphamapResolution = alphaMap.GetLength(0);
+			terrainData.splatPrototypes = splatPrototypes;
 			terrainData.SetAlphamaps(0, 0, alphaMap);
 		}
 
@@ -56,5 +68,21 @@ public static class GameObjectUtils
 		terrainObject.transform.position = position;
 
 		return terrainObject;
+	}
+
+	public static GameObject FindObjectWithTagUpHeirarchy(GameObject gameObject, string tag)
+	{
+		while(gameObject != null)
+		{
+			if(gameObject.tag == tag)
+			{
+				return gameObject;
+			}
+
+			var parentTransform = gameObject.transform.parent;
+			gameObject = (parentTransform != null) ? parentTransform.gameObject : null;
+		}
+
+		return null;
 	}
 }

@@ -22,9 +22,9 @@ namespace TESUnity
 			// If there is only one root, instantiate that directly.
 			// If there are multiple roots, create a container GameObject and parent it to the roots.
 
-			if(file.footer.rootRefs.Length == 1)
+			if(file.footer.roots.Length == 1)
 			{
-				GameObject gameObject = InstantiateNiObject(file.blocks[file.footer.rootRefs[0]]);
+				GameObject gameObject = InstantiateNiObject(file.blocks[file.footer.roots[0]]);
 
 				if(gameObject == null)
 				{
@@ -37,7 +37,7 @@ namespace TESUnity
 			{
 				GameObject gameObject = new GameObject(file.name);
 
-				foreach(var rootRef in file.footer.rootRefs)
+				foreach(var rootRef in file.footer.roots)
 				{
 					var child = InstantiateNiObject(file.blocks[rootRef]);
 
@@ -66,7 +66,7 @@ namespace TESUnity
 			}
 			else if(obj.GetType() == typeof(NiTriShape))
 			{
-				return InstantiateNiTriShape((NiTriShape)obj);
+				return InstantiateNiTriShape((NiTriShape)obj, true, false);
 			}
 			else if(obj.GetType() == typeof(RootCollisionNode))
 			{
@@ -106,9 +106,9 @@ namespace TESUnity
 			foreach(var childIndex in node.children)
 			{
 				// NiNodes can have child references < 0 meaning null.
-				if(childIndex >= 0)
+				if(!childIndex.isNull)
 				{
-					var child = InstantiateNiObject(file.blocks[childIndex]);
+					var child = InstantiateNiObject(file.blocks[childIndex.value]);
 
 					if(child != null)
 					{
@@ -119,14 +119,23 @@ namespace TESUnity
 
 			return obj;
 		}
-		private GameObject InstantiateNiTriShape(NiTriShape triShape)
+		private GameObject InstantiateNiTriShape(NiTriShape triShape, bool visual, bool collidable)
 		{
-			var mesh = NiTriShapeDataToMesh((NiTriShapeData)file.blocks[triShape.dataRef]);
-			var material = NiAVObjectPropertiesToMaterial(triShape);
+			Debug.Assert(visual || collidable);
 
+			var mesh = NiTriShapeDataToMesh((NiTriShapeData)file.blocks[triShape.data.value]);
 			var obj = new GameObject(System.Text.Encoding.ASCII.GetString(triShape.name));
-			obj.AddComponent<MeshFilter>().mesh = mesh;
-			obj.AddComponent<MeshRenderer>().material = material;
+
+			if(visual)
+			{
+				obj.AddComponent<MeshFilter>().mesh = mesh;
+				obj.AddComponent<MeshRenderer>().material = NiAVObjectPropertiesToMaterial(triShape);
+			}
+			
+			if(collidable)
+			{
+				obj.AddComponent<MeshCollider>().sharedMesh = mesh;
+			}
 
 			ApplyNiAVObject(triShape, obj);
 
@@ -140,9 +149,9 @@ namespace TESUnity
 			foreach(var childIndex in collisionNode.children)
 			{
 				// NiNodes can have child references < 0 meaning null.
-				if(childIndex >= 0)
+				if(!childIndex.isNull)
 				{
-					AddColliderFromNiObject(file.blocks[childIndex], obj);
+					AddColliderFromNiObject(file.blocks[childIndex.value], obj);
 				}
 			}
 
@@ -226,9 +235,9 @@ namespace TESUnity
 			NiMaterialProperty materialProperty = null;
 			NiAlphaProperty alphaProperty = null;
 
-			foreach(var propRef in obj.propertyRefs)
+			foreach(var propRef in obj.properties)
 			{
-				var prop = file.blocks[propRef];
+				var prop = file.blocks[propRef.value];
 
 				if(prop is NiTexturingProperty)
 				{
@@ -271,7 +280,7 @@ namespace TESUnity
 			// Apply textures.
 			if(texturingProperty != null && texturingProperty.hasBaseTexture)
 			{
-				var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.sourceRef];
+				var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.source.value];
 				var fileNameWithExt = System.Text.Encoding.ASCII.GetString(srcTexture.fileName);
 				var fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileNameWithExt);
 
@@ -285,9 +294,8 @@ namespace TESUnity
 		{
 			if(anNiObject.GetType() == typeof(NiTriShape))
 			{
-				var triShape = (NiTriShape)anNiObject;
-
-				gameObject.AddComponent<MeshCollider>().sharedMesh = NiTriShapeDataToMesh((NiTriShapeData)file.blocks[triShape.dataRef]);
+				var colliderObj = InstantiateNiTriShape((NiTriShape)anNiObject, false, true);
+				colliderObj.transform.SetParent(gameObject.transform, false);
 			}
 			else
 			{

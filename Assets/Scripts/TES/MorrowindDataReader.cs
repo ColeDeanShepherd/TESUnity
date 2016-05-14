@@ -116,6 +116,8 @@ namespace TESUnity
 				if(LAND != null)
 				{
 					var cellObj = new GameObject("cell " + cellIndices.ToString());
+					cellObj.tag = "Cell";
+
 					var landObj = InstantiateLAND(LAND);
 
 					if(landObj != null)
@@ -135,6 +137,7 @@ namespace TESUnity
 			else
 			{
 				GameObject cellObj = new GameObject(CELL.NAME.value);
+				cellObj.tag = "Cell";
 
 				InstantiateCellObjects(CELL, cellObj);
 
@@ -204,26 +207,23 @@ namespace TESUnity
 				return null;
 			}
 
-			int LAND_SIZE = 65;
-			float HEIGHT_SCALE = 1.0f / 16;
-			int VTEX_SIZE = 16;
+			int LAND_SIDE_LENGTH_IN_SAMPLES = 65;
+			var heights = new float[LAND_SIDE_LENGTH_IN_SAMPLES, LAND_SIDE_LENGTH_IN_SAMPLES];
 
-			var heights = new float[LAND_SIZE, LAND_SIZE];
-			Debug.Assert(heights.Length == LAND.VHGT.heightOffsets.Length);
-
-			// Read in the heights.
+			// Read in the heights in Morrowind units.
+			int VHGTIncrementToMWUnits = 8;
 			float rowOffset = LAND.VHGT.referenceHeight;
 
-			for(int y = 0; y < LAND_SIZE; y++)
+			for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
 			{
-				rowOffset += LAND.VHGT.heightOffsets[y * LAND_SIZE];
+				rowOffset += VHGTIncrementToMWUnits * LAND.VHGT.heightOffsets[y * LAND_SIDE_LENGTH_IN_SAMPLES];
 				heights[y, 0] = rowOffset;
 
 				float colOffset = rowOffset;
 
-				for(int x = 1; x < LAND_SIZE; x++)
+				for(int x = 1; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
 				{
-					colOffset += LAND.VHGT.heightOffsets[(y * LAND_SIZE) + x];
+					colOffset += VHGTIncrementToMWUnits * LAND.VHGT.heightOffsets[(y * LAND_SIDE_LENGTH_IN_SAMPLES) + x];
 					heights[y, x] = colOffset;
 				}
 			}
@@ -232,14 +232,15 @@ namespace TESUnity
 			float minHeight, maxHeight;
 			Utils.GetExtrema(heights, out minHeight, out maxHeight);
 
-			for(int y = 0; y < LAND_SIZE; y++)
+			for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
 			{
-				for(int x = 0; x < LAND_SIZE; x++)
+				for(int x = 0; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
 				{
 					heights[y, x] = Utils.ChangeRange(heights[y, x], minHeight, maxHeight, 0, 1);
 				}
 			}
 
+			// Texture the terrain.
 			SplatPrototype[] splatPrototypes = null;
 			float[,,] alphaMap = null;
 
@@ -282,14 +283,16 @@ namespace TESUnity
 				splatPrototypes = splatPrototypeList.ToArray();
 
 				// Create the alpha map.
-				alphaMap = new float[VTEX_SIZE, VTEX_SIZE, splatPrototypes.Length];
+				int VTEX_ROWS = 16;
+				int VTEX_COLUMNS = VTEX_ROWS;
+				alphaMap = new float[VTEX_ROWS, VTEX_COLUMNS, splatPrototypes.Length];
 
-				for(int y = 0; y < VTEX_SIZE; y++)
+				for(int y = 0; y < VTEX_ROWS; y++)
 				{
 					var yMajor = y / 4;
 					var yMinor = y - (yMajor * 4);
 
-					for(int x = 0; x < VTEX_SIZE; x++)
+					for(int x = 0; x < VTEX_COLUMNS; x++)
 					{
 						var xMajor = x / 4;
 						var xMinor = x - (xMajor * 4);
@@ -309,12 +312,13 @@ namespace TESUnity
 					}
 				}
 			}
-
+			////////////float HEIGHT_SCALE = 1.0f / 16;
 			// Create the terrain.
 			var heightRange = maxHeight - minHeight;
-			var terrainPosition = new Vector3((LAND_SIZE - 1) * LAND.INTV.value0, minHeight * HEIGHT_SCALE, (LAND_SIZE - 1) * LAND.INTV.value1);
+			var terrainPosition = new Vector3(Convert.exteriorCellSideLength * LAND.gridCoords.x, minHeight, Convert.exteriorCellSideLength * LAND.gridCoords.y);
 
-			var terrain = GameObjectUtils.CreateTerrain(heights, heightRange * HEIGHT_SCALE, 1, splatPrototypes, alphaMap, terrainPosition);
+			var heightSampleDistance = Convert.exteriorCellSideLength / (LAND_SIDE_LENGTH_IN_SAMPLES - 1);
+			var terrain = GameObjectUtils.CreateTerrain(heights, heightRange, heightSampleDistance, splatPrototypes, alphaMap, terrainPosition);
 			terrain.GetComponent<Terrain>().materialType = Terrain.MaterialType.BuiltInLegacyDiffuse;
 			return terrain;
 		}
@@ -408,6 +412,8 @@ namespace TESUnity
 
 						if(objRecord is DOORRecord)
 						{
+							obj.tag = "Door";
+
 							var DOOR = (DOORRecord)objRecord;
 							var doorComponent = obj.AddComponent<DoorComponent>();
 
@@ -415,11 +421,6 @@ namespace TESUnity
 							{
 								doorComponent.doorName = DOOR.FNAM.value;
 							}
-
-							var visualBounds = GameObjectUtils.GetLocalVisualBoundsOfParent(obj);
-							var boxCollider = obj.AddComponent<BoxCollider>();
-							boxCollider.size = visualBounds.size;
-							boxCollider.center = visualBounds.center;
 
 							if((refObjGroup.DNAM != null) || (refObjGroup.DODT != null))
 							{

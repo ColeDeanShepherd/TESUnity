@@ -6,6 +6,10 @@ using UnityEngine.UI;
 // TODO: fix rotation errors
 // TODO: redesign destructors/idisposable
 // TODO: handle untextured activators
+// TODO: add support for more ESM records
+// TODO: add walking mode
+// TODO: add music playing
+// TODO: add more creation functions for GUI elements
 
 namespace TESUnity
 {
@@ -28,6 +32,8 @@ namespace TESUnity
 		public Material cutoutMaterial;
 		public Material fadeMaterial;
 
+		public GameObject waterPrefab;
+
 		private GameObject canvasObject;
 		private GameObject waterObj;
 
@@ -37,7 +43,7 @@ namespace TESUnity
 		private string testObjPath;
 
 		private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
-		private int cellRadius = 2;
+		private int cellRadius = 1;
 
 		private bool isInteriorCell = false;
 
@@ -50,10 +56,19 @@ namespace TESUnity
 			canvasObject = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-			waterObj = GameObject.Find("Water");
+			waterObj = Instantiate(waterPrefab);
+
+			var cameraObj = GameObjectUtils.CreateMainCamera();
+			var cameraComponent = cameraObj.GetComponent<Camera>();
+			cameraComponent.nearClipPlane = 20;
+			cameraComponent.farClipPlane = 2 * cellRadius * Convert.exteriorCellSideLength;
+			var flyingCameraComponent = cameraObj.AddComponent<FlyingCameraComponent>();
+			flyingCameraComponent.slowSpeed = 200;
+			flyingCameraComponent.normalSpeed = 500;
+			flyingCameraComponent.fastSpeed = 1000;
 
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
-			ExtractFileFromMorrowind("meshes\\Marker_Prison.nif");
+			ExtractFileFromMorrowind("meshes\\x\\Ex_common_entrance_01.nif");
 
 			CreatePlayer(Vector3.up * 50, Quaternion.identity);
 
@@ -75,9 +90,7 @@ namespace TESUnity
 		}
 		private Vector2i GetCellIndices(Vector3 point)
 		{
-			float CELL_LENGTH = 64;
-
-			return new Vector2i(Mathf.FloorToInt(point.x / CELL_LENGTH), Mathf.FloorToInt(point.z / CELL_LENGTH));
+			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLength), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLength));
 		}
 		private void UpdateExteriorCells()
 		{
@@ -173,51 +186,7 @@ namespace TESUnity
 
 			if(Input.GetKeyDown(KeyCode.G))
 			{
-				RaycastHit hitInfo;
-
-				if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hitInfo, 2))
-				{
-					if(hitInfo.collider.gameObject.GetComponent<DoorComponent>() != null)
-					{
-						var doorComponent = hitInfo.collider.gameObject.GetComponent<DoorComponent>();
-
-						if(doorComponent.leadsToAnotherCell)
-						{
-							DestroyAllCells();
-
-							ESM.CELLRecord CELL;
-
-							if((doorComponent.doorExitName != null) && (doorComponent.doorExitName != ""))
-							{
-								CELL = MWDataReader.FindInteriorCellRecord(doorComponent.doorExitName);
-								cellObjects[Vector2i.zero] = MWDataReader.InstantiateCell(CELL);
-
-								if(CELL.WHGT != null)
-								{
-									waterObj.transform.position = new Vector3(0, Convert.MW2UnityScale * CELL.WHGT.value, 0);
-									waterObj.SetActive(true);
-								}
-								else
-								{
-									waterObj.SetActive(false);
-								}
-							}
-							else
-							{
-								var cellIndices = GetCellIndices(doorComponent.doorExitPos);
-								CELL = MWDataReader.FindExteriorCellRecord(cellIndices.x, cellIndices.y);
-								
-								waterObj.transform.position = Vector3.zero;
-								waterObj.SetActive(true);
-							}
-
-							Camera.main.transform.position = doorComponent.doorExitPos;
-							Camera.main.transform.eulerAngles = doorComponent.doorExitEulerAngles;
-
-							isInteriorCell = CELL.isInterior;
-						}
-					}
-				}
+				TryOpenDoor();
 			}
 		}
 		private void OnGUI()
@@ -342,6 +311,59 @@ namespace TESUnity
 					else
 					{
 						writer.WriteLine(CELL.NAME.value);
+					}
+				}
+			}
+		}
+
+		private void TryOpenDoor()
+		{
+			RaycastHit hitInfo;
+			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+
+			if(Physics.Raycast(ray, out hitInfo, 2))
+			{
+				// Find the door object.
+				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
+
+				if(doorObj != null)
+				{
+					var doorComponent = doorObj.GetComponent<DoorComponent>();
+
+					if(doorComponent.leadsToAnotherCell)
+					{
+						DestroyAllCells();
+
+						ESM.CELLRecord CELL;
+
+						if((doorComponent.doorExitName != null) && (doorComponent.doorExitName != ""))
+						{
+							CELL = MWDataReader.FindInteriorCellRecord(doorComponent.doorExitName);
+							cellObjects[Vector2i.zero] = MWDataReader.InstantiateCell(CELL);
+
+							if(CELL.WHGT != null)
+							{
+								waterObj.transform.position = new Vector3(0, CELL.WHGT.value, 0);
+								waterObj.SetActive(true);
+							}
+							else
+							{
+								waterObj.SetActive(false);
+							}
+						}
+						else
+						{
+							var cellIndices = GetCellIndices(doorComponent.doorExitPos);
+							CELL = MWDataReader.FindExteriorCellRecord(cellIndices.x, cellIndices.y);
+
+							waterObj.transform.position = Vector3.zero;
+							waterObj.SetActive(true);
+						}
+
+						Camera.main.transform.position = doorComponent.doorExitPos;
+						Camera.main.transform.eulerAngles = doorComponent.doorExitEulerAngles;
+
+						isInteriorCell = CELL.isInterior;
 					}
 				}
 			}
