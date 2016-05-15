@@ -211,20 +211,20 @@ namespace TESUnity
 			var heights = new float[LAND_SIDE_LENGTH_IN_SAMPLES, LAND_SIDE_LENGTH_IN_SAMPLES];
 
 			// Read in the heights in Morrowind units.
-			int VHGTIncrementToMWUnits = 8;
+			const int VHGTIncrementToMWUnits = 8;
 			float rowOffset = LAND.VHGT.referenceHeight;
 
 			for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
 			{
-				rowOffset += VHGTIncrementToMWUnits * LAND.VHGT.heightOffsets[y * LAND_SIDE_LENGTH_IN_SAMPLES];
-				heights[y, 0] = rowOffset;
+				rowOffset += LAND.VHGT.heightOffsets[y * LAND_SIDE_LENGTH_IN_SAMPLES];
+				heights[y, 0] = VHGTIncrementToMWUnits * rowOffset;
 
 				float colOffset = rowOffset;
 
 				for(int x = 1; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
 				{
-					colOffset += VHGTIncrementToMWUnits * LAND.VHGT.heightOffsets[(y * LAND_SIDE_LENGTH_IN_SAMPLES) + x];
-					heights[y, x] = colOffset;
+					colOffset += LAND.VHGT.heightOffsets[(y * LAND_SIDE_LENGTH_IN_SAMPLES) + x];
+					heights[y, x] = VHGTIncrementToMWUnits * colOffset;
 				}
 			}
 
@@ -312,7 +312,7 @@ namespace TESUnity
 					}
 				}
 			}
-			////////////float HEIGHT_SCALE = 1.0f / 16;
+
 			// Create the terrain.
 			var heightRange = maxHeight - minHeight;
 			var terrainPosition = new Vector3(Convert.exteriorCellSideLength * LAND.gridCoords.x, minHeight, Convert.exteriorCellSideLength * LAND.gridCoords.y);

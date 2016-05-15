@@ -63,9 +63,9 @@ namespace TESUnity
 			cameraComponent.nearClipPlane = 20;
 			cameraComponent.farClipPlane = 2 * cellRadius * Convert.exteriorCellSideLength;
 			var flyingCameraComponent = cameraObj.AddComponent<FlyingCameraComponent>();
-			flyingCameraComponent.slowSpeed = 200;
-			flyingCameraComponent.normalSpeed = 500;
-			flyingCameraComponent.fastSpeed = 1000;
+			flyingCameraComponent.slowSpeed = 500;
+			flyingCameraComponent.normalSpeed = 1500;
+			flyingCameraComponent.fastSpeed = 3000;
 
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 			ExtractFileFromMorrowind("meshes\\x\\Ex_common_entrance_01.nif");
@@ -321,7 +321,7 @@ namespace TESUnity
 			RaycastHit hitInfo;
 			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
 
-			if(Physics.Raycast(ray, out hitInfo, 2))
+			if(Physics.Raycast(ray, out hitInfo, 128))
 			{
 				// Find the door object.
 				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
