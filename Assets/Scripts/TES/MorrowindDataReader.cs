@@ -315,10 +315,10 @@ namespace TESUnity
 
 			// Create the terrain.
 			var heightRange = maxHeight - minHeight;
-			var terrainPosition = new Vector3(Convert.exteriorCellSideLength * LAND.gridCoords.x, minHeight, Convert.exteriorCellSideLength * LAND.gridCoords.y);
+			var terrainPosition = new Vector3(Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.x, minHeight / Convert.meterInMWUnits, Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.y);
 
-			var heightSampleDistance = Convert.exteriorCellSideLength / (LAND_SIDE_LENGTH_IN_SAMPLES - 1);
-			var terrain = GameObjectUtils.CreateTerrain(heights, heightRange, heightSampleDistance, splatPrototypes, alphaMap, terrainPosition);
+			var heightSampleDistance = Convert.exteriorCellSideLengthInMeters / (LAND_SIDE_LENGTH_IN_SAMPLES - 1);
+			var terrain = GameObjectUtils.CreateTerrain(heights, heightRange / Convert.meterInMWUnits, heightSampleDistance, splatPrototypes, alphaMap, terrainPosition);
 			terrain.GetComponent<Terrain>().materialType = Terrain.MaterialType.BuiltInLegacyDiffuse;
 			return terrain;
 		}
@@ -406,7 +406,7 @@ namespace TESUnity
 						}
 
 						obj.transform.position = Convert.NifPointToUnityPoint(refObjGroup.DATA.position);
-						obj.transform.eulerAngles = Convert.NifVector3ToUnityVector3(refObjGroup.DATA.eulerAngles) * Mathf.Rad2Deg;
+						obj.transform.rotation = Convert.NifEulerAnglesToUnityQuaternion(refObjGroup.DATA.eulerAngles);
 
 						obj.transform.parent = parent.transform;
 
@@ -434,7 +434,7 @@ namespace TESUnity
 								if(refObjGroup.DODT != null)
 								{
 									doorComponent.doorExitPos = Convert.NifPointToUnityPoint(refObjGroup.DODT.position);
-									doorComponent.doorExitEulerAngles = Convert.NifEulerAnglesToUnityEulerAngles(refObjGroup.DODT.eulerAngles);
+									doorComponent.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjGroup.DODT.eulerAngles);
 								}
 							}
 							else

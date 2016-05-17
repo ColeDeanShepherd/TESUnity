@@ -4,24 +4,38 @@ namespace TESUnity
 {
 	public static class Convert
 	{
-		public const int exteriorCellSideLength = 8192;
+		public const int yardInMWUnits = 64;
+		public const float meterInYards = 1.09361f;
+		public const float meterInMWUnits = meterInYards * yardInMWUnits;
 
-		public static Vector3 NifVector3ToUnityVector3(Vector3 NIFVector3)
+		public const int exteriorCellSideLengthInMWUnits = 8192;
+		public const float exteriorCellSideLengthInMeters = (float)exteriorCellSideLengthInMWUnits / meterInMWUnits;
+
+		public static Vector3 NifVectorToUnityVector(Vector3 NIFVector)
 		{
-			Utils.Swap(ref NIFVector3.y, ref NIFVector3.z);
+			Utils.Swap(ref NIFVector.y, ref NIFVector.z);
 
-			return NIFVector3;
+			return NIFVector;
 		}
 		public static Vector3 NifPointToUnityPoint(Vector3 NIFPoint)
 		{
-			return NifVector3ToUnityVector3(NIFPoint);
+			return NifVectorToUnityVector(NIFPoint) / meterInMWUnits;
 		}
-		public static Quaternion NifMatrix4x4ToUnityQuaternion(Matrix4x4 NIFMatrix4x4)
+		public static Matrix4x4 NifRotationMatrixToUnityRotationMatrix(Matrix4x4 NIFRotationMatrix)
 		{
-			var quat = RotationMatrixToQuaternion(NIFMatrix4x4);
-			Utils.Swap(ref quat.y, ref quat.z);
+			NIFRotationMatrix = NIFRotationMatrix.transpose;
 
-			return Quaternion.Inverse(quat);
+			var yColumn = NIFRotationMatrix.GetColumn(1);
+			var zColumn = NIFRotationMatrix.GetColumn(2);
+
+			NIFRotationMatrix.SetColumn(1, zColumn);
+			NIFRotationMatrix.SetColumn(2, yColumn);
+
+			return NIFRotationMatrix;
+		}
+		public static Quaternion NifRotationMatrixToUnityQuaternion(Matrix4x4 NIFRotationMatrix)
+		{
+			return RotationMatrixToQuaternion(NifRotationMatrixToUnityRotationMatrix(NIFRotationMatrix));
 		}
 		public static Quaternion RotationMatrixToQuaternion(Matrix4x4 matrix)
 		{
@@ -89,9 +103,15 @@ namespace TESUnity
 
 			return quat;
 		}
-		public static Vector3 NifEulerAnglesToUnityEulerAngles(Vector3 NifEulerAngles)
+		public static Quaternion NifEulerAnglesToUnityQuaternion(Vector3 NifEulerAngles)
 		{
-			return Mathf.Rad2Deg * NifVector3ToUnityVector3(NifEulerAngles);
+			var eulerAngles = NifVectorToUnityVector(NifEulerAngles);
+
+			var xRot = Quaternion.AngleAxis(Mathf.Rad2Deg * eulerAngles.x, Vector3.right);
+			var yRot = Quaternion.AngleAxis(Mathf.Rad2Deg * eulerAngles.y, Vector3.up);
+			var zRot = Quaternion.AngleAxis(Mathf.Rad2Deg * eulerAngles.z, Vector3.forward);
+
+			return zRot * yRot * xRot;
 		}
 	}
 }

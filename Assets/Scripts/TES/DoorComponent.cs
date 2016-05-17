@@ -8,6 +8,6 @@ namespace TESUnity
 		public bool leadsToAnotherCell;
 		public string doorExitName;
 		public Vector3 doorExitPos;
-		public Vector3 doorExitEulerAngles;
+		public Quaternion doorExitOrientation;
 	}
 }

@@ -59,16 +59,10 @@ namespace TESUnity
 			waterObj = Instantiate(waterPrefab);
 
 			var cameraObj = GameObjectUtils.CreateMainCamera();
-			var cameraComponent = cameraObj.GetComponent<Camera>();
-			cameraComponent.nearClipPlane = 20;
-			cameraComponent.farClipPlane = 2 * cellRadius * Convert.exteriorCellSideLength;
 			var flyingCameraComponent = cameraObj.AddComponent<FlyingCameraComponent>();
-			flyingCameraComponent.slowSpeed = 500;
-			flyingCameraComponent.normalSpeed = 1500;
-			flyingCameraComponent.fastSpeed = 3000;
 
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
-			ExtractFileFromMorrowind("meshes\\x\\Ex_common_entrance_01.nif");
+			//ExtractFileFromMorrowind("meshes\\x\\Ex_DAE_ruin_01.nif");
 
 			CreatePlayer(Vector3.up * 50, Quaternion.identity);
 
@@ -90,7 +84,7 @@ namespace TESUnity
 		}
 		private Vector2i GetCellIndices(Vector3 point)
 		{
-			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLength), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLength));
+			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
 		}
 		private void UpdateExteriorCells()
 		{
@@ -321,7 +315,7 @@ namespace TESUnity
 			RaycastHit hitInfo;
 			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
 
-			if(Physics.Raycast(ray, out hitInfo, 128))
+			if(Physics.Raycast(ray, out hitInfo, 2))
 			{
 				// Find the door object.
 				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
@@ -361,7 +355,7 @@ namespace TESUnity
 						}
 
 						Camera.main.transform.position = doorComponent.doorExitPos;
-						Camera.main.transform.eulerAngles = doorComponent.doorExitEulerAngles;
+						Camera.main.transform.rotation = doorComponent.doorExitOrientation;
 
 						isInteriorCell = CELL.isInterior;
 					}

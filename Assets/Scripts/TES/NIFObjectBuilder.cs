@@ -161,7 +161,7 @@ namespace TESUnity
 		private void ApplyNiAVObject(NiAVObject anNiAVObject, GameObject obj)
 		{
 			obj.transform.position = Convert.NifPointToUnityPoint(anNiAVObject.translation);
-			obj.transform.rotation = Convert.NifMatrix4x4ToUnityQuaternion(anNiAVObject.rotation);
+			obj.transform.rotation = Convert.NifRotationMatrixToUnityQuaternion(anNiAVObject.rotation);
 			obj.transform.localScale = anNiAVObject.scale * Vector3.one;
 		}
 
@@ -182,7 +182,7 @@ namespace TESUnity
 
 				for(int i = 0; i < normals.Length; i++)
 				{
-					normals[i] = Convert.NifVector3ToUnityVector3(data.normals[i]);
+					normals[i] = Convert.NifVectorToUnityVector(data.normals[i]);
 				}
 			}
 
