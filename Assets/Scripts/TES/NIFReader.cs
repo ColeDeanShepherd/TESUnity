@@ -79,6 +79,10 @@ namespace TESUnity
 				{
 					return (T)((object)reader.ReadSingle());
 				}
+				else if(typeof(T) == typeof(byte))
+				{
+					return (T)((object)reader.ReadByte());
+				}
 				else if(typeof(T) == typeof(string))
 				{
 					return (T)((object)BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader));
@@ -90,6 +94,13 @@ namespace TESUnity
 				else if(typeof(T) == typeof(Quaternion))
 				{
 					return (T)((object)BinaryReaderExtensions.ReadQuaternionWFirst(reader));
+				}
+				else if(typeof(T) == typeof(Color4))
+				{
+					var color = new Color4();
+					color.Deserialize(reader);
+
+					return (T)((object)color);
 				}
 				else
 				{
@@ -334,6 +345,62 @@ namespace TESUnity
 				else if(StringUtils.Equals(nodeTypeBytes, "NiKeyframeData"))
 				{
 					var data = new NiKeyframeData();
+					data.Deserialize(reader);
+
+					return data;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "NiColorData"))
+				{
+					var data = new NiColorData();
+					data.Deserialize(reader);
+
+					return data;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "NiGeomMorpherController"))
+				{
+					var controller = new NiGeomMorpherController();
+					controller.Deserialize(reader);
+
+					return controller;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "NiMorphData"))
+				{
+					var data = new NiMorphData();
+					data.Deserialize(reader);
+
+					return data;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "AvoidNode"))
+				{
+					var node = new AvoidNode();
+					node.Deserialize(reader);
+
+					return node;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "NiVisController"))
+				{
+					var controller = new NiVisController();
+					controller.Deserialize(reader);
+
+					return controller;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "NiVisData"))
+				{
+					var data = new NiVisData();
+					data.Deserialize(reader);
+
+					return data;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "NiAlphaController"))
+				{
+					var controller = new NiAlphaController();
+					controller.Deserialize(reader);
+
+					return controller;
+				}
+				else if(StringUtils.Equals(nodeTypeBytes, "NiFloatData"))
+				{
+					var data = new NiFloatData();
 					data.Deserialize(reader);
 
 					return data;
@@ -648,13 +715,20 @@ namespace TESUnity
 			public T value;
 			public TBC TBC;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(BinaryReader reader, KeyType keyType)
 			{
 				time = reader.ReadSingle();
-				value = NiReaderUtils.Read<T>(reader);
 
-				TBC = new TBC();
-				TBC.Deserialize(reader);
+				if(keyType != KeyType.XYZ_ROTATION_KEY)
+				{
+					value = NiReaderUtils.Read<T>(reader);
+				}
+
+				if(keyType == KeyType.TBC_KEY)
+				{
+					TBC = new TBC();
+					TBC.Deserialize(reader);
+				}
 			}
 		}
 
@@ -727,6 +801,33 @@ namespace TESUnity
 				timestamp = reader.ReadSingle();
 				unknownShort = reader.ReadUInt16();
 				vertexID = reader.ReadUInt16();
+			}
+		}
+
+		public class Morph
+		{
+			public uint numKeys;
+			public KeyType interpolation;
+			public Key<float>[] keys;
+			public Vector3[] vectors;
+
+			public void Deserialize(BinaryReader reader, uint numVertices)
+			{
+				numKeys = reader.ReadUInt32();
+				interpolation = (KeyType)reader.ReadUInt32();
+
+				keys = new Key<float>[numKeys];
+				for(int i = 0; i < keys.Length; i++)
+				{
+					keys[i] = new Key<float>();
+					keys[i].Deserialize(reader, interpolation);
+				}
+
+				vectors = new Vector3[numVertices];
+				for(int i = 0; i < vectors.Length; i++)
+				{
+					vectors[i] = BinaryReaderExtensions.ReadVector3(reader);
+				}
 			}
 		}
 		#endregion
@@ -829,8 +930,9 @@ namespace TESUnity
 			}
 		}
 		public class RootCollisionNode : NiNode { }
-		public class NiBSAnimationNode : NiNode {}
-		public class NiBSParticleNode : NiNode {}
+		public class NiBSAnimationNode : NiNode { }
+		public class NiBSParticleNode : NiNode { }
+		public class AvoidNode : NiNode { }
 
 		// Geometry
 		public abstract class NiGeometry : NiAVObject
@@ -1155,7 +1257,7 @@ namespace TESUnity
 						for(int i = 0; i < quaternionKeys.Length; i++)
 						{
 							quaternionKeys[i] = new QuatKey<Quaternion>();
-							quaternionKeys[i].Deserialize(reader);
+							quaternionKeys[i].Deserialize(reader, rotationType);
 						}
 					}
 					else
@@ -1176,6 +1278,72 @@ namespace TESUnity
 
 				scales = new KeyGroup<float>();
 				scales.Deserialize(reader);
+			}
+		}
+		public class NiColorData : NiObject
+		{
+			public KeyGroup<Color4> data;
+
+			public override void Deserialize(BinaryReader reader)
+			{
+				base.Deserialize(reader);
+
+				data = new KeyGroup<Color4>();
+				data.Deserialize(reader);
+			}
+		}
+		public class NiMorphData : NiObject
+		{
+			public uint numMorphs;
+			public uint numVertices;
+			public byte relativeTargets;
+			public Morph[] morphs;
+
+			public override void Deserialize(BinaryReader reader)
+			{
+				base.Deserialize(reader);
+
+				numMorphs = reader.ReadUInt32();
+				numVertices = reader.ReadUInt32();
+				relativeTargets = reader.ReadByte();
+
+				morphs = new Morph[numMorphs];
+				for(int i = 0; i < morphs.Length; i++)
+				{
+					morphs[i] = new Morph();
+					morphs[i].Deserialize(reader, numVertices);
+				}
+			}
+		}
+		public class NiVisData : NiObject
+		{
+			public uint numKeys;
+			public Key<byte>[] keys;
+
+			public override void Deserialize(BinaryReader reader)
+			{
+				base.Deserialize(reader);
+
+				numKeys = reader.ReadUInt32();
+
+				keys = new Key<byte>[numKeys];
+				for(int i = 0; i < keys.Length; i++)
+				{
+					keys[i] = new Key<byte>();
+					keys[i].Deserialize(reader, KeyType.LINEAR_KEY);
+				}
+			}
+		}
+		public class NiFloatData : NiObject
+		{
+			public KeyGroup<float> data;
+
+			public override void Deserialize(BinaryReader reader)
+			{
+				base.Deserialize(reader);
+
+				data = new KeyGroup<float>();
+				data.Deserialize(reader);
 			}
 		}
 
@@ -1426,18 +1594,6 @@ namespace TESUnity
 				colorData = NiReaderUtils.ReadRef<NiColorData>(reader);
 			}
 		}
-		public class NiColorData : NiObject
-		{
-			public KeyGroup<Color4> data;
-
-			public override void Deserialize(BinaryReader reader)
-			{
-				base.Deserialize(reader);
-
-				data = new KeyGroup<Color4>();
-				data.Deserialize(reader);
-			}
-		}
 		public class NiParticleGrowFade : NiParticleModifier
 		{
 			public float grow;
@@ -1533,6 +1689,43 @@ namespace TESUnity
 				base.Deserialize(reader);
 
 				data = NiReaderUtils.ReadRef<NiKeyframeData>(reader);
+			}
+		}
+		public class NiGeomMorpherController : NiInterpController
+		{
+			public Ref<NiMorphData> data;
+			public byte alwaysUpdate;
+
+			public override void Deserialize(BinaryReader reader)
+			{
+				base.Deserialize(reader);
+
+				data = NiReaderUtils.ReadRef<NiMorphData>(reader);
+				alwaysUpdate = reader.ReadByte();
+			}
+		}
+		public abstract class NiBoolInterpController : NiSingleInterpController { }
+		public class NiVisController : NiBoolInterpController
+		{
+			public Ref<NiVisData> data;
+
+			public override void Deserialize(BinaryReader reader)
+			{
+				base.Deserialize(reader);
+
+				data = NiReaderUtils.ReadRef<NiVisData>(reader);
+			}
+		}
+		public abstract class NiFloatInterpController : NiSingleInterpController { }
+		public class NiAlphaController : NiFloatInterpController
+		{
+			public Ref<NiFloatData> data;
+
+			public override void Deserialize(BinaryReader reader)
+			{
+				base.Deserialize(reader);
+
+				data = NiReaderUtils.ReadRef<NiFloatData>(reader);
 			}
 		}
 

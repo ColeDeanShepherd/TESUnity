@@ -367,7 +367,7 @@ namespace TESUnity
 				if(MorrowindESMFile.objectsByIDString.TryGetValue(refObjGroup.NAME.value, out objRecord))
 				{
 					string modelFileName = null;
-
+					
 					if(objRecord is STATRecord)
 					{
 						var record = (STATRecord)objRecord;
@@ -378,23 +378,78 @@ namespace TESUnity
 						var record = (DOORRecord)objRecord;
 						modelFileName = record.MODL.value;
 					}
-					else if(objRecord is CONTRecord)
-					{
-						var record = (CONTRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
 					else if(objRecord is MISCRecord)
 					{
 						var record = (MISCRecord)objRecord;
 						modelFileName = record.MODL.value;
 					}
-					/*else if(objRecord is ACTIRecord)
+					else if(objRecord is WEAPRecord)
+					{
+						var record = (WEAPRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is CONTRecord)
+					{
+						var record = (CONTRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is LIGHRecord)
+					{
+						var record = (LIGHRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is ARMORecord)
+					{
+						var record = (ARMORecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is CLOTRecord)
+					{
+						var record = (CLOTRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is REPARecord)
+					{
+						var record = (REPARecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is ACTIRecord)
 					{
 						var record = (ACTIRecord)objRecord;
 						modelFileName = record.MODL.value;
-					}*/
+					}
+					else if(objRecord is APPARecord)
+					{
+						var record = (APPARecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is LOCKRecord)
+					{
+						var record = (LOCKRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is PROBRecord)
+					{
+						var record = (PROBRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is INGRRecord)
+					{
+						var record = (INGRRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is BOOKRecord)
+					{
+						var record = (BOOKRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
+					else if(objRecord is ALCHRecord)
+					{
+						var record = (ALCHRecord)objRecord;
+						modelFileName = record.MODL.value;
+					}
 
-					if(modelFileName != null)
+					if((modelFileName != null) && (modelFileName != ""))
 					{
 						var modelFilePath = "meshes\\" + modelFileName;
 

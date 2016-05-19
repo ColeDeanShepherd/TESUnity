@@ -124,6 +124,7 @@ namespace TESUnity
 				}
 			}
 		}
+
 		public class GMSTRecord : Record
 		{
 			public NAMESubRecord NAME;
@@ -152,11 +153,13 @@ namespace TESUnity
 				}
 			}
 		}
-
-		public class STATRecord : Record
+		public class GLOBRecord : Record
 		{
+			public class FNAMSubRecord : ByteSubRecord { }
+			
 			public NAMESubRecord NAME;
-			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public FLTVSubRecord FLTV;
 
 			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
 			{
@@ -165,9 +168,141 @@ namespace TESUnity
 					case "NAME":
 						NAME = new NAMESubRecord();
 						return NAME;
-					case "MODL":
-						MODL = new MODLSubRecord();
-						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "FLTV":
+						FLTV = new FLTVSubRecord();
+						return FLTV;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class SOUNRecord : Record
+		{
+			public class DATASubRecord : SubRecord
+			{
+				public byte volume;
+				public byte minRange;
+				public byte maxRange;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					volume = reader.ReadByte();
+					minRange = reader.ReadByte();
+					maxRange = reader.ReadByte();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public FNAMSubRecord FNAM;
+			public DATASubRecord DATA;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "DATA":
+						DATA = new DATASubRecord();
+						return DATA;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class REGNRecord : Record
+		{
+			public class WEATSubRecord : SubRecord
+			{
+				public byte clear;
+				public byte cloudy;
+				public byte foggy;
+				public byte overcast;
+				public byte rain;
+				public byte thunder;
+				public byte ash;
+				public byte blight;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					clear = reader.ReadByte();
+					cloudy = reader.ReadByte();
+					foggy = reader.ReadByte();
+					overcast = reader.ReadByte();
+					rain = reader.ReadByte();
+					thunder = reader.ReadByte();
+					ash = reader.ReadByte();
+					blight = reader.ReadByte();
+				}
+			}
+			public class CNAMSubRecord : SubRecord
+			{
+				byte red;
+				byte green;
+				byte blue;
+				byte nullByte;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					red = reader.ReadByte();
+					green = reader.ReadByte();
+					blue = reader.ReadByte();
+					nullByte = reader.ReadByte();
+				}
+			}
+			public class SNAMSubRecord : SubRecord
+			{
+				byte[] soundName;
+				byte chance;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					soundName = reader.ReadBytes(32);
+					chance = reader.ReadByte();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public FNAMSubRecord FNAM;
+			public WEATSubRecord WEAT;
+			public BNAMSubRecord BNAM;
+			public CNAMSubRecord CNAM;
+			public List<SNAMSubRecord> SNAMs = new List<SNAMSubRecord>();
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "WEAT":
+						WEAT = new WEATSubRecord();
+						return WEAT;
+					case "BNAM":
+						BNAM = new BNAMSubRecord();
+						return BNAM;
+					case "CNAM":
+						CNAM = new CNAMSubRecord();
+						return CNAM;
+					case "SNAM":
+						var SNAM = new SNAMSubRecord();
+
+						SNAMs.Add(SNAM);
+
+						return SNAM;
 					default:
 						return null;
 				}
@@ -195,6 +330,27 @@ namespace TESUnity
 					case "DATA":
 						DATA = new DATASubRecord();
 						return DATA;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class STATRecord : Record
+		{
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
 					default:
 						return null;
 				}
@@ -293,6 +449,83 @@ namespace TESUnity
 			}
 		}
 
+		public class WEAPRecord : Record
+		{
+			public class WPDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public short type;
+				public short health;
+				public float speed;
+				public float reach;
+				public short enchantPts;
+				public byte chopMin;
+				public byte chopMax;
+				public byte slashMin;
+				public byte slashMax;
+				public byte thrustMin;
+				public byte thrustMax;
+				public int flags;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					type = reader.ReadInt16();
+					health = reader.ReadInt16();
+					speed = reader.ReadSingle();
+					reach = reader.ReadSingle();
+					enchantPts = reader.ReadInt16();
+					chopMin = reader.ReadByte();
+					chopMax = reader.ReadByte();
+					slashMin = reader.ReadByte();
+					slashMax = reader.ReadByte();
+					thrustMin = reader.ReadByte();
+					thrustMax = reader.ReadByte();
+					flags = reader.ReadInt32();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public WPDTSubRecord WPDT;
+			public ITEXSubRecord ITEX;
+			public ENAMSubRecord ENAM;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "WPDT":
+						WPDT = new WPDTSubRecord();
+						return WPDT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "ENAM":
+						ENAM = new ENAMSubRecord();
+						return ENAM;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+
 		public class CONTRecord : Record
 		{
 			public class CNDTSubRecord : FLTVSubRecord { }
@@ -347,6 +580,292 @@ namespace TESUnity
 			}
 		}
 
+		public class LIGHRecord : Record
+		{
+			public class LHDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public int time;
+				public int radius;
+				public byte red;
+				public byte green;
+				public byte blue;
+				public byte nullByte;
+				public int flags;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					time = reader.ReadInt32();
+					radius = reader.ReadInt32();
+					red = reader.ReadByte();
+					green = reader.ReadByte();
+					blue = reader.ReadByte();
+					nullByte = reader.ReadByte();
+					flags = reader.ReadInt32();
+			}
+			}
+
+			public NAMESubRecord NAME;
+			public FNAMSubRecord FNAM;
+			public LHDTSubRecord LHDT;
+			public SCPTSubRecord SCPT;
+			public ITEXSubRecord ITEX;
+			public MODLSubRecord MODL;
+			public SNAMSubRecord SNAM;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "LHDT":
+						LHDT = new LHDTSubRecord();
+						return LHDT;
+					case "SCPT":
+						SCPT = new SCPTSubRecord();
+						return SCPT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "SNAM":
+						SNAM = new SNAMSubRecord();
+						return SNAM;
+					default:
+						return null;
+				}
+			}
+		}
+		
+		public class ARMORecord : Record
+		{
+			public class AODTSubRecord : SubRecord
+			{
+				public int type;
+				public float weight;
+				public int value;
+				public int health;
+				public int enchantPts;
+				public int armour;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					type = reader.ReadInt32();
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					health = reader.ReadInt32();
+					enchantPts = reader.ReadInt32();
+					armour = reader.ReadInt32();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public AODTSubRecord AODT;
+			public ITEXSubRecord ITEX;
+
+			public List<INDXBNAMCNAMGroup> INDXBNAMCNAMGroups = new List<INDXBNAMCNAMGroup>();
+
+			public SCRISubRecord SCRI;
+			public ENAMSubRecord ENAM;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "AODT":
+						AODT = new AODTSubRecord();
+						return AODT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "INDX":
+						var INDX = new INDXSubRecord();
+
+						var group = new INDXBNAMCNAMGroup();
+						group.INDX = INDX;
+
+						INDXBNAMCNAMGroups.Add(group);
+
+						return INDX;
+					case "BNAM":
+						var BNAM = new BNAMSubRecord();
+
+						Utils.Last(INDXBNAMCNAMGroups).BNAM = BNAM;
+
+						return BNAM;
+					case "CNAM":
+						var CNAM = new CNAMSubRecord();
+
+						Utils.Last(INDXBNAMCNAMGroups).CNAM = CNAM;
+
+						return CNAM;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					case "ENAM":
+						ENAM = new ENAMSubRecord();
+						return ENAM;
+					default:
+						return null;
+				}
+			}
+		}
+		
+		public class CLOTRecord : Record
+		{
+			public class CTDTSubRecord : SubRecord
+			{
+				public int type;
+				public float weight;
+				public short value;
+				public short enchantPts;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					type = reader.ReadInt32();
+					weight = reader.ReadSingle();
+					value = reader.ReadInt16();
+					enchantPts = reader.ReadInt16();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public CTDTSubRecord CTDT;
+			public ITEXSubRecord ITEX;
+
+			public List<INDXBNAMCNAMGroup> INDXBNAMCNAMGroups = new List<INDXBNAMCNAMGroup>();
+
+			public ENAMSubRecord ENAM;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "CTDT":
+						CTDT = new CTDTSubRecord();
+						return CTDT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "INDX":
+						var INDX = new INDXSubRecord();
+
+						var group = new INDXBNAMCNAMGroup();
+						group.INDX = INDX;
+
+						INDXBNAMCNAMGroups.Add(group);
+
+						return INDX;
+					case "BNAM":
+						var BNAM = new BNAMSubRecord();
+
+						Utils.Last(INDXBNAMCNAMGroups).BNAM = BNAM;
+
+						return BNAM;
+					case "CNAM":
+						var CNAM = new CNAMSubRecord();
+
+						Utils.Last(INDXBNAMCNAMGroups).CNAM = CNAM;
+
+						return CNAM;
+					case "ENAM":
+						ENAM = new ENAMSubRecord();
+						return ENAM;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+		
+		public class REPARecord : Record
+		{
+			public class RIDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public int uses;
+				public float quality;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					uses = reader.ReadInt32();
+					quality = reader.ReadSingle();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public RIDTSubRecord RIDT;
+			public ITEXSubRecord ITEX;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "RIDT":
+						RIDT = new RIDTSubRecord();
+						return RIDT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+
 		public class ACTIRecord : Record
 		{
 			public NAMESubRecord NAME; // door ID
@@ -367,6 +886,372 @@ namespace TESUnity
 					case "FNAM":
 						FNAM = new FNAMSubRecord();
 						return FNAM;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+		
+		public class APPARecord : Record
+		{
+			public class AADTSubRecord : SubRecord
+			{
+				public int type;
+				public float quality;
+				public float weight;
+				public int value;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					type = reader.ReadInt32();
+					quality = reader.ReadSingle();
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public AADTSubRecord AADT;
+			public ITEXSubRecord ITEX;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "AADT":
+						AADT = new AADTSubRecord();
+						return AADT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class LOCKRecord : Record
+		{
+			public class LKDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public float quality;
+				public int uses;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					quality = reader.ReadSingle();
+					uses = reader.ReadInt32();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public LKDTSubRecord LKDT;
+			public ITEXSubRecord ITEX;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "LKDT":
+						LKDT = new LKDTSubRecord();
+						return LKDT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class PROBRecord : Record
+		{
+			public class PBDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public float quality;
+				public int uses;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					quality = reader.ReadSingle();
+					uses = reader.ReadInt32();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public PBDTSubRecord PBDT;
+			public ITEXSubRecord ITEX;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "PBDT":
+						PBDT = new PBDTSubRecord();
+						return PBDT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class INGRRecord : Record
+		{
+			public class IRDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public int[] effectID;
+				public int[] skillID;
+				public int[] attributeID;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+
+					effectID = new int[4];
+					for(int i = 0; i < effectID.Length; i++)
+					{
+						effectID[i] = reader.ReadInt32();
+					}
+
+					skillID = new int[4];
+					for(int i = 0; i < skillID.Length; i++)
+					{
+						skillID[i] = reader.ReadInt32();
+					}
+
+					attributeID = new int[4];
+					for(int i = 0; i < attributeID.Length; i++)
+					{
+						attributeID[i] = reader.ReadInt32();
+					}
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public IRDTSubRecord IRDT;
+			public ITEXSubRecord ITEX;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "IRDT":
+						IRDT = new IRDTSubRecord();
+						return IRDT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class BOOKRecord : Record
+		{
+			public class BKDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public int scroll;
+				public int skillID;
+				public int enchantPts;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					scroll = reader.ReadInt32();
+					skillID = reader.ReadInt32();
+					enchantPts = reader.ReadInt32();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public BKDTSubRecord BKDT;
+			public ITEXSubRecord ITEX;
+			public SCRISubRecord SCRI;
+			public TEXTSubRecord TEXT;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "BKDT":
+						BKDT = new BKDTSubRecord();
+						return BKDT;
+					case "ITEX":
+						ITEX = new ITEXSubRecord();
+						return ITEX;
+					case "SCRI":
+						SCRI = new SCRISubRecord();
+						return SCRI;
+					case "TEXT":
+						TEXT = new TEXTSubRecord();
+						return TEXT;
+					default:
+						return null;
+				}
+			}
+		}
+
+		public class ALCHRecord : Record
+		{
+			public class ALDTSubRecord : SubRecord
+			{
+				public float weight;
+				public int value;
+				public int autoCalc;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					weight = reader.ReadSingle();
+					value = reader.ReadInt32();
+					autoCalc = reader.ReadInt32();
+				}
+			}
+			public class ENAMSubRecord : SubRecord
+			{
+				public short effectID;
+				public byte skillID;
+				public byte attributeID;
+				public int unknown1;
+				public int unknown2;
+				public int duration;
+				public int magnitude;
+				public int unknown4;
+
+				public override void DeserializeData(BinaryReader reader)
+				{
+					effectID = reader.ReadInt16();
+					skillID = reader.ReadByte();
+					attributeID = reader.ReadByte();
+					unknown1 = reader.ReadInt32();
+					unknown2 = reader.ReadInt32();
+					duration = reader.ReadInt32();
+					magnitude = reader.ReadInt32();
+					unknown4 = reader.ReadInt32();
+				}
+			}
+
+			public NAMESubRecord NAME;
+			public MODLSubRecord MODL;
+			public FNAMSubRecord FNAM;
+			public ALDTSubRecord ALDT;
+			public ENAMSubRecord ENAM;
+			public TEXTSubRecord TEXT;
+			public SCRISubRecord SCRI;
+
+			public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+			{
+				switch(subRecordName)
+				{
+					case "NAME":
+						NAME = new NAMESubRecord();
+						return NAME;
+					case "MODL":
+						MODL = new MODLSubRecord();
+						return MODL;
+					case "FNAM":
+						FNAM = new FNAMSubRecord();
+						return FNAM;
+					case "ALDT":
+						ALDT = new ALDTSubRecord();
+						return ALDT;
+					case "ENAM":
+						ENAM = new ENAMSubRecord();
+						return ENAM;
+					case "TEXT":
+						TEXT = new TEXTSubRecord();
+						return TEXT;
 					case "SCRI":
 						SCRI = new SCRISubRecord();
 						return SCRI;
@@ -780,6 +1665,7 @@ namespace TESUnity
 				value1 = reader.ReadInt32();
 			}
 		}
+		public class INDXSubRecord : INTVSubRecord { }
 
 		public class FLTVSubRecord : SubRecord
 		{
@@ -825,8 +1711,19 @@ namespace TESUnity
 		public class ANAMSubRecord : STRVSubRecord { }
 		public class ITEXSubRecord : STRVSubRecord { }
 		public class ENAMSubRecord : STRVSubRecord { }
+		public class BNAMSubRecord : STRVSubRecord { }
+		public class CNAMSubRecord : STRVSubRecord { }
 		public class SCRISubRecord : STRVSubRecord { }
+		public class SCPTSubRecord : STRVSubRecord { }
 		public class MODLSubRecord : STRVSubRecord { }
+		public class TEXTSubRecord : STRVSubRecord { }
+
+		public class INDXBNAMCNAMGroup
+		{
+			public INDXSubRecord INDX;
+			public BNAMSubRecord BNAM;
+			public CNAMSubRecord CNAM;
+		}
 
 		public class ESMFile : IDisposable
 		{
@@ -852,7 +1749,14 @@ namespace TESUnity
 
 			public List<Record> GetRecordsOfType<T>() where T : Record
 			{
-				return recordsByType[typeof(T)];
+				List<Record> records;
+
+				if(recordsByType.TryGetValue(typeof(T), out records))
+				{
+					return records;
+				}
+
+				return null;
 			}
 
 			/* Private */
@@ -868,18 +1772,46 @@ namespace TESUnity
 						return new TES3Record();
 					case "GMST":
 						return new GMSTRecord();
-					case "STAT":
-						return new STATRecord();
+					case "GLOB":
+						return new GLOBRecord();
+					case "SOUN":
+						return new SOUNRecord();
+					case "REGN":
+						return new REGNRecord();
 					case "LTEX":
 						return new LTEXRecord();
+					case "STAT":
+						return new STATRecord();
 					case "DOOR":
 						return new DOORRecord();
 					case "MISC":
 						return new MISCRecord();
+					case "WEAP":
+						return new WEAPRecord();
 					case "CONT":
 						return new CONTRecord();
+					case "LIGH":
+						return new LIGHRecord();
+					case "ARMO":
+						return new ARMORecord();
+					case "CLOT":
+						return new CLOTRecord();
+					case "REPA":
+						return new REPARecord();
 					case "ACTI":
 						return new ACTIRecord();
+					case "APPA":
+						return new APPARecord();
+					case "LOCK":
+						return new LOCKRecord();
+					case "PROB":
+						return new PROBRecord();
+					case "INGR":
+						return new INGRRecord();
+					case "BOOK":
+						return new BOOKRecord();
+					case "ALCH":
+						return new ALCHRecord();
 					case "CELL":
 						return new CELLRecord();
 					case "LAND":
@@ -948,7 +1880,27 @@ namespace TESUnity
 					}
 
 					// Add the record to the object dictionary if applicable.
-					if(record is STATRecord)
+					if(record is GMSTRecord)
+					{
+						objectsByIDString.Add(((GMSTRecord)record).NAME.value, record);
+					}
+					else if(record is GLOBRecord)
+					{
+						objectsByIDString.Add(((GLOBRecord)record).NAME.value, record);
+					}
+					else if(record is SOUNRecord)
+					{
+						objectsByIDString.Add(((SOUNRecord)record).NAME.value, record);
+					}
+					else if(record is REGNRecord)
+					{
+						objectsByIDString.Add(((REGNRecord)record).NAME.value, record);
+					}
+					else if(record is LTEXRecord)
+					{
+						objectsByIDString.Add(((LTEXRecord)record).NAME.value, record);
+					}
+					else if(record is STATRecord)
 					{
 						objectsByIDString.Add(((STATRecord)record).NAME.value, record);
 					}
@@ -960,13 +1912,57 @@ namespace TESUnity
 					{
 						objectsByIDString.Add(((MISCRecord)record).NAME.value, record);
 					}
+					else if(record is WEAPRecord)
+					{
+						objectsByIDString.Add(((WEAPRecord)record).NAME.value, record);
+					}
 					else if(record is CONTRecord)
 					{
 						objectsByIDString.Add(((CONTRecord)record).NAME.value, record);
 					}
+					else if(record is LIGHRecord)
+					{
+						objectsByIDString.Add(((LIGHRecord)record).NAME.value, record);
+					}
+					else if(record is ARMORecord)
+					{
+						objectsByIDString.Add(((ARMORecord)record).NAME.value, record);
+					}
+					else if(record is CLOTRecord)
+					{
+						objectsByIDString.Add(((CLOTRecord)record).NAME.value, record);
+					}
+					else if(record is REPARecord)
+					{
+						objectsByIDString.Add(((REPARecord)record).NAME.value, record);
+					}
 					else if(record is ACTIRecord)
 					{
 						objectsByIDString.Add(((ACTIRecord)record).NAME.value, record);
+					}
+					else if(record is APPARecord)
+					{
+						objectsByIDString.Add(((APPARecord)record).NAME.value, record);
+					}
+					else if(record is LOCKRecord)
+					{
+						objectsByIDString.Add(((LOCKRecord)record).NAME.value, record);
+					}
+					else if(record is PROBRecord)
+					{
+						objectsByIDString.Add(((PROBRecord)record).NAME.value, record);
+					}
+					else if(record is INGRRecord)
+					{
+						objectsByIDString.Add(((INGRRecord)record).NAME.value, record);
+					}
+					else if(record is BOOKRecord)
+					{
+						objectsByIDString.Add(((BOOKRecord)record).NAME.value, record);
+					}
+					else if(record is ALCHRecord)
+					{
+						objectsByIDString.Add(((ALCHRecord)record).NAME.value, record);
 					}
 				}
 			}

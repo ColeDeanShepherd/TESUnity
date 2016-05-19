@@ -6,10 +6,10 @@ using UnityEngine.UI;
 // TODO: fix rotation errors
 // TODO: redesign destructors/idisposable
 // TODO: handle untextured activators
-// TODO: add support for more ESM records
 // TODO: add walking mode
 // TODO: add music playing
 // TODO: add more creation functions for GUI elements
+// TODO: refactor water level handling
 
 namespace TESUnity
 {
@@ -62,9 +62,10 @@ namespace TESUnity
 			var flyingCameraComponent = cameraObj.AddComponent<FlyingCameraComponent>();
 
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
+
 			//ExtractFileFromMorrowind("meshes\\x\\Ex_DAE_ruin_01.nif");
 
-			CreatePlayer(Vector3.up * 50, Quaternion.identity);
+			//CreatePlayer(Vector3.up * 50, Quaternion.identity);
 
 			//CreateExteriorCell(Vector2i.zero);
 
@@ -210,17 +211,7 @@ namespace TESUnity
 			float yMarginBottom = 0;
 			int drawI = 0;
 
-			/*
-			File Formats:
-			.nif - model
-			.dds - texture
-			.kl - animation
-			.pso - DirectX Shader
-			.vso - DirectX Shader
-			*/
-
-			//for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
-			for(int i = 0; i < 1000; i++)
+			for(int i = 0; i < MWArchiveFile.fileMetadatas.Length; i++)
 			{
 				var filePath = MWArchiveFile.fileMetadatas[i].path;
 
