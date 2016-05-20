@@ -19,12 +19,14 @@ namespace TESUnity
 		public static TESUnity instance;
 
 		public Sprite UIBackgroundImg;
-		public Sprite UISpriteImg;
+		public Sprite UICheckmarkImg;
+		public Sprite UIDropdownArrowImg;
+		public Sprite UIInputFieldBackgroundImg;
+		public Sprite UIKnobImg;
 		public Sprite UIMaskImg;
-
+		public Sprite UISpriteImg;
+		
 		// UI Prefabs
-		public GameObject dropdownPrefab;
-		public GameObject inputFieldPrefab;
 		public GameObject sliderPrefab;
 		public GameObject togglePrefab;
 
@@ -38,6 +40,8 @@ namespace TESUnity
 		private GameObject waterObj;
 
 		private MorrowindDataReader MWDataReader;
+		private MorrowindEngine MWEngine;
+
 		private Texture2D testImg;
 		private GameObject testObj;
 		private string testObjPath;
@@ -45,7 +49,8 @@ namespace TESUnity
 		private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
 		private int cellRadius = 1;
 
-		private bool isInteriorCell = false;
+		private ESM.CELLRecord currentCell;
+		private bool isInteriorCell;
 
 		private void Awake()
 		{
@@ -56,20 +61,21 @@ namespace TESUnity
 			canvasObject = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
+			/*var cameraObj = GameObjectUtils.CreateMainCamera();
+
+			GUIUtils.CreateToggle(canvasObject);
+			var UIObj = GameObject.Instantiate(togglePrefab);
+			UIObj.transform.SetParent(canvasObject.transform, false);*/
+
 			waterObj = Instantiate(waterPrefab);
 
 			var cameraObj = GameObjectUtils.CreateMainCamera();
 			var flyingCameraComponent = cameraObj.AddComponent<FlyingCameraComponent>();
 
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
-
-			//ExtractFileFromMorrowind("meshes\\x\\Ex_DAE_ruin_01.nif");
+			MWEngine = new MorrowindEngine(MWDataReader);
 
 			//CreatePlayer(Vector3.up * 50, Quaternion.identity);
-
-			//CreateExteriorCell(Vector2i.zero);
-
-			//ExtractFileFromMorrowind("meshes\\f\\flora_tree_wg_05.nif");
 
 			//MWDataReader.InstantiateInteriorCell("Helan Ancestral Tomb");
 			//MWDataReader.InstantiateInteriorCell("Suran, Ibarnadad Assirnarari: Apothecary");
@@ -79,9 +85,6 @@ namespace TESUnity
 			//UIObj.transform.SetParent(canvasObject.transform, false);
 
 			//CreateBSABrowser();
-
-			//var parserGenerator = new NIFParserGenerator();
-			//parserGenerator.GenerateParser("Assets/Misc/nif.xml", "Assets/Scripts/AutoNIFReader.cs");
 		}
 		private Vector2i GetCellIndices(Vector3 point)
 		{
@@ -127,7 +130,7 @@ namespace TESUnity
 		}
 		private GameObject CreateExteriorCell(Vector2i indices)
 		{
-			var cellObj = MWDataReader.InstantiateExteriorCell(indices.x, indices.y);
+			var cellObj = MWEngine.InstantiateExteriorCell(indices.x, indices.y);
 			cellObjects[indices] = cellObj;
 
 			return cellObj;
@@ -148,7 +151,7 @@ namespace TESUnity
 		}
 		private GameObject CreateInteriorCell(string cellName)
 		{
-			var cellObj = MWDataReader.InstantiateInteriorCell(cellName);
+			var cellObj = MWEngine.InstantiateInteriorCell(cellName);
 			cellObjects[Vector2i.zero] = cellObj;
 
 			return cellObj;
@@ -229,7 +232,7 @@ namespace TESUnity
 							testObj = null;
 						}
 
-						testObj = MWDataReader.InstantiateNIF(filePath);
+						testObj = MWEngine.InstantiateNIF(filePath);
 						testObjPath = filePath;
 
 						//testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
@@ -279,7 +282,7 @@ namespace TESUnity
 
 					try
 					{
-						var cellObj = MWDataReader.InstantiateCell(CELL);
+						var cellObj = MWEngine.InstantiateCell(CELL);
 						DestroyImmediate(cellObj);
 
 						writer.Write("Pass: ");
@@ -324,7 +327,7 @@ namespace TESUnity
 						if((doorComponent.doorExitName != null) && (doorComponent.doorExitName != ""))
 						{
 							CELL = MWDataReader.FindInteriorCellRecord(doorComponent.doorExitName);
-							cellObjects[Vector2i.zero] = MWDataReader.InstantiateCell(CELL);
+							cellObjects[Vector2i.zero] = MWEngine.InstantiateCell(CELL);
 
 							if(CELL.WHGT != null)
 							{

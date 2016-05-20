@@ -297,6 +297,9 @@ namespace TESUnity
 				var colliderObj = InstantiateNiTriShape((NiTriShape)anNiObject, false, true);
 				colliderObj.transform.SetParent(gameObject.transform, false);
 			}
+			else if(anNiObject.GetType() == typeof(AvoidNode))
+			{
+			}
 			else
 			{
 				Debug.Log("Unsupported collider NiObject: " + anNiObject.GetType().Name);

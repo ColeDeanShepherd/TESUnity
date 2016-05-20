@@ -40,8 +40,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+  UIDropdownArrowImg: {fileID: 10915, guid: 0000000000000000f000000000000000, type: 0}
+  UIInputFieldBackgroundImg: {fileID: 10911, guid: 0000000000000000f000000000000000,
+    type: 0}
+  UIKnobImg: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   UIMaskImg: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
+  UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   dropdownPrefab: {fileID: 140778, guid: 48edde947e3b59d468f7597cb80e41e2, type: 2}
   inputFieldPrefab: {fileID: 120294, guid: 1135fb4260cb2144eb7f2dd01ff0dcf9, type: 2}
   sliderPrefab: {fileID: 120944, guid: 2f9c323d524207142b04e07b34b1e180, type: 2}

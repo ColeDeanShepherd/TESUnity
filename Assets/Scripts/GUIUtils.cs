@@ -15,25 +15,54 @@ public static class GUIUtils
 			return _Arial;
 		}
 	}
-	public static Sprite UIBackgroundImage
+
+	public static Sprite backgroundImg
 	{
 		get
 		{
 			return TESUnity.TESUnity.instance.UIBackgroundImg;
 		}
 	}
-	public static Sprite UISpriteImage
+	public static Sprite checkmarkImg
 	{
 		get
 		{
-			return TESUnity.TESUnity.instance.UISpriteImg;
+			return TESUnity.TESUnity.instance.UICheckmarkImg;
 		}
 	}
-	public static Sprite UIMaskImage
+	public static Sprite dropdownArrowImg
+	{
+		get
+		{
+			return TESUnity.TESUnity.instance.UIDropdownArrowImg;
+		}
+	}
+	public static Sprite inputFieldBackgroundImg
+	{
+		get
+		{
+			return TESUnity.TESUnity.instance.UIInputFieldBackgroundImg;
+		}
+	}
+	public static Sprite knobImg
+	{
+		get
+		{
+			return TESUnity.TESUnity.instance.UIKnobImg;
+		}
+	}
+	public static Sprite maskImg
 	{
 		get
 		{
 			return TESUnity.TESUnity.instance.UIMaskImg;
+		}
+	}
+	public static Sprite spriteImg
+	{
+		get
+		{
+			return TESUnity.TESUnity.instance.UISpriteImg;
 		}
 	}
 
@@ -75,7 +104,7 @@ public static class GUIUtils
 		button.AddComponent<CanvasRenderer>();
 
 		var buttonImage = button.AddComponent<Image>();
-		buttonImage.sprite = UISpriteImage;
+		buttonImage.sprite = spriteImg;
 		buttonImage.type = Image.Type.Sliced;
 
 		button.AddComponent<Button>();
@@ -122,7 +151,7 @@ public static class GUIUtils
 		panel.AddComponent<CanvasRenderer>();
 
 		var image = panel.AddComponent<Image>();
-		image.sprite = UIBackgroundImage;
+		image.sprite = backgroundImg;
 		image.type = Image.Type.Sliced;
 		image.color = new Color32(255, 255, 255, 100);
 
@@ -146,7 +175,7 @@ public static class GUIUtils
 		scrollBar.GetComponent<RectTransform>().sizeDelta = isHorizontal ? new Vector2(length, 20) : new Vector2(20, length);
 
 		var scrollBarImage = scrollBar.AddComponent<Image>();
-		scrollBarImage.sprite = UIBackgroundImage;
+		scrollBarImage.sprite = backgroundImg;
 		scrollBarImage.type = Image.Type.Sliced;
 
 		var scrollBarComponent = scrollBar.AddComponent<Scrollbar>();
@@ -166,7 +195,7 @@ public static class GUIUtils
 		handle.AddComponent<CanvasRenderer>();
 
 		var handleImage = handle.AddComponent<Image>();
-		handleImage.sprite = UISpriteImage;
+		handleImage.sprite = spriteImg;
 		handleImage.type = Image.Type.Sliced;
 
 		var handleRectTransform = handle.GetComponent<RectTransform>();
@@ -196,7 +225,7 @@ public static class GUIUtils
 		scrollView.AddComponent<CanvasRenderer>();
 
 		var scrollViewImage = scrollView.AddComponent<Image>();
-		scrollViewImage.sprite = UIBackgroundImage;
+		scrollViewImage.sprite = backgroundImg;
 		scrollViewImage.type = Image.Type.Sliced;
 		scrollViewImage.color = new Color32(255, 255, 255, 100);
 
@@ -208,7 +237,7 @@ public static class GUIUtils
 		viewport.AddComponent<Mask>().showMaskGraphic = false;
 
 		var viewportImage = viewport.AddComponent<Image>();
-		viewportImage.sprite = UIMaskImage;
+		viewportImage.sprite = maskImg;
 		viewportImage.type = Image.Type.Sliced;
 
 		var viewportRectTransform = viewport.GetComponent<RectTransform>();
@@ -251,7 +280,6 @@ public static class GUIUtils
 		scrollViewScrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
 		scrollViewScrollRect.verticalScrollbarSpacing = -3;
 
-
 		return scrollView;
 	}
 
@@ -262,6 +290,212 @@ public static class GUIUtils
 	public static GameObject GetScrollViewContent(GameObject scrollView)
 	{
 		return scrollView.transform.FindChild("Viewport/Content").gameObject;
+	}
+
+	public static GameObject CreateDropdown(GameObject parent)
+	{
+		// Create the dropdown object.
+		var dropdown = CreateUIObject("Dropdown", parent);
+		dropdown.AddComponent<CanvasRenderer>();
+
+		var image = dropdown.AddComponent<Image>();
+		image.sprite = spriteImg;
+		image.type = Image.Type.Sliced;
+
+		var dropdownComponent = dropdown.AddComponent<Dropdown>();
+		dropdownComponent.targetGraphic = image;
+
+		dropdownComponent.options = new System.Collections.Generic.List<Dropdown.OptionData>();
+		dropdownComponent.options.Add(new Dropdown.OptionData("Option A"));
+		dropdownComponent.options.Add(new Dropdown.OptionData("Option B"));
+		dropdownComponent.options.Add(new Dropdown.OptionData("Option C"));
+
+		dropdown.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 30);
+
+		// Create the label.
+		var label = CreateText("", dropdown);
+		label.name = "Label";
+
+		var labelTransform = label.GetComponent<RectTransform>();
+		labelTransform.anchorMin = Vector2.zero;
+		labelTransform.anchorMax = Vector2.one;
+		labelTransform.offsetMin = new Vector2(10, 6);
+		labelTransform.offsetMax = new Vector2(-25, -7);
+
+		label.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
+
+		// Create the arrow.
+		var arrow = CreateImage(dropdownArrowImg, dropdown);
+		arrow.name = "Arrow";
+
+		var arrowTransform = arrow.GetComponent<RectTransform>();
+		arrowTransform.anchorMin = new Vector2(1, 0.5f);
+		arrowTransform.anchorMax = new Vector2(1, 0.5f);
+		arrowTransform.anchoredPosition = new Vector2(-15, 0);
+		arrowTransform.sizeDelta = new Vector2(20, 20);
+
+		// Create the scroll view.
+		var scrollView = CreateScrollView(dropdown);
+		scrollView.name = "Template";
+
+		var scrollViewTransform = scrollView.GetComponent<RectTransform>();
+		scrollViewTransform.anchorMin = Vector2.zero;
+		scrollViewTransform.anchorMax = new Vector2(1, 0);
+		scrollViewTransform.pivot = new Vector2(0.5f, 1);
+		scrollViewTransform.offsetMin = Vector2.zero;
+		scrollViewTransform.anchoredPosition = new Vector2(0, 2);
+		scrollViewTransform.sizeDelta = new Vector2(0, 150);
+
+		var scrollViewImage = scrollView.GetComponent<Image>();
+		scrollViewImage.sprite = spriteImg;
+		scrollViewImage.color = new Color32(255, 255, 255, 255);
+
+		var scrollViewScrollRect = scrollView.GetComponent<ScrollRect>();
+		scrollViewScrollRect.horizontal = false;
+		scrollViewScrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+		var scrollViewContent = GetScrollViewContent(scrollView);
+		var scrollViewContentTransform = scrollViewContent.GetComponent<RectTransform>();
+		scrollViewContentTransform.sizeDelta = new Vector2(0, 28);
+		scrollViewContentTransform.pivot = new Vector2(0.5f, 1);
+
+		scrollView.SetActive(false);
+
+		// Create the dropdown item.
+		var item = CreateDropdownItem("Option A", GetScrollViewContent(scrollView));
+
+		// Link everything together.
+		dropdownComponent.template = scrollView.GetComponent<RectTransform>();
+		dropdownComponent.captionText = label.GetComponent<Text>();
+		dropdownComponent.itemText = item.transform.FindChild("Item Label").gameObject.GetComponent<Text>();
+
+		return dropdown;
+	}
+	public static GameObject CreateDropdownItem(string text, GameObject parent)
+	{
+		// Create the item object.
+		var item = CreateUIObject("Item", parent);
+
+		var itemTransform = item.GetComponent<RectTransform>();
+		itemTransform.anchorMin = new Vector2(0, 0.5f);
+		itemTransform.anchorMax = new Vector2(1, 0.5f);
+		itemTransform.offsetMin = Vector2.zero;
+		itemTransform.offsetMax = Vector2.zero;
+		itemTransform.sizeDelta = new Vector2(0, 20);
+
+		var itemToggle = item.AddComponent<Toggle>();
+
+		// Create the item background.
+		var itemBackground = CreateImage(null, item);
+		itemBackground.name = "Item Background";
+
+		var itemBackgroundTransform = itemBackground.GetComponent<RectTransform>();
+		itemBackgroundTransform.anchorMin = Vector2.zero;
+		itemBackgroundTransform.anchorMax = Vector2.one;
+		itemBackgroundTransform.offsetMin = Vector2.zero;
+		itemBackgroundTransform.offsetMax = Vector2.zero;
+
+		// Create the item checkmark.
+		var itemCheckmark = CreateImage(checkmarkImg, item);
+		itemCheckmark.name = "Item Checkmark";
+
+		var itemCheckmarkTransform = itemCheckmark.GetComponent<RectTransform>();
+		itemCheckmarkTransform.anchorMin = new Vector2(0, 0.5f);
+		itemCheckmarkTransform.anchorMax = new Vector2(0, 0.5f);
+		itemCheckmarkTransform.sizeDelta = new Vector2(20, 20);
+		itemCheckmarkTransform.anchoredPosition = new Vector2(10, 0);
+
+		// Create the item label.
+		var itemLabel = CreateText(text, item);
+		itemLabel.name = "Item Label";
+
+		var itemLabelTransform = itemLabel.GetComponent<RectTransform>();
+		itemLabelTransform.anchorMin = Vector2.zero;
+		itemLabelTransform.anchorMax = Vector2.one;
+		itemLabelTransform.offsetMin = new Vector2(20, 1);
+		itemLabelTransform.offsetMax = new Vector2(-10, -2);
+
+		itemLabel.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
+
+		// Link everything together.
+		itemToggle.targetGraphic = itemBackground.GetComponent<Image>();
+		itemToggle.graphic = itemCheckmark.GetComponent<Image>();
+		itemToggle.isOn = true;
+
+		return item;
+	}
+
+	public static GameObject CreateInputField(GameObject parent)
+	{
+		var inputField = CreateUIObject("Input Field", parent);
+
+		var inputFieldTransform = inputField.GetComponent<RectTransform>();
+		inputFieldTransform.sizeDelta = new Vector2(160, 30);
+
+		inputField.AddComponent<CanvasRenderer>();
+
+		var inputFieldImage = inputField.AddComponent<Image>();
+		inputFieldImage.sprite = inputFieldBackgroundImg;
+		inputFieldImage.type = Image.Type.Sliced;
+
+		var inputFieldComponent = inputField.AddComponent<InputField>();
+
+		// Create the caret.
+		var caret = CreateUIObject("Input Caret", inputField);
+		caret.AddComponent<CanvasRenderer>();
+		caret.AddComponent<LayoutElement>().ignoreLayout = true;
+
+		var caretTransform = caret.GetComponent<RectTransform>();
+		caretTransform.anchorMin = Vector2.zero;
+		caretTransform.anchorMax = Vector2.one;
+		caretTransform.offsetMin = new Vector2(10, 6);
+		caretTransform.offsetMax = new Vector2(-10, -7);
+
+		// Create the placeholder text.
+		var placeholderText = CreateText("Enter text...", inputField);
+		placeholderText.name = "Placeholder";
+
+		var placeholderTextTransform = placeholderText.GetComponent<RectTransform>();
+		placeholderTextTransform.anchorMin = Vector2.zero;
+		placeholderTextTransform.anchorMax = Vector2.one;
+		placeholderTextTransform.offsetMin = new Vector2(10, 6);
+		placeholderTextTransform.offsetMax = new Vector2(-10, -7);
+
+		var placeholderTextTextComponent = placeholderText.GetComponent<Text>();
+		placeholderTextTextComponent.fontStyle = FontStyle.Italic;
+		placeholderTextTextComponent.color = new Color32(50, 50, 50, 128);
+
+		// Create the text.
+		var text = CreateText("", inputField);
+
+		var textTextTransform = text.GetComponent<RectTransform>();
+		textTextTransform.anchorMin = Vector2.zero;
+		textTextTransform.anchorMax = Vector2.one;
+		textTextTransform.offsetMin = new Vector2(10, 6);
+		textTextTransform.offsetMax = new Vector2(-10, -7);
+
+		var textTextComponent = text.GetComponent<Text>();
+		textTextComponent.supportRichText = false;
+
+		// Link everything together.
+		inputFieldComponent.textComponent = textTextComponent;
+		inputFieldComponent.placeholder = placeholderTextTextComponent;
+
+		return inputField;
+	}
+
+	public static GameObject CreateSlider(GameObject parent)
+	{
+		var slider = CreateUIObject("Slider", parent);
+
+		return slider;
+	}
+
+	public static GameObject CreateToggle(GameObject parent)
+	{
+		var toggle = CreateUIObject("Toggle", parent);
+
+		return toggle;
 	}
 
 	private static Font _Arial;

@@ -89,6 +89,7 @@
     <Compile Include="Assets\Scripts\TES\DoorComponent.cs" />
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
+    <Compile Include="Assets\Scripts\TES\MorrowindEngine.cs" />
     <Compile Include="Assets\Scripts\TES\NIFObjectBuilder.cs" />
     <Compile Include="Assets\Scripts\TES\NIFParserGenerator.cs" />
     <Compile Include="Assets\Scripts\TES\NIFReader.cs" />
