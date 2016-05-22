@@ -25,10 +25,6 @@ namespace TESUnity
 		public Sprite UIKnobImg;
 		public Sprite UIMaskImg;
 		public Sprite UISpriteImg;
-		
-		// UI Prefabs
-		public GameObject sliderPrefab;
-		public GameObject togglePrefab;
 
 		public Material defaultMaterial;
 		public Material cutoutMaterial;
@@ -60,12 +56,6 @@ namespace TESUnity
 		{
 			canvasObject = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
-
-			/*var cameraObj = GameObjectUtils.CreateMainCamera();
-
-			GUIUtils.CreateToggle(canvasObject);
-			var UIObj = GameObject.Instantiate(togglePrefab);
-			UIObj.transform.SetParent(canvasObject.transform, false);*/
 
 			waterObj = Instantiate(waterPrefab);
 

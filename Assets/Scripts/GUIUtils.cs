@@ -487,6 +487,65 @@ public static class GUIUtils
 	public static GameObject CreateSlider(GameObject parent)
 	{
 		var slider = CreateUIObject("Slider", parent);
+		slider.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 20);
+		var sliderComponent = slider.AddComponent<Slider>();
+
+		// Create the background.
+		var background = CreateImage(backgroundImg, slider);
+		background.name = "Background";
+
+		var backgroundTransform = background.GetComponent<RectTransform>();
+		backgroundTransform.anchorMin = new Vector2(0, 0.25f);
+		backgroundTransform.anchorMax = new Vector2(1, 0.75f);
+		backgroundTransform.offsetMin = Vector2.zero;
+		backgroundTransform.offsetMax = Vector2.zero;
+
+		background.GetComponent<Image>().type = Image.Type.Sliced;
+
+		// Create the fill area.
+		var fillArea = CreateUIObject("Fill Area", slider);
+
+		var fillAreaTransform = fillArea.GetComponent<RectTransform>();
+		fillAreaTransform.anchorMin = new Vector2(0, 0.25f);
+		fillAreaTransform.anchorMax = new Vector2(1, 0.75f);
+		fillAreaTransform.offsetMin = new Vector2(5, 0);
+		fillAreaTransform.offsetMax = new Vector2(-15, 0);
+
+		// Create the fill.
+		var fill = CreateImage(spriteImg, fillArea);
+		fill.name = "Fill";
+
+		var fillTransform = fill.GetComponent<RectTransform>();
+		fillTransform.anchoredPosition = Vector2.zero;
+		fillTransform.offsetMin = Vector2.zero;
+		fillTransform.offsetMax = Vector2.zero;
+		fillTransform.sizeDelta = new Vector2(10, 0);
+
+		fill.GetComponent<Image>().type = Image.Type.Sliced;
+		
+		// Create the handle slide area.
+		var handleSlideArea = CreateUIObject("Handle Slide Area", slider);
+
+		var handleSlideAreaTransform = handleSlideArea.GetComponent<RectTransform>();
+		handleSlideAreaTransform.anchorMin = Vector2.zero;
+		handleSlideAreaTransform.anchorMax = Vector2.one;
+		handleSlideAreaTransform.offsetMin = new Vector2(10, 0);
+		handleSlideAreaTransform.offsetMax = new Vector2(-10, 0);
+
+		// Create the handle.
+		var handle = CreateImage(knobImg, handleSlideArea);
+		handle.name = "Handle";
+
+		var handleTransform = handle.GetComponent<RectTransform>();
+		handleTransform.anchoredPosition = Vector2.zero;
+		handleTransform.offsetMin = Vector2.zero;
+		handleTransform.offsetMax = Vector2.zero;
+		handleTransform.sizeDelta = new Vector2(20, 0);
+
+		// Link everything together.
+		sliderComponent.targetGraphic = handle.GetComponent<Image>();
+		sliderComponent.fillRect = fill.GetComponent<RectTransform>();
+		sliderComponent.handleRect = handle.GetComponent<RectTransform>();
 
 		return slider;
 	}
@@ -494,6 +553,42 @@ public static class GUIUtils
 	public static GameObject CreateToggle(GameObject parent)
 	{
 		var toggle = CreateUIObject("Toggle", parent);
+		toggle.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 20);
+
+		var toggleComponent = toggle.AddComponent<Toggle>();
+		toggleComponent.isOn = true;
+
+		// Create the background.
+		var background = CreateImage(spriteImg, toggle);
+		background.name = "Background";
+
+		var backgroundTransform = background.GetComponent<RectTransform>();
+		backgroundTransform.sizeDelta = new Vector2(20, 20);
+		backgroundTransform.anchorMin = new Vector2(0, 1);
+		backgroundTransform.anchorMax = new Vector2(0, 1);
+		backgroundTransform.anchoredPosition = new Vector2(10, -10);
+
+		background.GetComponent<Image>().type = Image.Type.Sliced;
+
+		// Create the checkmark.
+		var checkmark = CreateImage(checkmarkImg, background);
+		checkmark.name = "Checkmark";
+
+		checkmark.GetComponent<RectTransform>().sizeDelta = new Vector2(20, 20);
+
+		// Create the label.
+		var label = CreateText("Toggle", toggle);
+		label.name = "Label";
+
+		var labelTransform = label.GetComponent<RectTransform>();
+		labelTransform.anchorMin = Vector2.zero;
+		labelTransform.anchorMax = Vector2.one;
+		labelTransform.offsetMin = new Vector2(23, 1);
+		labelTransform.offsetMax = new Vector2(-5, -2);
+
+		// Link everything together.
+		toggleComponent.targetGraphic = background.GetComponent<Image>();
+		toggleComponent.graphic = checkmark.GetComponent<Image>();
 
 		return toggle;
 	}
