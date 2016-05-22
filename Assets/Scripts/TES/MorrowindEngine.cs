@@ -8,6 +8,16 @@ namespace TESUnity
 	
 	public class MorrowindEngine
 	{
+		public const float maxInteractDistance = 2;
+
+		public CELLRecord currentCell
+		{
+			get
+			{
+				return _currentCell;
+			}
+		}
+
 		public MorrowindEngine(MorrowindDataReader dataReader)
 		{
 			this.dataReader = dataReader;
@@ -46,7 +56,7 @@ namespace TESUnity
 			if(!CELL.isInterior)
 			{
 				var cellIndices = new Vector2i(CELL.DATA.gridX, CELL.DATA.gridY);
-				var LAND = dataReader.FindLANDRecord(cellIndices.x, cellIndices.y);
+				var LAND = dataReader.FindLANDRecord(cellIndices);
 
 				if(LAND != null)
 				{
@@ -79,9 +89,9 @@ namespace TESUnity
 				return cellObj;
 			}
 		}
-		public GameObject InstantiateExteriorCell(int x, int y)
+		public GameObject InstantiateExteriorCell(Vector2i cellIndices)
 		{
-			var CELL = dataReader.FindExteriorCellRecord(x, y);
+			var CELL = dataReader.FindExteriorCellRecord(cellIndices);
 
 			if(CELL != null)
 			{
@@ -229,46 +239,61 @@ namespace TESUnity
 			return terrain;
 		}
 
+		public void SpawnPlayerOutside(Vector3 position)
+		{
+			var cellIndices = GetExteriorCellIndices(position);
+			_currentCell = dataReader.FindExteriorCellRecord(cellIndices);
+
+			var camera = CreateFlyingCamera(position);
+		}
+		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
+		{
+			_currentCell = dataReader.FindInteriorCellRecord(interiorCellName);
+
+			Debug.Assert(_currentCell != null);
+
+			var camera = CreateFlyingCamera(position);
+		}
 		public void Update()
 		{
-			if(!isInteriorCell)
+			// The current cell can be null if the player is outside of the defined game world.
+			if((_currentCell == null) || !_currentCell.isInterior)
 			{
 				UpdateExteriorCells();
-
-				if(Input.GetKeyDown(KeyCode.P))
-				{
-					Debug.Log(GetExteriorCellIndices(Camera.main.transform.position));
-				}
 			}
 		}
 		public void TryOpenDoor()
 		{
+			// Cast a ray to see what the camera is looking at.
 			RaycastHit hitInfo;
 			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
 
-			if(Physics.Raycast(ray, out hitInfo, 2))
+			if(Physics.Raycast(ray, out hitInfo, maxInteractDistance))
 			{
-				// Find the door object.
+				// Find the door associated with the hit collider.
 				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
 
 				if(doorObj != null)
 				{
 					var doorComponent = doorObj.GetComponent<DoorComponent>();
-
+					
 					if(doorComponent.leadsToAnotherCell)
 					{
+						// The door leads to another cell, so destroy all currently loaded cells.
 						DestroyAllCells();
 
-						ESM.CELLRecord CELL;
+						// Load the new cell.
+						CELLRecord newCell;
 
 						if((doorComponent.doorExitName != null) && (doorComponent.doorExitName != ""))
 						{
-							CELL = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
-							cellObjects[Vector2i.zero] = InstantiateCell(CELL);
+							newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
+							Debug.Assert(newCell.isInterior);
+							cellObjects[Vector2i.zero] = InstantiateCell(newCell);
 
-							if(CELL.WHGT != null)
+							if(newCell.WHGT != null)
 							{
-								waterObj.transform.position = new Vector3(0, CELL.WHGT.value, 0);
+								waterObj.transform.position = new Vector3(0, newCell.WHGT.value, 0);
 								waterObj.SetActive(true);
 							}
 							else
@@ -279,7 +304,8 @@ namespace TESUnity
 						else
 						{
 							var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
-							CELL = dataReader.FindExteriorCellRecord(cellIndices.x, cellIndices.y);
+							newCell = dataReader.FindExteriorCellRecord(cellIndices);
+							Debug.Assert(!newCell.isInterior);
 
 							waterObj.transform.position = Vector3.zero;
 							waterObj.SetActive(true);
@@ -288,7 +314,7 @@ namespace TESUnity
 						Camera.main.transform.position = doorComponent.doorExitPos;
 						Camera.main.transform.rotation = doorComponent.doorExitOrientation;
 
-						isInteriorCell = CELL.isInterior;
+						_currentCell = newCell;
 					}
 				}
 			}
@@ -301,155 +327,79 @@ namespace TESUnity
 
 		private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
 		private int cellRadius = 1;
-		private bool isInteriorCell;
+		private CELLRecord _currentCell;
 
 		private GameObject waterObj;
 
 		private void InstantiateCellObjects(CELLRecord CELL, GameObject parent)
 		{
-			foreach(var refObjGroup in CELL.refObjDataGroups)
+			foreach(var refObjDataGroup in CELL.refObjDataGroups)
 			{
 				Record objRecord;
 
-				if(dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjGroup.NAME.value, out objRecord))
+				// Find the ESM record associated with the referenced object.
+				if(dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjDataGroup.NAME.value, out objRecord))
 				{
-					string modelFileName = null;
+					var modelFileName = ESM.RecordUtils.GetModelFileName(objRecord);
 
-					if(objRecord is STATRecord)
-					{
-						var record = (STATRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is DOORRecord)
-					{
-						var record = (DOORRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is MISCRecord)
-					{
-						var record = (MISCRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is WEAPRecord)
-					{
-						var record = (WEAPRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is CONTRecord)
-					{
-						var record = (CONTRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is LIGHRecord)
-					{
-						var record = (LIGHRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is ARMORecord)
-					{
-						var record = (ARMORecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is CLOTRecord)
-					{
-						var record = (CLOTRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is REPARecord)
-					{
-						var record = (REPARecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is ACTIRecord)
-					{
-						var record = (ACTIRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is APPARecord)
-					{
-						var record = (APPARecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is LOCKRecord)
-					{
-						var record = (LOCKRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is PROBRecord)
-					{
-						var record = (PROBRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is INGRRecord)
-					{
-						var record = (INGRRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is BOOKRecord)
-					{
-						var record = (BOOKRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-					else if(objRecord is ALCHRecord)
-					{
-						var record = (ALCHRecord)objRecord;
-						modelFileName = record.MODL.value;
-					}
-
+					// If the model file name is valid, instantiate it.
 					if((modelFileName != null) && (modelFileName != ""))
 					{
 						var modelFilePath = "meshes\\" + modelFileName;
 
 						var obj = InstantiateNIF(modelFilePath);
-
-						if(refObjGroup.XSCL != null)
-						{
-							obj.transform.localScale = Vector3.one * refObjGroup.XSCL.value;
-						}
-
-						obj.transform.position = Convert.NifPointToUnityPoint(refObjGroup.DATA.position);
-						obj.transform.rotation = Convert.NifEulerAnglesToUnityQuaternion(refObjGroup.DATA.eulerAngles);
-
+						PostProcessInstantiatedCellObject(obj, objRecord, refObjDataGroup);
 						obj.transform.parent = parent.transform;
-
-						if(objRecord is DOORRecord)
-						{
-							obj.tag = "Door";
-
-							var DOOR = (DOORRecord)objRecord;
-							var doorComponent = obj.AddComponent<DoorComponent>();
-
-							if(DOOR.FNAM != null)
-							{
-								doorComponent.doorName = DOOR.FNAM.value;
-							}
-
-							if((refObjGroup.DNAM != null) || (refObjGroup.DODT != null))
-							{
-								doorComponent.leadsToAnotherCell = true;
-
-								if(refObjGroup.DNAM != null)
-								{
-									doorComponent.doorExitName = refObjGroup.DNAM.value;
-								}
-
-								if(refObjGroup.DODT != null)
-								{
-									doorComponent.doorExitPos = Convert.NifPointToUnityPoint(refObjGroup.DODT.position);
-									doorComponent.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjGroup.DODT.eulerAngles);
-								}
-							}
-							else
-							{
-								doorComponent.leadsToAnotherCell = false;
-							}
-						}
 					}
 				}
 				/*else
 				{
-					Debug.Log("Unknown Object: " + refObjGroup.NAME.value);
+					Debug.Log("Unknown Object: " + refObjDataGroup.NAME.value);
 				}*/
+			}
+		}
+		// Called by InstantiateCellObjects.
+		private void PostProcessInstantiatedCellObject(GameObject gameObject, ESM.Record record, CELLRecord.RefObjDataGroup refObjDataGroup)
+		{
+			if(refObjDataGroup.XSCL != null)
+			{
+				gameObject.transform.localScale = Vector3.one * refObjDataGroup.XSCL.value;
+			}
+
+			gameObject.transform.position = Convert.NifPointToUnityPoint(refObjDataGroup.DATA.position);
+			gameObject.transform.rotation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DATA.eulerAngles);
+
+			if(record is DOORRecord)
+			{
+				gameObject.tag = "Door";
+
+				var DOOR = (DOORRecord)record;
+				var doorComponent = gameObject.AddComponent<DoorComponent>();
+
+				if(DOOR.FNAM != null)
+				{
+					doorComponent.doorName = DOOR.FNAM.value;
+				}
+
+				if((refObjDataGroup.DNAM != null) || (refObjDataGroup.DODT != null))
+				{
+					doorComponent.leadsToAnotherCell = true;
+
+					if(refObjDataGroup.DNAM != null)
+					{
+						doorComponent.doorExitName = refObjDataGroup.DNAM.value;
+					}
+
+					if(refObjDataGroup.DODT != null)
+					{
+						doorComponent.doorExitPos = Convert.NifPointToUnityPoint(refObjDataGroup.DODT.position);
+						doorComponent.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
+					}
+				}
+				else
+				{
+					doorComponent.leadsToAnotherCell = false;
+				}
 			}
 		}
 
@@ -460,6 +410,9 @@ namespace TESUnity
 		private void UpdateExteriorCells()
 		{
 			var cameraCellIndices = GetExteriorCellIndices(Camera.main.transform.position);
+
+			_currentCell = dataReader.FindExteriorCellRecord(cameraCellIndices);
+
 			var minCellX = cameraCellIndices.x - cellRadius;
 			var maxCellX = cameraCellIndices.x + cellRadius;
 			var minCellY = cameraCellIndices.y - cellRadius;
@@ -497,7 +450,7 @@ namespace TESUnity
 		}
 		private GameObject CreateExteriorCell(Vector2i indices)
 		{
-			var cellObj = InstantiateExteriorCell(indices.x, indices.y);
+			var cellObj = InstantiateExteriorCell(indices);
 			cellObjects[indices] = cellObj;
 
 			return cellObj;
@@ -531,6 +484,16 @@ namespace TESUnity
 			}
 
 			cellObjects.Clear();
+		}
+
+		private GameObject CreateFlyingCamera(Vector3 position)
+		{
+			var camera = GameObjectUtils.CreateMainCamera();
+			camera.AddComponent<FlyingCameraComponent>();
+
+			camera.transform.position = position;
+
+			return camera;
 		}
 	}
 }

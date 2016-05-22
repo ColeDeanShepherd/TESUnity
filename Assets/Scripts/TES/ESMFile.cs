@@ -7,6 +7,81 @@ namespace TESUnity
 {
 	namespace ESM
 	{
+		public static class RecordUtils
+		{
+			public static string GetModelFileName(Record record)
+			{
+				if(record is STATRecord)
+				{
+					return ((STATRecord)record).MODL.value;
+				}
+				else if(record is DOORRecord)
+				{
+					return ((DOORRecord)record).MODL.value;
+				}
+				else if(record is MISCRecord)
+				{
+					return ((MISCRecord)record).MODL.value;
+				}
+				else if(record is WEAPRecord)
+				{
+					return ((WEAPRecord)record).MODL.value;
+				}
+				else if(record is CONTRecord)
+				{
+					return ((CONTRecord)record).MODL.value;
+				}
+				else if(record is LIGHRecord)
+				{
+					return ((LIGHRecord)record).MODL.value;
+				}
+				else if(record is ARMORecord)
+				{
+					return ((ARMORecord)record).MODL.value;
+				}
+				else if(record is CLOTRecord)
+				{
+					return ((CLOTRecord)record).MODL.value;
+				}
+				else if(record is REPARecord)
+				{
+					return ((REPARecord)record).MODL.value;
+				}
+				else if(record is ACTIRecord)
+				{
+					return ((ACTIRecord)record).MODL.value;
+				}
+				else if(record is APPARecord)
+				{
+					return ((APPARecord)record).MODL.value;
+				}
+				else if(record is LOCKRecord)
+				{
+					return ((LOCKRecord)record).MODL.value;
+				}
+				else if(record is PROBRecord)
+				{
+					return ((PROBRecord)record).MODL.value;
+				}
+				else if(record is INGRRecord)
+				{
+					return ((INGRRecord)record).MODL.value;
+				}
+				else if(record is BOOKRecord)
+				{
+					return ((BOOKRecord)record).MODL.value;
+				}
+				else if(record is ALCHRecord)
+				{
+					return ((ALCHRecord)record).MODL.value;
+				}
+				else
+				{
+					return null;
+				}
+			}
+		}
+
 		public class RecordHeader
 		{
 			public string name; // 4 bytes
@@ -362,7 +437,7 @@ namespace TESUnity
 			public NAMESubRecord NAME; // door ID
 			public FNAMSubRecord FNAM; // door name
 			public MODLSubRecord MODL; // model filename
-									   // public SCIPSubRecord SCIP; // script
+			// public SCIPSubRecord SCIP; // script
 			public SNAMSubRecord SNAM;
 			public ANAMSubRecord ANAM;
 

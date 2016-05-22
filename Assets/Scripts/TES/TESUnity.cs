@@ -52,11 +52,11 @@ namespace TESUnity
 			canvasObject = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-			var cameraObj = GameObjectUtils.CreateMainCamera();
-			cameraObj.AddComponent<FlyingCameraComponent>();
-
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
+
+			MWEngine.SpawnPlayerInside("Caldera, Nedhelas' House", Vector3.zero);
+			//MWEngine.SpawnPlayerOutside(Vector3.up * 50);
 
 			//CreatePlayer(Vector3.up * 50, Quaternion.identity);
 
@@ -81,6 +81,18 @@ namespace TESUnity
 			if(Input.GetKeyDown(KeyCode.G))
 			{
 				MWEngine.TryOpenDoor();
+			}
+
+			if(Input.GetKeyDown(KeyCode.P))
+			{
+				if(!MWEngine.currentCell.isInterior)
+				{
+					Debug.Log(MWEngine.currentCell.gridCoords);
+				}
+				else
+				{
+					Debug.Log(MWEngine.currentCell.NAME.value);
+				}
 			}
 		}
 
