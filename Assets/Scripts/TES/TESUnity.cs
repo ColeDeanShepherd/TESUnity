@@ -10,6 +10,7 @@ using UnityEngine.UI;
 // TODO: add music playing
 // TODO: add more creation functions for GUI elements
 // TODO: refactor water level handling
+// TODO: use MW lights
 
 namespace TESUnity
 {
@@ -18,6 +19,7 @@ namespace TESUnity
 		const string MorrowindDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
 		public static TESUnity instance;
 
+		#region Inspector-set Members
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
 		public Sprite UIDropdownArrowImg;
@@ -31,22 +33,15 @@ namespace TESUnity
 		public Material fadeMaterial;
 
 		public GameObject waterPrefab;
+		#endregion
 
 		private GameObject canvasObject;
-		private GameObject waterObj;
 
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
-
-		private Texture2D testImg;
+		
 		private GameObject testObj;
 		private string testObjPath;
-
-		private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
-		private int cellRadius = 1;
-
-		private ESM.CELLRecord currentCell;
-		private bool isInteriorCell;
 
 		private void Awake()
 		{
@@ -57,10 +52,8 @@ namespace TESUnity
 			canvasObject = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-			waterObj = Instantiate(waterPrefab);
-
 			var cameraObj = GameObjectUtils.CreateMainCamera();
-			var flyingCameraComponent = cameraObj.AddComponent<FlyingCameraComponent>();
+			cameraObj.AddComponent<FlyingCameraComponent>();
 
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
@@ -76,85 +69,6 @@ namespace TESUnity
 
 			//CreateBSABrowser();
 		}
-		private Vector2i GetCellIndices(Vector3 point)
-		{
-			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
-		}
-		private void UpdateExteriorCells()
-		{
-			var cameraCellIndices = GetCellIndices(Camera.main.transform.position);
-			var minCellX = cameraCellIndices.x - cellRadius;
-			var maxCellX = cameraCellIndices.x + cellRadius;
-			var minCellY = cameraCellIndices.y - cellRadius;
-			var maxCellY = cameraCellIndices.y + cellRadius;
-
-			// Destroy out of range cells.
-			var outOfRangeCellIndices = new List<Vector2i>();
-
-			foreach(var KVPair in cellObjects)
-			{
-				if((KVPair.Key.x < minCellX) || (KVPair.Key.x > maxCellX) || (KVPair.Key.y < minCellY) || (KVPair.Key.y > maxCellY))
-				{
-					outOfRangeCellIndices.Add(KVPair.Key);
-				}
-			}
-
-			foreach(var cellIndices in outOfRangeCellIndices)
-			{
-				DestroyExteriorCell(cellIndices);
-			}
-
-			// Create new cells.
-			for(int x = minCellX; x <= maxCellX; x++)
-			{
-				for(int y = minCellY; y <= maxCellY; y++)
-				{
-					var cellIndices = new Vector2i(x, y);
-
-					if(!cellObjects.ContainsKey(cellIndices))
-					{
-						CreateExteriorCell(cellIndices);
-					}
-				}
-			}
-		}
-		private GameObject CreateExteriorCell(Vector2i indices)
-		{
-			var cellObj = MWEngine.InstantiateExteriorCell(indices.x, indices.y);
-			cellObjects[indices] = cellObj;
-
-			return cellObj;
-		}
-		private void DestroyExteriorCell(Vector2i indices)
-		{
-			GameObject cellObj;
-
-			if(cellObjects.TryGetValue(indices, out cellObj))
-			{
-				cellObjects.Remove(indices);
-				Destroy(cellObj);
-			}
-			else
-			{
-				Debug.LogError("Tried to destroy a cell that isn't created.");
-			}
-		}
-		private GameObject CreateInteriorCell(string cellName)
-		{
-			var cellObj = MWEngine.InstantiateInteriorCell(cellName);
-			cellObjects[Vector2i.zero] = cellObj;
-
-			return cellObj;
-		}
-		private void DestroyAllCells()
-		{
-			foreach(var keyValuePair in cellObjects)
-			{
-				Destroy(keyValuePair.Value);
-			}
-
-			cellObjects.Clear();
-		}
 		private void OnDestroy()
 		{
 			MWDataReader.Close();
@@ -162,26 +76,11 @@ namespace TESUnity
 
 		private void Update()
 		{
-			if(!isInteriorCell)
-			{
-				UpdateExteriorCells();
-
-				if(Input.GetKeyDown(KeyCode.P))
-				{
-					Debug.Log(GetCellIndices(Camera.main.transform.position));
-				}
-			}
+			MWEngine.Update();
 
 			if(Input.GetKeyDown(KeyCode.G))
 			{
-				TryOpenDoor();
-			}
-		}
-		private void OnGUI()
-		{
-			if(testImg != null)
-			{
-				GUI.DrawTexture(new Rect(10, 10, testImg.width, testImg.height), testImg);
+				MWEngine.TryOpenDoor();
 			}
 		}
 
@@ -294,59 +193,6 @@ namespace TESUnity
 			}
 		}
 
-		private void TryOpenDoor()
-		{
-			RaycastHit hitInfo;
-			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
-
-			if(Physics.Raycast(ray, out hitInfo, 2))
-			{
-				// Find the door object.
-				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
-
-				if(doorObj != null)
-				{
-					var doorComponent = doorObj.GetComponent<DoorComponent>();
-
-					if(doorComponent.leadsToAnotherCell)
-					{
-						DestroyAllCells();
-
-						ESM.CELLRecord CELL;
-
-						if((doorComponent.doorExitName != null) && (doorComponent.doorExitName != ""))
-						{
-							CELL = MWDataReader.FindInteriorCellRecord(doorComponent.doorExitName);
-							cellObjects[Vector2i.zero] = MWEngine.InstantiateCell(CELL);
-
-							if(CELL.WHGT != null)
-							{
-								waterObj.transform.position = new Vector3(0, CELL.WHGT.value, 0);
-								waterObj.SetActive(true);
-							}
-							else
-							{
-								waterObj.SetActive(false);
-							}
-						}
-						else
-						{
-							var cellIndices = GetCellIndices(doorComponent.doorExitPos);
-							CELL = MWDataReader.FindExteriorCellRecord(cellIndices.x, cellIndices.y);
-
-							waterObj.transform.position = Vector3.zero;
-							waterObj.SetActive(true);
-						}
-
-						Camera.main.transform.position = doorComponent.doorExitPos;
-						Camera.main.transform.rotation = doorComponent.doorExitOrientation;
-
-						isInteriorCell = CELL.isInterior;
-					}
-				}
-			}
-		}
-
 		private GameObject CreatePlayer(Vector3 position, Quaternion orientation)
 		{
 			GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -359,7 +205,6 @@ namespace TESUnity
 		}
 
 		/*
-
 		//string testSoundFilePath = MorrowindDataPath + "/Sound/Fx/BMWind.wav";
 		string testSoundFilePath = MorrowindDataPath + "/Music/Explore/mx_explore_1.mp3";
 		//string testSoundFilePath = MorrowindDataPath + "/Sound/Vo/a/f/Atk_AF001.mp3";

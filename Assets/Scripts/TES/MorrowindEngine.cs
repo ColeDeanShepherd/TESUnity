@@ -11,6 +11,8 @@ namespace TESUnity
 		public MorrowindEngine(MorrowindDataReader dataReader)
 		{
 			this.dataReader = dataReader;
+
+			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
 		}
 
 		public GameObject InstantiateNIF(string filePath)
@@ -227,9 +229,81 @@ namespace TESUnity
 			return terrain;
 		}
 
+		public void Update()
+		{
+			if(!isInteriorCell)
+			{
+				UpdateExteriorCells();
+
+				if(Input.GetKeyDown(KeyCode.P))
+				{
+					Debug.Log(GetExteriorCellIndices(Camera.main.transform.position));
+				}
+			}
+		}
+		public void TryOpenDoor()
+		{
+			RaycastHit hitInfo;
+			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+
+			if(Physics.Raycast(ray, out hitInfo, 2))
+			{
+				// Find the door object.
+				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
+
+				if(doorObj != null)
+				{
+					var doorComponent = doorObj.GetComponent<DoorComponent>();
+
+					if(doorComponent.leadsToAnotherCell)
+					{
+						DestroyAllCells();
+
+						ESM.CELLRecord CELL;
+
+						if((doorComponent.doorExitName != null) && (doorComponent.doorExitName != ""))
+						{
+							CELL = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
+							cellObjects[Vector2i.zero] = InstantiateCell(CELL);
+
+							if(CELL.WHGT != null)
+							{
+								waterObj.transform.position = new Vector3(0, CELL.WHGT.value, 0);
+								waterObj.SetActive(true);
+							}
+							else
+							{
+								waterObj.SetActive(false);
+							}
+						}
+						else
+						{
+							var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
+							CELL = dataReader.FindExteriorCellRecord(cellIndices.x, cellIndices.y);
+
+							waterObj.transform.position = Vector3.zero;
+							waterObj.SetActive(true);
+						}
+
+						Camera.main.transform.position = doorComponent.doorExitPos;
+						Camera.main.transform.rotation = doorComponent.doorExitOrientation;
+
+						isInteriorCell = CELL.isInterior;
+					}
+				}
+			}
+		}
+
 		private MorrowindDataReader dataReader;
+
 		private Dictionary<string, GameObject> loadedNIFObjects = new Dictionary<string, GameObject>();
 		private GameObject prefabObj;
+
+		private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
+		private int cellRadius = 1;
+		private bool isInteriorCell;
+
+		private GameObject waterObj;
 
 		private void InstantiateCellObjects(CELLRecord CELL, GameObject parent)
 		{
@@ -377,6 +451,86 @@ namespace TESUnity
 					Debug.Log("Unknown Object: " + refObjGroup.NAME.value);
 				}*/
 			}
+		}
+
+		private Vector2i GetExteriorCellIndices(Vector3 point)
+		{
+			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
+		}
+		private void UpdateExteriorCells()
+		{
+			var cameraCellIndices = GetExteriorCellIndices(Camera.main.transform.position);
+			var minCellX = cameraCellIndices.x - cellRadius;
+			var maxCellX = cameraCellIndices.x + cellRadius;
+			var minCellY = cameraCellIndices.y - cellRadius;
+			var maxCellY = cameraCellIndices.y + cellRadius;
+
+			// Destroy out of range cells.
+			var outOfRangeCellIndices = new List<Vector2i>();
+
+			foreach(var KVPair in cellObjects)
+			{
+				if((KVPair.Key.x < minCellX) || (KVPair.Key.x > maxCellX) || (KVPair.Key.y < minCellY) || (KVPair.Key.y > maxCellY))
+				{
+					outOfRangeCellIndices.Add(KVPair.Key);
+				}
+			}
+
+			foreach(var cellIndices in outOfRangeCellIndices)
+			{
+				DestroyExteriorCell(cellIndices);
+			}
+
+			// Create new cells.
+			for(int x = minCellX; x <= maxCellX; x++)
+			{
+				for(int y = minCellY; y <= maxCellY; y++)
+				{
+					var cellIndices = new Vector2i(x, y);
+
+					if(!cellObjects.ContainsKey(cellIndices))
+					{
+						CreateExteriorCell(cellIndices);
+					}
+				}
+			}
+		}
+		private GameObject CreateExteriorCell(Vector2i indices)
+		{
+			var cellObj = InstantiateExteriorCell(indices.x, indices.y);
+			cellObjects[indices] = cellObj;
+
+			return cellObj;
+		}
+		private void DestroyExteriorCell(Vector2i indices)
+		{
+			GameObject cellObj;
+
+			if(cellObjects.TryGetValue(indices, out cellObj))
+			{
+				cellObjects.Remove(indices);
+				GameObject.Destroy(cellObj);
+			}
+			else
+			{
+				Debug.LogError("Tried to destroy a cell that isn't created.");
+			}
+		}
+		private GameObject CreateInteriorCell(string cellName)
+		{
+			var cellObj = InstantiateInteriorCell(cellName);
+			cellObjects[Vector2i.zero] = cellObj;
+
+			return cellObj;
+		}
+		private void DestroyAllCells()
+		{
+			foreach(var keyValuePair in cellObjects)
+			{
+				GameObject.Destroy(keyValuePair.Value);
+			}
+
+			cellObjects.Clear();
 		}
 	}
 }
