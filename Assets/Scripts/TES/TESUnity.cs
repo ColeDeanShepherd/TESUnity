@@ -11,6 +11,7 @@ using UnityEngine.UI;
 // TODO: add more creation functions for GUI elements
 // TODO: refactor water level handling
 // TODO: use MW lights
+// TODO: fix doors with no colliders (Hlaalu Council Manor in Balmora)
 
 namespace TESUnity
 {
@@ -55,17 +56,8 @@ namespace TESUnity
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
-			MWEngine.SpawnPlayerInside("Caldera, Nedhelas' House", Vector3.zero);
-			//MWEngine.SpawnPlayerOutside(Vector3.up * 50);
-
-			//CreatePlayer(Vector3.up * 50, Quaternion.identity);
-
-			//MWDataReader.InstantiateInteriorCell("Helan Ancestral Tomb");
-			//MWDataReader.InstantiateInteriorCell("Suran, Ibarnadad Assirnarari: Apothecary");
-
-			//GUIUtils.CreateScrollView(canvasObject);
-			//var UIObj = GameObject.Instantiate(dropdownPrefab);
-			//UIObj.transform.SetParent(canvasObject.transform, false);
+			ExtractFileFromMorrowind("meshes\\x\\ex_dae_ruin_01.nif");
+			MWEngine.SpawnPlayerOutside(Vector3.up * 50);
 
 			//CreateBSABrowser();
 		}

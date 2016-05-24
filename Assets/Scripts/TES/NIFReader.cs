@@ -410,6 +410,10 @@ namespace TESUnity
 					throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
 				}
 			}
+			public static Matrix4x4 Read3x3RotationMatrix(BinaryReader reader)
+			{
+				return BinaryReaderExtensions.ReadRowMajorMatrix3x3(reader);
+			}
 		}
 
 		public class NiFile
@@ -549,7 +553,7 @@ namespace TESUnity
 			{
 				unknownInt = reader.ReadUInt32();
 				translation = BinaryReaderExtensions.ReadVector3(reader);
-				rotation = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
+				rotation = NiReaderUtils.Read3x3RotationMatrix(reader);
 				radius = BinaryReaderExtensions.ReadVector3(reader);
 			}
 		}
@@ -776,7 +780,7 @@ namespace TESUnity
 
 			public void Deserialize(BinaryReader reader)
 			{
-				rotation = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
+				rotation = NiReaderUtils.Read3x3RotationMatrix(reader);
 				translation = BinaryReaderExtensions.ReadVector3(reader);
 				scale = reader.ReadSingle();
 			}
@@ -899,7 +903,7 @@ namespace TESUnity
 
 				flags = NiReaderUtils.ReadFlags(reader);
 				translation = BinaryReaderExtensions.ReadVector3(reader);
-				rotation = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
+				rotation = NiReaderUtils.Read3x3RotationMatrix(reader);
 				scale = reader.ReadSingle();
 				velocity = BinaryReaderExtensions.ReadVector3(reader);
 				properties = NiReaderUtils.ReadLengthPrefixedRefs32<NiProperty>(reader);
@@ -1881,7 +1885,7 @@ namespace TESUnity
 			{
 				base.Deserialize(reader);
 
-				modelProjectionMatrix = BinaryReaderExtensions.ReadColumnMajorMatrix3x3(reader);
+				modelProjectionMatrix = NiReaderUtils.Read3x3RotationMatrix(reader);
 				modelProjectionTransform = BinaryReaderExtensions.ReadVector3(reader);
 				textureFiltering = (TexFilterMode)reader.ReadUInt32();
 				textureClamping = (TexClampMode)reader.ReadUInt32();

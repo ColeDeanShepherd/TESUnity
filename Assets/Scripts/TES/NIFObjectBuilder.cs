@@ -24,17 +24,31 @@ namespace TESUnity
 
 			if(file.footer.roots.Length == 1)
 			{
-				GameObject gameObject = InstantiateNiObject(file.blocks[file.footer.roots[0]]);
+				var rootNiObject = file.blocks[file.footer.roots[0]];
 
+				GameObject gameObject = InstantiateNiObject(rootNiObject);
+
+				// If the file doesn't contain any NiObjects we are looking for, return an empty GameObject.
 				if(gameObject == null)
 				{
+					Debug.Log(file.name + " resulted in a null GameObject when instantiated.");
+
 					gameObject = new GameObject(file.name);
+				}
+				// If gameObject != null and the root NiObject is an NiNode, discard any transformations (Morrowind apparently does).
+				else if(rootNiObject is NiNode)
+				{
+					gameObject.transform.position = Vector3.zero;
+					gameObject.transform.rotation = Quaternion.identity;
+					gameObject.transform.localScale = Vector3.one;
 				}
 
 				return gameObject;
 			}
 			else
 			{
+				Debug.Log(file.name + " has multiple roots.");
+
 				GameObject gameObject = new GameObject(file.name);
 
 				foreach(var rootRef in file.footer.roots)
@@ -297,9 +311,7 @@ namespace TESUnity
 				var colliderObj = InstantiateNiTriShape((NiTriShape)anNiObject, false, true);
 				colliderObj.transform.SetParent(gameObject.transform, false);
 			}
-			else if(anNiObject.GetType() == typeof(AvoidNode))
-			{
-			}
+			else if(anNiObject.GetType() == typeof(AvoidNode)) { }
 			else
 			{
 				Debug.Log("Unsupported collider NiObject: " + anNiObject.GetType().Name);

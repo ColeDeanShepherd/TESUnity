@@ -86,6 +86,16 @@ namespace TESUnity
 
 				InstantiateCellObjects(CELL, cellObj);
 
+				if(CELL.WHGT != null)
+				{
+					waterObj.transform.position = new Vector3(0, CELL.WHGT.value / Convert.meterInMWUnits, 0);
+					waterObj.SetActive(true);
+				}
+				else
+				{
+					waterObj.SetActive(false);
+				}
+
 				return cellObj;
 			}
 		}
@@ -253,6 +263,8 @@ namespace TESUnity
 			Debug.Assert(_currentCell != null);
 
 			var camera = CreateFlyingCamera(position);
+
+			CreateInteriorCell(interiorCellName);
 		}
 		public void Update()
 		{
@@ -290,16 +302,6 @@ namespace TESUnity
 							newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
 							Debug.Assert(newCell.isInterior);
 							cellObjects[Vector2i.zero] = InstantiateCell(newCell);
-
-							if(newCell.WHGT != null)
-							{
-								waterObj.transform.position = new Vector3(0, newCell.WHGT.value, 0);
-								waterObj.SetActive(true);
-							}
-							else
-							{
-								waterObj.SetActive(false);
-							}
 						}
 						else
 						{
@@ -365,9 +367,9 @@ namespace TESUnity
 			{
 				gameObject.transform.localScale = Vector3.one * refObjDataGroup.XSCL.value;
 			}
-
-			gameObject.transform.position = Convert.NifPointToUnityPoint(refObjDataGroup.DATA.position);
-			gameObject.transform.rotation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DATA.eulerAngles);
+			
+			gameObject.transform.position += Convert.NifPointToUnityPoint(refObjDataGroup.DATA.position);
+			gameObject.transform.rotation *= Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DATA.eulerAngles);
 
 			if(record is DOORRecord)
 			{

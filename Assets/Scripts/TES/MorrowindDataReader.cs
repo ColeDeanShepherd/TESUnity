@@ -23,19 +23,19 @@ namespace TESUnity
 			MorrowindESMFile = new ESMFile(MorrowindFilePath + "/Morrowind.esm");
 			MorrowindBSAFile = new BSAFile(MorrowindFilePath + "/Morrowind.bsa");
 
-			BloodmoonESMFile = new ESMFile(MorrowindFilePath + "/Bloodmoon.esm");
+			/*BloodmoonESMFile = new ESMFile(MorrowindFilePath + "/Bloodmoon.esm");
 			BloodmoonBSAFile = new BSAFile(MorrowindFilePath + "/Bloodmoon.bsa");
 
 			TribunalESMFile = new ESMFile(MorrowindFilePath + "/Tribunal.esm");
-			TribunalBSAFile = new BSAFile(MorrowindFilePath + "/Tribunal.bsa");
+			TribunalBSAFile = new BSAFile(MorrowindFilePath + "/Tribunal.bsa");*/
 		}
 		public void Close()
 		{
-			TribunalBSAFile.Close();
+			/*TribunalBSAFile.Close();
 			TribunalESMFile.Close();
 
 			BloodmoonBSAFile.Close();
-			BloodmoonESMFile.Close();
+			BloodmoonESMFile.Close();*/
 
 			MorrowindBSAFile.Close();
 			MorrowindESMFile.Close();
