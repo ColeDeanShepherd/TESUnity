@@ -14,6 +14,16 @@ public static class GameObjectUtils
 
 		return cameraObject;
 	}
+	public static GameObject CreateDirectionalLight()
+	{
+		var light = new GameObject("Directional Light");
+
+		var lightComponent = light.AddComponent<Light>();
+		lightComponent.type = LightType.Directional;
+		lightComponent.shadows = LightShadows.Soft;
+
+		return light;
+	}
 
 	/// <summary>
 	/// Creates terrain from runtime data.
@@ -68,6 +78,28 @@ public static class GameObjectUtils
 		terrainObject.transform.position = position;
 
 		return terrainObject;
+	}
+	public static Bounds GetVisualBoundsRecursive(GameObject gameObject)
+	{
+		Debug.Assert(gameObject != null);
+
+		var renderers = gameObject.transform.GetComponentsInChildren<Renderer>();
+
+		if(renderers.Length > 0)
+		{
+			var visualBounds = renderers[0].bounds;
+
+			for(int i = 1; i < renderers.Length; i++)
+			{
+				visualBounds.Encapsulate(renderers[i].bounds);
+			}
+
+			return visualBounds;
+		}
+		else
+		{
+			return new Bounds(gameObject.transform.position, Vector3.zero);
+		}
 	}
 
 	public static GameObject FindObjectWithTagUpHeirarchy(GameObject gameObject, string tag)

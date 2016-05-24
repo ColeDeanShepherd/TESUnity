@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// TODO: fix rotation errors
 // TODO: redesign destructors/idisposable
 // TODO: handle untextured activators
 // TODO: add walking mode
 // TODO: add music playing
-// TODO: add more creation functions for GUI elements
-// TODO: refactor water level handling
-// TODO: use MW lights
 // TODO: fix doors with no colliders (Hlaalu Council Manor in Balmora)
+// TODO: add support for day/night cycle
 
 namespace TESUnity
 {
@@ -56,8 +53,8 @@ namespace TESUnity
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
-			ExtractFileFromMorrowind("meshes\\x\\ex_dae_ruin_01.nif");
 			MWEngine.SpawnPlayerOutside(Vector3.up * 50);
+			//MWEngine.SpawnPlayerInside("Caldera, Dro'Shavir's House", Vector3.zero);
 
 			//CreateBSABrowser();
 		}

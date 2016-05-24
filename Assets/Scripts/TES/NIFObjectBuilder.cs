@@ -232,13 +232,13 @@ namespace TESUnity
 			mesh.normals = normals;
 			mesh.uv = UVs;
 			mesh.triangles = triangles;
-
-			mesh.RecalculateBounds();
-
+			
 			if(!data.hasNormals)
 			{
 				mesh.RecalculateNormals();
 			}
+
+			mesh.RecalculateBounds();
 
 			return mesh;
 		}

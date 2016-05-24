@@ -22,7 +22,14 @@ namespace TESUnity
 		{
 			this.dataReader = dataReader;
 
+			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+
+			sunObj = GameObjectUtils.CreateDirectionalLight();
+			sunObj.transform.rotation = Quaternion.Euler(new Vector3(50, 330, 0));
+			sunObj.SetActive(false);
+
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
+			waterObj.SetActive(false);
 		}
 
 		public GameObject InstantiateNIF(string filePath)
@@ -85,16 +92,6 @@ namespace TESUnity
 				cellObj.tag = "Cell";
 
 				InstantiateCellObjects(CELL, cellObj);
-
-				if(CELL.WHGT != null)
-				{
-					waterObj.transform.position = new Vector3(0, CELL.WHGT.value / Convert.meterInMWUnits, 0);
-					waterObj.SetActive(true);
-				}
-				else
-				{
-					waterObj.SetActive(false);
-				}
 
 				return cellObj;
 			}
@@ -255,6 +252,8 @@ namespace TESUnity
 			_currentCell = dataReader.FindExteriorCellRecord(cellIndices);
 
 			var camera = CreateFlyingCamera(position);
+
+			OnExteriorCell(_currentCell);
 		}
 		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
 		{
@@ -265,6 +264,8 @@ namespace TESUnity
 			var camera = CreateFlyingCamera(position);
 
 			CreateInteriorCell(interiorCellName);
+
+			OnInteriorCell(_currentCell);
 		}
 		public void Update()
 		{
@@ -302,6 +303,8 @@ namespace TESUnity
 							newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
 							Debug.Assert(newCell.isInterior);
 							cellObjects[Vector2i.zero] = InstantiateCell(newCell);
+
+							OnInteriorCell(newCell);
 						}
 						else
 						{
@@ -309,8 +312,7 @@ namespace TESUnity
 							newCell = dataReader.FindExteriorCellRecord(cellIndices);
 							Debug.Assert(!newCell.isInterior);
 
-							waterObj.transform.position = Vector3.zero;
-							waterObj.SetActive(true);
+							OnExteriorCell(newCell);
 						}
 
 						Camera.main.transform.position = doorComponent.doorExitPos;
@@ -331,7 +333,10 @@ namespace TESUnity
 		private int cellRadius = 1;
 		private CELLRecord _currentCell;
 
+		private GameObject sunObj;
 		private GameObject waterObj;
+
+		private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
 
 		private void InstantiateCellObjects(CELLRecord CELL, GameObject parent)
 		{
@@ -343,15 +348,46 @@ namespace TESUnity
 				if(dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjDataGroup.NAME.value, out objRecord))
 				{
 					var modelFileName = ESM.RecordUtils.GetModelFileName(objRecord);
+					GameObject modelObj = null;
 
 					// If the model file name is valid, instantiate it.
 					if((modelFileName != null) && (modelFileName != ""))
 					{
 						var modelFilePath = "meshes\\" + modelFileName;
 
-						var obj = InstantiateNIF(modelFilePath);
-						PostProcessInstantiatedCellObject(obj, objRecord, refObjDataGroup);
-						obj.transform.parent = parent.transform;
+						modelObj = InstantiateNIF(modelFilePath);
+						PostProcessInstantiatedCellObject(modelObj, objRecord, refObjDataGroup);
+						modelObj.transform.parent = parent.transform;
+					}
+
+					if(objRecord is LIGHRecord)
+					{
+						var lightObj = InstantiateLight((LIGHRecord)objRecord, CELL.isInterior);
+
+						if(modelObj != null)
+						{
+							var attachLightTransform = modelObj.transform.FindChild("AttachLight");
+
+							if(attachLightTransform != null)
+							{
+								lightObj.transform.position = attachLightTransform.position;
+								lightObj.transform.rotation = attachLightTransform.rotation;
+
+								lightObj.transform.parent = attachLightTransform;
+							}
+							else
+							{
+								lightObj.transform.position = GameObjectUtils.GetVisualBoundsRecursive(modelObj).center;
+								lightObj.transform.rotation = modelObj.transform.rotation;
+
+								lightObj.transform.parent = modelObj.transform;
+							}
+						}
+						else
+						{
+							PostProcessInstantiatedCellObject(lightObj, objRecord, refObjDataGroup);
+							lightObj.transform.parent = parent.transform;
+						}
 					}
 				}
 				/*else
@@ -359,6 +395,23 @@ namespace TESUnity
 					Debug.Log("Unknown Object: " + refObjDataGroup.NAME.value);
 				}*/
 			}
+		}
+		private GameObject InstantiateLight(LIGHRecord LIGH, bool indoors)
+		{
+			var lightObj = new GameObject("Light");
+
+			var lightComponent = lightObj.AddComponent<Light>();
+			lightComponent.range = 3 * (LIGH.LHDT.radius / Convert.meterInMWUnits);
+			lightComponent.color = new Color32(LIGH.LHDT.red, LIGH.LHDT.green, LIGH.LHDT.blue, 255);
+			lightComponent.intensity = 1.5f;
+			//lightComponent.shadows = LightShadows.Soft;
+
+			if(!indoors)
+			{
+				lightComponent.enabled = false;
+			}
+
+			return lightObj;
 		}
 		// Called by InstantiateCellObjects.
 		private void PostProcessInstantiatedCellObject(GameObject gameObject, ESM.Record record, CELLRecord.RefObjDataGroup refObjDataGroup)
@@ -486,6 +539,32 @@ namespace TESUnity
 			}
 
 			cellObjects.Clear();
+		}
+
+		private void OnExteriorCell(CELLRecord CELL)
+		{
+			RenderSettings.ambientLight = defaultAmbientColor;
+
+			sunObj.SetActive(true);
+
+			waterObj.transform.position = Vector3.zero;
+			waterObj.SetActive(true);
+		}
+		private void OnInteriorCell(CELLRecord CELL)
+		{
+			RenderSettings.ambientLight = ColorUtils.B8G8R8ToColor32(CELL.AMBI.ambientColor);
+
+			sunObj.SetActive(false);
+
+			if(CELL.WHGT != null)
+			{
+				waterObj.transform.position = new Vector3(0, CELL.WHGT.value / Convert.meterInMWUnits, 0);
+				waterObj.SetActive(true);
+			}
+			else
+			{
+				waterObj.SetActive(false);
+			}
 		}
 
 		private GameObject CreateFlyingCamera(Vector3 position)
