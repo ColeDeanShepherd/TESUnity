@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\ArrayRange.cs" />
     <Compile Include="Assets\Scripts\Audio\AudioUtils.cs" />
+    <Compile Include="Assets\Scripts\Audio\MusicPlayer.cs" />
     <Compile Include="Assets\Scripts\Audio\OneShotAudioSourceComponent.cs" />
     <Compile Include="Assets\Scripts\Audio\OneShotAudioStreamComponent.cs" />
     <Compile Include="Assets\Scripts\BinaryReaderExtensions.cs" />

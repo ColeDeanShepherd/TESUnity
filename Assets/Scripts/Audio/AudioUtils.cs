@@ -27,7 +27,7 @@ public static class AudioUtils
 		return byteCount / (bitDepth / 8) / channelCount;
 	}
 
-	public static void Play2DAudioClip(AudioClip audioClip)
+	public static GameObject Play2DAudioClip(AudioClip audioClip)
 	{
 		GameObject gameObject = new GameObject("tmp2DAudioClip");
 
@@ -35,14 +35,16 @@ public static class AudioUtils
 		audioSource.clip = audioClip;
 
 		gameObject.AddComponent<OneShotAudioSourceComponent>();
+
+		return gameObject;
 	}
-	public static void Play2DAudioClip(PCMAudioBuffer audioBuffer)
+	public static GameObject Play2DAudioClip(PCMAudioBuffer audioBuffer)
 	{
 		var audioClip = CreateAudioClip("tmp2DAudioClip", audioBuffer);
 
-		Play2DAudioClip(audioClip);
+		return Play2DAudioClip(audioClip);
 	}
-	public static void Play2DAudioStream(MP3StreamReader audioStream)
+	public static GameObject Play2DAudioStream(MP3StreamReader audioStream)
 	{
 		GameObject gameObject = new GameObject("tmp2DAudioStream");
 
@@ -52,6 +54,8 @@ public static class AudioUtils
 
 		var audioStreamComponent = gameObject.AddComponent<OneShotAudioStreamComponent>();
 		audioStreamComponent.audioStream = audioStream;
+
+		return gameObject;
 	}
 
 	public static PCMAudioBuffer ReadAudioFile(string filePath)

@@ -4,11 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // TODO: redesign destructors/idisposable
-// TODO: handle untextured activators
 // TODO: add walking mode
-// TODO: add music playing
 // TODO: fix doors with no colliders (Hlaalu Council Manor in Balmora)
-// TODO: add support for day/night cycle
+// TODO: add support for opening doors that don't lead to other cells
+// TODO: document audio
 
 namespace TESUnity
 {
@@ -33,10 +32,9 @@ namespace TESUnity
 		public GameObject waterPrefab;
 		#endregion
 
-		private GameObject canvasObject;
-
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
+		private MusicPlayer musicPlayer;
 		
 		private GameObject testObj;
 		private string testObjPath;
@@ -47,16 +45,22 @@ namespace TESUnity
 		}
 		private void Start()
 		{
-			canvasObject = GUIUtils.CreateCanvas();
-			GUIUtils.CreateEventSystem();
-
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
 			MWEngine.SpawnPlayerOutside(Vector3.up * 50);
-			//MWEngine.SpawnPlayerInside("Caldera, Dro'Shavir's House", Vector3.zero);
 
-			//CreateBSABrowser();
+			musicPlayer = new MusicPlayer();
+
+			foreach(var songFilePath in Directory.GetFiles(MorrowindDataPath + "/Music/Explore"))
+			{
+				if(!songFilePath.Contains("Morrowind Title"))
+				{
+					musicPlayer.AddSong(songFilePath);
+				}
+			}
+
+			musicPlayer.Play();
 		}
 		private void OnDestroy()
 		{
@@ -66,11 +70,7 @@ namespace TESUnity
 		private void Update()
 		{
 			MWEngine.Update();
-
-			if(Input.GetKeyDown(KeyCode.G))
-			{
-				MWEngine.TryOpenDoor();
-			}
+			musicPlayer.Update();
 
 			if(Input.GetKeyDown(KeyCode.P))
 			{
@@ -89,7 +89,7 @@ namespace TESUnity
 		{
 			var MWArchiveFile = MWDataReader.MorrowindBSAFile;
 
-			var scrollView = GUIUtils.CreateScrollView(canvasObject);
+			var scrollView = GUIUtils.CreateScrollView(MWEngine.canvasObj);
 			scrollView.GetComponent<RectTransform>().sizeDelta = new Vector2(480, 400);
 
 			var scrollViewContent = GUIUtils.GetScrollViewContent(scrollView);
@@ -124,8 +124,6 @@ namespace TESUnity
 
 						testObj = MWEngine.InstantiateNIF(filePath);
 						testObjPath = filePath;
-
-						//testImg = TextureUtils.LoadDDSTexture(new MemoryStream(fileData));
 					});
 
 					drawI++;
@@ -204,31 +202,5 @@ namespace TESUnity
 
 			return player;
 		}
-
-		/*
-		//string testSoundFilePath = MorrowindDataPath + "/Sound/Fx/BMWind.wav";
-		string testSoundFilePath = MorrowindDataPath + "/Music/Explore/mx_explore_1.mp3";
-		//string testSoundFilePath = MorrowindDataPath + "/Sound/Vo/a/f/Atk_AF001.mp3";
-
-		private void Update()
-		{
-			if(Input.GetKeyDown(KeyCode.B))
-			{
-				if(File.Exists(testSoundFilePath))
-				{
-					PCMAudioBuffer audioBuffer = AudioUtils.ReadAudioFile(testSoundFilePath);
-					AudioUtils.Play2DAudioClip(audioBuffer);
-				}
-			}
-
-			if(Input.GetKeyDown(KeyCode.S))
-			{
-				if(File.Exists(testSoundFilePath))
-				{
-					MP3StreamReader audioStream = new MP3StreamReader(testSoundFilePath);
-					AudioUtils.Play2DAudioStream(audioStream);
-				}
-			}
-		}*/
 	}
 }

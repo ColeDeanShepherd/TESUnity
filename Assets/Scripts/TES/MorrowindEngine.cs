@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TESUnity
 {
@@ -8,7 +9,9 @@ namespace TESUnity
 	
 	public class MorrowindEngine
 	{
-		public const float maxInteractDistance = 2;
+		public static MorrowindEngine instance;
+
+		public const float maxInteractDistance = 3;
 		public static int markerLayer
 		{
 			get
@@ -30,6 +33,7 @@ namespace TESUnity
 					lowerName == "editormarker";
 		}
 
+		public GameObject canvasObj;
 		public CELLRecord currentCell
 		{
 			get
@@ -40,7 +44,22 @@ namespace TESUnity
 
 		public MorrowindEngine(MorrowindDataReader dataReader)
 		{
+			Debug.Assert(instance == null);
+
+			instance = this;
 			this.dataReader = dataReader;
+
+			canvasObj = GUIUtils.CreateCanvas();
+			GUIUtils.CreateEventSystem();
+
+			interactTextObj = GUIUtils.CreateText("asdffdsa", canvasObj);
+			interactTextObj.GetComponent<Text>().color = Color.white;
+
+			var interactTextCSF = interactTextObj.AddComponent<ContentSizeFitter>();
+			interactTextCSF.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+			interactTextCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+			interactTextObj.SetActive(false);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
 
@@ -294,9 +313,13 @@ namespace TESUnity
 			{
 				UpdateExteriorCells();
 			}
+
+			CastInteractRay();
 		}
-		public void TryOpenDoor()
+		public void CastInteractRay()
 		{
+			interactTextObj.SetActive(false);
+
 			// Cast a ray to see what the camera is looking at.
 			RaycastHit hitInfo;
 			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
@@ -309,38 +332,56 @@ namespace TESUnity
 				if(doorObj != null)
 				{
 					var doorComponent = doorObj.GetComponent<DoorComponent>();
-					
+
+					interactTextObj.SetActive(true);
+
 					if(doorComponent.leadsToAnotherCell)
 					{
-						// The door leads to another cell, so destroy all currently loaded cells.
-						DestroyAllCells();
+						interactTextObj.GetComponent<Text>().text = doorComponent.doorExitName;
+					}
+					else
+					{
+						interactTextObj.GetComponent<Text>().text = doorComponent.doorName;
+					}
 
-						// Load the new cell.
-						CELLRecord newCell;
-
-						if((doorComponent.doorExitName != null) && (doorComponent.doorExitName != ""))
-						{
-							newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
-							Debug.Assert(newCell.isInterior);
-							cellObjects[Vector2i.zero] = InstantiateCell(newCell);
-
-							OnInteriorCell(newCell);
-						}
-						else
-						{
-							var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
-							newCell = dataReader.FindExteriorCellRecord(cellIndices);
-							Debug.Assert(!newCell.isInterior);
-
-							OnExteriorCell(newCell);
-						}
-
-						Camera.main.transform.position = doorComponent.doorExitPos;
-						Camera.main.transform.rotation = doorComponent.doorExitOrientation;
-
-						_currentCell = newCell;
+					if(Input.GetKeyDown(KeyCode.G))
+					{
+						OpenDoor(doorComponent);
 					}
 				}
+			}
+		}
+		public void OpenDoor(DoorComponent doorComponent)
+		{
+			if(doorComponent.leadsToAnotherCell)
+			{
+				// The door leads to another cell, so destroy all currently loaded cells.
+				DestroyAllCells();
+
+				// Load the new cell.
+				CELLRecord newCell;
+
+				if(doorComponent.leadsToInteriorCell)
+				{
+					newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
+					Debug.Assert(newCell.isInterior);
+					cellObjects[Vector2i.zero] = InstantiateCell(newCell);
+
+					OnInteriorCell(newCell);
+				}
+				else
+				{
+					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
+					newCell = dataReader.FindExteriorCellRecord(cellIndices);
+					Debug.Assert(!newCell.isInterior);
+
+					OnExteriorCell(newCell);
+				}
+
+				Camera.main.transform.position = doorComponent.doorExitPos;
+				Camera.main.transform.rotation = doorComponent.doorExitOrientation;
+
+				_currentCell = newCell;
 			}
 		}
 
@@ -353,6 +394,7 @@ namespace TESUnity
 		private int cellRadius = 1;
 		private CELLRecord _currentCell;
 
+		private GameObject interactTextObj;
 		private GameObject sunObj;
 		private GameObject waterObj;
 
@@ -463,12 +505,23 @@ namespace TESUnity
 					if(refObjDataGroup.DNAM != null)
 					{
 						doorComponent.doorExitName = refObjDataGroup.DNAM.value;
+						doorComponent.leadsToInteriorCell = true;
+					}
+					else
+					{
+						doorComponent.leadsToInteriorCell = false;
 					}
 
 					if(refObjDataGroup.DODT != null)
 					{
 						doorComponent.doorExitPos = Convert.NifPointToUnityPoint(refObjDataGroup.DODT.position);
 						doorComponent.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
+
+						if(!doorComponent.leadsToInteriorCell)
+						{
+							var doorExitCell = dataReader.FindExteriorCellRecord(GetExteriorCellIndices(doorComponent.doorExitPos));
+							doorComponent.doorExitName = (doorExitCell != null) ? doorExitCell.RGNN.value : doorComponent.doorName;
+						}
 					}
 				}
 				else
