@@ -78,6 +78,10 @@ namespace TESUnity
 			{
 				return InstantiateNiNode((NiNode)obj);
 			}
+			else if(obj.GetType() == typeof(NiBSAnimationNode))
+			{
+				return InstantiateNiNode((NiNode)obj);
+			}
 			else if(obj.GetType() == typeof(NiTriShape))
 			{
 				return InstantiateNiTriShape((NiTriShape)obj, true, false);
@@ -114,8 +118,7 @@ namespace TESUnity
 
 		private GameObject InstantiateNiNode(NiNode node)
 		{
-			GameObject obj = new GameObject(System.Text.Encoding.ASCII.GetString(node.name));
-			ApplyNiAVObject(node, obj);
+			GameObject obj = new GameObject(node.name);
 
 			foreach(var childIndex in node.children)
 			{
@@ -131,6 +134,8 @@ namespace TESUnity
 				}
 			}
 
+			ApplyNiAVObject(node, obj);
+
 			return obj;
 		}
 		private GameObject InstantiateNiTriShape(NiTriShape triShape, bool visual, bool collidable)
@@ -138,7 +143,7 @@ namespace TESUnity
 			Debug.Assert(visual || collidable);
 
 			var mesh = NiTriShapeDataToMesh((NiTriShapeData)file.blocks[triShape.data.value]);
-			var obj = new GameObject(System.Text.Encoding.ASCII.GetString(triShape.name));
+			var obj = new GameObject(triShape.name);
 
 			if(visual)
 			{
@@ -158,7 +163,6 @@ namespace TESUnity
 		private GameObject InstantiateRootCollisionNode(RootCollisionNode collisionNode)
 		{
 			GameObject obj = new GameObject("Root Collision Node");
-			ApplyNiAVObject(collisionNode, obj);
 
 			foreach(var childIndex in collisionNode.children)
 			{
@@ -169,6 +173,8 @@ namespace TESUnity
 				}
 			}
 
+			ApplyNiAVObject(collisionNode, obj);
+
 			return obj;
 		}
 
@@ -177,6 +183,11 @@ namespace TESUnity
 			obj.transform.position = Convert.NifPointToUnityPoint(anNiAVObject.translation);
 			obj.transform.rotation = Convert.NifRotationMatrixToUnityQuaternion(anNiAVObject.rotation);
 			obj.transform.localScale = anNiAVObject.scale * Vector3.one;
+
+			if(MorrowindEngine.IsMarkerName(anNiAVObject.name))
+			{
+				GameObjectUtils.SetLayerRecursively(obj, MorrowindEngine.markerLayer);
+			}
 		}
 
 		private Mesh NiTriShapeDataToMesh(NiTriShapeData data)
@@ -299,6 +310,10 @@ namespace TESUnity
 				var fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileNameWithExt);
 
 				material.mainTexture = dataReader.LoadTexture(fileNameWithoutExt);
+			}
+			else
+			{
+				Debug.Log(file.name + " has no texture.");
 			}
 
 			return material;

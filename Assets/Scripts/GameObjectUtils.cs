@@ -117,4 +117,13 @@ public static class GameObjectUtils
 
 		return null;
 	}
+	public static void SetLayerRecursively(GameObject gameObject, int layer)
+	{
+		gameObject.layer = layer;
+
+		foreach(Transform childTransform in gameObject.transform)
+		{
+			childTransform.gameObject.layer = layer;
+		}
+	}
 }

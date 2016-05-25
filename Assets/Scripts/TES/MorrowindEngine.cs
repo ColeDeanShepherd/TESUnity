@@ -9,6 +9,26 @@ namespace TESUnity
 	public class MorrowindEngine
 	{
 		public const float maxInteractDistance = 2;
+		public static int markerLayer
+		{
+			get
+			{
+				return LayerMask.NameToLayer("Marker");
+			}
+		}
+
+		public static bool IsMarkerName(string name)
+		{
+			var lowerName = name.ToLower();
+
+			return	lowerName == "prisonmarker" ||
+					lowerName == "divinemarker" ||
+					lowerName == "templemarker" ||
+					lowerName == "northmarker" ||
+					lowerName == "doormarker" ||
+					lowerName == "travelmarker" ||
+					lowerName == "editormarker";
+		}
 
 		public CELLRecord currentCell
 		{
@@ -456,6 +476,11 @@ namespace TESUnity
 					doorComponent.leadsToAnotherCell = false;
 				}
 			}
+
+			if(IsMarkerName(refObjDataGroup.NAME.value))
+			{
+				GameObjectUtils.SetLayerRecursively(gameObject, markerLayer);
+			}
 		}
 
 		private Vector2i GetExteriorCellIndices(Vector3 point)
@@ -571,6 +596,7 @@ namespace TESUnity
 		{
 			var camera = GameObjectUtils.CreateMainCamera();
 			camera.AddComponent<FlyingCameraComponent>();
+			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
 
 			camera.transform.position = position;
 

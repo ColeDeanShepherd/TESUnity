@@ -872,7 +872,7 @@ namespace TESUnity
 		}
 		public abstract class NiObjectNET : NiObject
 		{
-			public byte[] name;
+			public string name;
 			public Ref<NiExtraData> extraData;
 			public Ref<NiTimeController> controller;
 
@@ -880,7 +880,7 @@ namespace TESUnity
 			{
 				base.Deserialize(reader);
 
-				name = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
+				name = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
 				extraData = NiReaderUtils.ReadRef<NiExtraData>(reader);
 				controller = NiReaderUtils.ReadRef<NiTimeController>(reader);
 			}
