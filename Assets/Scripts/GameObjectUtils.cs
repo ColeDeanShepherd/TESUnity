@@ -2,7 +2,7 @@
 
 public static class GameObjectUtils
 {
-	public static GameObject CreateMainCamera()
+	public static GameObject CreateMainCamera(Vector3 position, Quaternion orientation)
 	{
 		GameObject cameraObject = new GameObject("Main Camera");
 		cameraObject.AddComponent<Camera>();
@@ -12,15 +12,21 @@ public static class GameObjectUtils
 
 		cameraObject.tag = "MainCamera";
 
+		cameraObject.transform.position = position;
+		cameraObject.transform.rotation = orientation;
+
 		return cameraObject;
 	}
-	public static GameObject CreateDirectionalLight()
+	public static GameObject CreateDirectionalLight(Vector3 position, Quaternion orientation)
 	{
 		var light = new GameObject("Directional Light");
 
 		var lightComponent = light.AddComponent<Light>();
 		lightComponent.type = LightType.Directional;
 		lightComponent.shadows = LightShadows.Soft;
+
+		light.transform.position = position;
+		light.transform.rotation = orientation;
 
 		return light;
 	}
@@ -102,6 +108,49 @@ public static class GameObjectUtils
 		}
 	}
 
+	public static GameObject FindChildRecursively(GameObject parent, string name)
+	{
+		var resultTransform = parent.transform.Find(name);
+
+		if(resultTransform != null)
+		{
+			return resultTransform.gameObject;
+		}
+
+		foreach(Transform childTransform in parent.transform)
+		{
+			var result = FindChildRecursively(childTransform.gameObject, name);
+
+			if(result != null)
+			{
+				return result;
+			}
+		}
+
+		return null;
+	}
+	public static GameObject FindChildWithNameSubstringRecursively(GameObject parent, string nameSubstring)
+	{
+		foreach(Transform childTransform in parent.transform)
+		{
+			if(childTransform.name.Contains(nameSubstring))
+			{
+				return childTransform.gameObject;
+			}
+		}
+
+		foreach(Transform childTransform in parent.transform)
+		{
+			var result = FindChildWithNameSubstringRecursively(childTransform.gameObject, nameSubstring);
+
+			if(result != null)
+			{
+				return result;
+			}
+		}
+
+		return null;
+	}
 	public static GameObject FindObjectWithTagUpHeirarchy(GameObject gameObject, string tag)
 	{
 		while(gameObject != null)
@@ -123,7 +172,24 @@ public static class GameObjectUtils
 
 		foreach(Transform childTransform in gameObject.transform)
 		{
-			childTransform.gameObject.layer = layer;
+			SetLayerRecursively(childTransform.gameObject, layer);
+		}
+	}
+	public static void AddMissingMeshCollidersRecursively(GameObject gameObject)
+	{
+		if(gameObject.GetComponent<Collider>() == null)
+		{
+			var meshFilter = gameObject.GetComponent<MeshFilter>();
+
+			if((meshFilter != null) && (meshFilter.mesh != null))
+			{
+				gameObject.AddComponent<MeshCollider>();
+			}
+		}
+
+		foreach(Transform childTransform in gameObject.transform)
+		{
+			AddMissingMeshCollidersRecursively(childTransform.gameObject);
 		}
 	}
 }

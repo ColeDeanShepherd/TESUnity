@@ -10,6 +10,8 @@ public class FlyingCameraComponent : MonoBehaviour
 	public float minVerticalAngle = -90;
 	public float maxVerticalAngle = 90;
 
+	public float arrowKeyRotSpeedMultiplier = 120;
+
 	private Rigidbody rigidbody;
 	
 	private void Start()
@@ -38,13 +40,17 @@ public class FlyingCameraComponent : MonoBehaviour
 		var eulerAngles = transform.eulerAngles;
 		eulerAngles.z = 0;
 
-		var deltaMouse = mouseSensitivity * (new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")));
-
-		// Make eulerAngles.x range from -180 to 180.
+		// Make eulerAngles.x range from -180 to 180 so we can clamp it between a negative and positive angle.
 		if(eulerAngles.x > 180)
 		{
 			eulerAngles.x = eulerAngles.x - 360;
 		}
+
+		var deltaMouse = mouseSensitivity * (new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")));
+
+		var arrowKeysDirection = CalculateArrowKeysDirection();
+		deltaMouse.x += Time.deltaTime * (arrowKeyRotSpeedMultiplier * arrowKeysDirection.x);
+		deltaMouse.y += Time.deltaTime * (arrowKeyRotSpeedMultiplier * arrowKeysDirection.y);
 
 		eulerAngles.x = Mathf.Clamp(eulerAngles.x - deltaMouse.y, minVerticalAngle, maxVerticalAngle);
 		eulerAngles.y = Mathf.Repeat(eulerAngles.y + deltaMouse.x, 360);
@@ -119,5 +125,32 @@ public class FlyingCameraComponent : MonoBehaviour
 	private Vector3 CalculateLocalVelocity()
 	{
 		return CalculateSpeed() * CalculateLocalMovementDirection();
+	}
+
+	private Vector2 CalculateArrowKeysDirection()
+	{
+		var arrowKeysDirection = Vector2.zero;
+
+		if(Input.GetKey(KeyCode.UpArrow))
+		{
+			arrowKeysDirection += Vector2.up;
+		}
+
+		if(Input.GetKey(KeyCode.LeftArrow))
+		{
+			arrowKeysDirection += Vector2.left;
+		}
+
+		if(Input.GetKey(KeyCode.DownArrow))
+		{
+			arrowKeysDirection += Vector2.down;
+		}
+
+		if(Input.GetKey(KeyCode.RightArrow))
+		{
+			arrowKeysDirection += Vector2.right;
+		}
+
+		return arrowKeysDirection.normalized;
 	}
 }

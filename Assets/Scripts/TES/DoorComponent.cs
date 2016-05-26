@@ -10,10 +10,6 @@ namespace TESUnity
 		public string doorExitName;
 		public Vector3 doorExitPos;
 		public Quaternion doorExitOrientation;
-
-		public void Interact()
-		{
-
-		}
+		public bool isOpen;
 	}
 }

@@ -1365,14 +1365,14 @@ namespace TESUnity
 		public class NiStringExtraData : NiExtraData
 		{
 			public uint bytesRemaining;
-			public string stringData;
+			public string str;
 
 			public override void Deserialize(BinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				bytesRemaining = reader.ReadUInt32();
-				stringData = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
+				str = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
 			}
 		}
 		public class NiTextKeyExtraData : NiExtraData

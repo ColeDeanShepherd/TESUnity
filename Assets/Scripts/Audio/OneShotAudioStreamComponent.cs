@@ -28,7 +28,7 @@ public class OneShotAudioStreamComponent : MonoBehaviour
 	}*/
 
 	private PCMAudioBuffer streamBuffer;
-	private int UnitySampleRate;
+	private int UnitySampleRate = -1;
 
 	private void Start()
 	{
@@ -45,16 +45,19 @@ public class OneShotAudioStreamComponent : MonoBehaviour
 	}
 	private void OnAudioFilterRead(float[] samples, int channelCount)
 	{
-		int lowSRSampleCount = (int)((44100.0f / UnitySampleRate) * samples.Length);
-		var lowSRSamples = new float[lowSRSampleCount];
-
-		int samplesReturned = AudioUtils.FillUnityStreamBuffer(lowSRSamples, streamBuffer, audioStream);
-		AudioUtils.ResampleHack(lowSRSamples, samples);
-		//AudioUtils.LowPassHack(samples);
-
-		if(audioStream.isOpen && audioStream.isDoneStreaming)
+		if(UnitySampleRate > 0)
 		{
-			audioStream.Close();
+			int lowSRSampleCount = (int)((44100.0f / UnitySampleRate) * samples.Length);
+			var lowSRSamples = new float[lowSRSampleCount];
+
+			int samplesReturned = AudioUtils.FillUnityStreamBuffer(lowSRSamples, streamBuffer, audioStream);
+			AudioUtils.ResampleHack(lowSRSamples, samples);
+			//AudioUtils.LowPassHack(samples);
+
+			if(audioStream.isOpen && audioStream.isDoneStreaming)
+			{
+				audioStream.Close();
+			}
 		}
 	}
 }

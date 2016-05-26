@@ -5,9 +5,10 @@ using UnityEngine.UI;
 
 // TODO: redesign destructors/idisposable
 // TODO: add walking mode
-// TODO: fix doors with no colliders (Hlaalu Council Manor in Balmora)
-// TODO: add support for opening doors that don't lead to other cells
 // TODO: document audio
+// TODO: add console
+// TODO: optimize
+// TODO: remove hard-coded paths
 
 namespace TESUnity
 {
@@ -190,17 +191,6 @@ namespace TESUnity
 					}
 				}
 			}
-		}
-
-		private GameObject CreatePlayer(Vector3 position, Quaternion orientation)
-		{
-			GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-			player.AddComponent<Rigidbody>();
-
-			player.transform.position = position;
-			player.transform.rotation = orientation;
-
-			return player;
 		}
 	}
 }

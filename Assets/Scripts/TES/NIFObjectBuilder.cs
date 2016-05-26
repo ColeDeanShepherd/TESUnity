@@ -16,7 +16,7 @@ namespace TESUnity
 		}
 		public GameObject BuildObject()
 		{
-			Debug.Assert(file.name != null);
+			Debug.Assert((file.name != null) && (file.footer.roots.Length > 0));
 
 			// NIF files can have any number of root NiObjects.
 			// If there is only one root, instantiate that directly.
@@ -26,7 +26,7 @@ namespace TESUnity
 			{
 				var rootNiObject = file.blocks[file.footer.roots[0]];
 
-				GameObject gameObject = InstantiateNiObject(rootNiObject);
+				GameObject gameObject = InstantiateRootNiObject(rootNiObject);
 
 				// If the file doesn't contain any NiObjects we are looking for, return an empty GameObject.
 				if(gameObject == null)
@@ -53,7 +53,7 @@ namespace TESUnity
 
 				foreach(var rootRef in file.footer.roots)
 				{
-					var child = InstantiateNiObject(file.blocks[rootRef]);
+					var child = InstantiateRootNiObject(file.blocks[rootRef]);
 
 					if(child != null)
 					{
@@ -67,6 +67,53 @@ namespace TESUnity
 
 		private NiFile file;
 		private MorrowindDataReader dataReader;
+
+		private GameObject InstantiateRootNiObject(NiObject obj)
+		{
+			var gameObject = InstantiateNiObject(obj);
+
+			// Add colliders to the object if it doesn't already contain one.
+			if(!ShouldNiObjectHaveNoColliders(obj) && (gameObject.GetComponentInChildren<Collider>() == null))
+			{
+				GameObjectUtils.AddMissingMeshCollidersRecursively(gameObject);
+			}
+
+			return gameObject;
+		}
+		private bool ShouldNiObjectHaveNoColliders(NiObject obj)
+		{
+			if(obj is NiObjectNET)
+			{
+				var objNET = (NiObjectNET)obj;
+				var extraData = (objNET.extraData.value >= 0) ? (NiExtraData)file.blocks[objNET.extraData.value] : null;
+
+				while(extraData != null)
+				{
+					// Return true if the NiObject should have no colliders.
+					if(extraData is NiStringExtraData)
+					{
+						var strExtraData = (NiStringExtraData)extraData;
+
+						if(strExtraData.str == "NCO" || strExtraData.str == "NCC")
+						{
+							return true;
+						}
+					}
+
+					// Move to the next NiExtraData.
+					if(extraData.nextExtraData.value >= 0)
+					{
+						extraData = (NiExtraData)file.blocks[extraData.nextExtraData.value];
+					}
+					else
+					{
+						extraData = null;
+					}
+				}
+			}
+
+			return false;
+		}
 
 		/// <summary>
 		/// Creates a GameObject representation of an NiObject.

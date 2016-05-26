@@ -62,9 +62,9 @@ namespace TESUnity
 			interactTextObj.SetActive(false);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+			RenderSettings.ambientIntensity = 1.5f;
 
-			sunObj = GameObjectUtils.CreateDirectionalLight();
-			sunObj.transform.rotation = Quaternion.Euler(new Vector3(50, 330, 0));
+			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
 			sunObj.SetActive(false);
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
@@ -75,10 +75,10 @@ namespace TESUnity
 		{
 			NIF.NiFile file = dataReader.LoadNIF(filePath);
 
-			if(prefabObj == null)
+			if(prefabContainerObj == null)
 			{
-				prefabObj = new GameObject("Prefabs");
-				prefabObj.SetActive(false);
+				prefabContainerObj = new GameObject("Prefabs");
+				prefabContainerObj.SetActive(false);
 			}
 
 			GameObject prefab;
@@ -88,7 +88,7 @@ namespace TESUnity
 				var objBuilder = new NIFObjectBuilder(file, dataReader);
 				prefab = objBuilder.BuildObject();
 
-				prefab.transform.parent = prefabObj.transform;
+				prefab.transform.parent = prefabContainerObj.transform;
 
 				loadedNIFObjects[filePath] = prefab;
 			}
@@ -290,9 +290,9 @@ namespace TESUnity
 			var cellIndices = GetExteriorCellIndices(position);
 			_currentCell = dataReader.FindExteriorCellRecord(cellIndices);
 
-			var camera = CreateFlyingCamera(position);
-
 			OnExteriorCell(_currentCell);
+
+			playerObj = CreatePlayer(position);
 		}
 		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
 		{
@@ -300,11 +300,10 @@ namespace TESUnity
 
 			Debug.Assert(_currentCell != null);
 
-			var camera = CreateFlyingCamera(position);
-
 			CreateInteriorCell(interiorCellName);
-
 			OnInteriorCell(_currentCell);
+
+			playerObj = CreatePlayer(position);
 		}
 		public void Update()
 		{
@@ -321,11 +320,14 @@ namespace TESUnity
 			interactTextObj.SetActive(false);
 
 			// Cast a ray to see what the camera is looking at.
-			RaycastHit hitInfo;
 			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
 
-			if(Physics.Raycast(ray, out hitInfo, maxInteractDistance))
+			var raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
+
+			for(int i = 0; i < raycastHitCount; i++)
 			{
+				var hitInfo = interactRaycastHitBuffer[i];
+
 				// Find the door associated with the hit collider.
 				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
 
@@ -344,16 +346,31 @@ namespace TESUnity
 						interactTextObj.GetComponent<Text>().text = doorComponent.doorName;
 					}
 
-					if(Input.GetKeyDown(KeyCode.G))
+					if(Input.GetKeyDown(KeyCode.Space))
 					{
 						OpenDoor(doorComponent);
 					}
+
+					break;
 				}
 			}
 		}
 		public void OpenDoor(DoorComponent doorComponent)
 		{
-			if(doorComponent.leadsToAnotherCell)
+			if(!doorComponent.leadsToAnotherCell)
+			{
+				if(!doorComponent.isOpen)
+				{
+					doorComponent.gameObject.transform.Rotate(new Vector3(0, -90, 0));
+					doorComponent.isOpen = true;
+				}
+				else
+				{
+					doorComponent.gameObject.transform.Rotate(new Vector3(0, 90, 0));
+					doorComponent.isOpen = false;
+				}
+			}
+			else
 			{
 				// The door leads to another cell, so destroy all currently loaded cells.
 				DestroyAllCells();
@@ -378,17 +395,19 @@ namespace TESUnity
 					OnExteriorCell(newCell);
 				}
 
-				Camera.main.transform.position = doorComponent.doorExitPos;
-				Camera.main.transform.rotation = doorComponent.doorExitOrientation;
+				playerObj.transform.position = doorComponent.doorExitPos + new Vector3(0, playerHeight / 2, 0);
+				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
 
 				_currentCell = newCell;
 			}
 		}
 
+		private const float playerHeight = 2;
+
 		private MorrowindDataReader dataReader;
 
 		private Dictionary<string, GameObject> loadedNIFObjects = new Dictionary<string, GameObject>();
-		private GameObject prefabObj;
+		private GameObject prefabContainerObj;
 
 		private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
 		private int cellRadius = 1;
@@ -397,8 +416,11 @@ namespace TESUnity
 		private GameObject interactTextObj;
 		private GameObject sunObj;
 		private GameObject waterObj;
+		private GameObject playerObj;
 
 		private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
+
+		private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
 
 		private void InstantiateCellObjects(CELLRecord CELL, GameObject parent)
 		{
@@ -419,6 +441,7 @@ namespace TESUnity
 
 						modelObj = InstantiateNIF(modelFilePath);
 						PostProcessInstantiatedCellObject(modelObj, objRecord, refObjDataGroup);
+
 						modelObj.transform.parent = parent.transform;
 					}
 
@@ -428,14 +451,19 @@ namespace TESUnity
 
 						if(modelObj != null)
 						{
-							var attachLightTransform = modelObj.transform.FindChild("AttachLight");
+							GameObject attachLightObj = GameObjectUtils.FindChildRecursively(modelObj, "AttachLight");
 
-							if(attachLightTransform != null)
+							if(attachLightObj == null)
 							{
-								lightObj.transform.position = attachLightTransform.position;
-								lightObj.transform.rotation = attachLightTransform.rotation;
+								attachLightObj = GameObjectUtils.FindChildWithNameSubstringRecursively(modelObj, "Emitter");
+							}
 
-								lightObj.transform.parent = attachLightTransform;
+							if(attachLightObj != null)
+							{
+								lightObj.transform.position = attachLightObj.transform.position;
+								lightObj.transform.rotation = attachLightObj.transform.rotation;
+
+								lightObj.transform.parent = attachLightObj.transform;
 							}
 							else
 							{
@@ -490,6 +518,7 @@ namespace TESUnity
 			{
 				gameObject.tag = "Door";
 
+				// Add a door component.
 				var DOOR = (DOORRecord)record;
 				var doorComponent = gameObject.AddComponent<DoorComponent>();
 
@@ -645,13 +674,40 @@ namespace TESUnity
 			}
 		}
 
+		private GameObject CreatePlayer(Vector3 position)
+		{
+			// Create the player.
+			var player = new GameObject();
+			player.name = "Player";
+
+			var characterController = player.AddComponent<CharacterController>();
+			characterController.height = playerHeight;
+
+			var playerComponent = player.AddComponent<PlayerComponent>();
+
+			// Create the camera point object.
+			var eyeHeight = 0.9f * (characterController.height / 2);
+
+			var cameraPoint = new GameObject("Camera Point");
+			cameraPoint.transform.localPosition = new Vector3(0, eyeHeight, 0);
+			cameraPoint.transform.SetParent(player.transform, false);
+
+			player.transform.position = position;
+
+			// Create the player camera.
+			var playerCamera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
+			playerCamera.transform.localPosition = Vector3.zero;
+			playerCamera.transform.SetParent(cameraPoint.transform, false);
+
+			playerComponent.camera = playerCamera;
+
+			return player;
+		}
 		private GameObject CreateFlyingCamera(Vector3 position)
 		{
-			var camera = GameObjectUtils.CreateMainCamera();
+			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
 			camera.AddComponent<FlyingCameraComponent>();
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-
-			camera.transform.position = position;
 
 			return camera;
 		}
