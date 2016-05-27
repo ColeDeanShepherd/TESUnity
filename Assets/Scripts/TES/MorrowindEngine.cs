@@ -346,7 +346,7 @@ namespace TESUnity
 						interactTextObj.GetComponent<Text>().text = doorComponent.doorName;
 					}
 
-					if(Input.GetKeyDown(KeyCode.Space))
+					if(Input.GetKeyDown(KeyCode.E))
 					{
 						OpenDoor(doorComponent);
 					}
@@ -403,6 +403,7 @@ namespace TESUnity
 		}
 
 		private const float playerHeight = 2;
+		private const float playerRadius = 0.4f;
 
 		private MorrowindDataReader dataReader;
 
@@ -680,28 +681,52 @@ namespace TESUnity
 			var player = new GameObject();
 			player.name = "Player";
 
-			var characterController = player.AddComponent<CharacterController>();
-			characterController.height = playerHeight;
+			var capsuleCollider = player.AddComponent<CapsuleCollider>();
+			capsuleCollider.height = playerHeight;
+			capsuleCollider.radius = playerRadius;
+
+			var rigidbody = player.AddComponent<Rigidbody>();
+			rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
 
 			var playerComponent = player.AddComponent<PlayerComponent>();
 
 			// Create the camera point object.
-			var eyeHeight = 0.9f * (characterController.height / 2);
+			var eyeHeight = 0.9f * capsuleCollider.height;
 
 			var cameraPoint = new GameObject("Camera Point");
-			cameraPoint.transform.localPosition = new Vector3(0, eyeHeight, 0);
+			cameraPoint.transform.localPosition = new Vector3(0, eyeHeight - (capsuleCollider.height / 2), 0);
 			cameraPoint.transform.SetParent(player.transform, false);
 
 			player.transform.position = position;
 
 			// Create the player camera.
-			var playerCamera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
+			var playerCamera = CreatePlayerCamera(position);
 			playerCamera.transform.localPosition = Vector3.zero;
 			playerCamera.transform.SetParent(cameraPoint.transform, false);
 
+			// Create the player's lantern.
+			var lantern = new GameObject("Lantern");
+
+			var lightComponent = lantern.AddComponent<Light>();
+			lightComponent.range = 20;
+			lightComponent.intensity = 3;
+			lightComponent.color = new Color32(245, 140, 40, 255);
+			lightComponent.enabled = false;
+
+			lantern.transform.localPosition = cameraPoint.transform.localPosition;
+			lantern.transform.SetParent(playerComponent.transform, false);
+
 			playerComponent.camera = playerCamera;
+			playerComponent.lantern = lantern;
 
 			return player;
+		}
+		private GameObject CreatePlayerCamera(Vector3 position)
+		{
+			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
+			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
+
+			return camera;
 		}
 		private GameObject CreateFlyingCamera(Vector3 position)
 		{

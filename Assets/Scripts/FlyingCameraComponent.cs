@@ -105,22 +105,18 @@ public class FlyingCameraComponent : MonoBehaviour
 	}
 	private float CalculateSpeed()
 	{
-		float speed;
-
 		if(Input.GetKey(KeyCode.LeftShift))
 		{
-			speed = fastSpeed;
+			return fastSpeed;
 		}
 		else if(Input.GetKey(KeyCode.LeftControl))
 		{
-			speed = slowSpeed;
+			return slowSpeed;
 		}
 		else
 		{
-			speed = normalSpeed;
+			return normalSpeed;
 		}
-
-		return speed;
 	}
 	private Vector3 CalculateLocalVelocity()
 	{

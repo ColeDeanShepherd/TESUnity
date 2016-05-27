@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // TODO: redesign destructors/idisposable
-// TODO: add walking mode
 // TODO: document audio
 // TODO: add console
 // TODO: optimize

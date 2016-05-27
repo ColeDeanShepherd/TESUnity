@@ -7,22 +7,78 @@ namespace TESUnity
 		public float slowSpeed = 3;
 		public float normalSpeed = 5;
 		public float fastSpeed = 10;
+		public float flightSpeedMultiplier = 3;
 
 		public float mouseSensitivity = 3;
 		public float minVerticalAngle = -90;
 		public float maxVerticalAngle = 90;
 
+		public bool isFlying
+		{
+			get
+			{
+				return _isFlying;
+			}
+			set
+			{
+				_isFlying = value;
+
+				if(!_isFlying)
+				{
+					rigidbody.useGravity = true;
+				}
+				else
+				{
+					rigidbody.useGravity = false;
+				}
+			}
+		}
+
 		public new GameObject camera;
-		public CharacterController characterController;
+		public GameObject lantern;
+
+		private CapsuleCollider capsuleCollider;
+		private Rigidbody rigidbody;
+
+		private bool isGrounded;
+		private bool _isFlying = false;
 		
 		private void Start()
 		{
-			characterController = GetComponent<CharacterController>();
+			capsuleCollider = GetComponent<CapsuleCollider>();
+			rigidbody = GetComponent<Rigidbody>();
 		}
 		private void Update()
 		{
 			Rotate();
-			Translate();
+
+			if(Input.GetKeyDown(KeyCode.Tab))
+			{
+				isFlying = !isFlying;
+			}
+
+			if(isGrounded && !isFlying && Input.GetKeyDown(KeyCode.Space))
+			{
+				var newVelocity = rigidbody.velocity;
+				newVelocity.y = 5;
+
+				rigidbody.velocity = newVelocity;
+			}
+
+			if(Input.GetKeyDown(KeyCode.L))
+			{
+				var light = lantern.GetComponent<Light>();
+				light.enabled = !light.enabled;
+			}
+		}
+		private void FixedUpdate()
+		{
+			isGrounded = CalculateIsGrounded();
+
+			if(isGrounded || isFlying)
+			{
+				SetVelocity();
+			}
 		}
 
 		private void Rotate()
@@ -43,11 +99,21 @@ namespace TESUnity
 			camera.transform.localEulerAngles = new Vector3(eulerAngles.x, 0, 0);
 			transform.localEulerAngles = new Vector3(0, eulerAngles.y, 0);
 		}
-		private void Translate()
+		private void SetVelocity()
 		{
-			var velocity = transform.TransformVector(CalculateLocalVelocity());
+			Vector3 velocity;
 
-			characterController.SimpleMove(velocity);
+			if(!isFlying)
+			{
+				velocity = transform.TransformVector(CalculateLocalVelocity());
+				velocity.y = rigidbody.velocity.y;
+			}
+			else
+			{
+				velocity = camera.transform.TransformVector(CalculateLocalVelocity());
+			}
+
+			rigidbody.velocity = velocity;
 		}
 
 		private Vector3 CalculateLocalMovementDirection()
@@ -94,11 +160,25 @@ namespace TESUnity
 				speed = normalSpeed;
 			}
 
+			if(isFlying)
+			{
+				speed *= flightSpeedMultiplier;
+			}
+
 			return speed;
 		}
 		private Vector3 CalculateLocalVelocity()
 		{
 			return CalculateSpeed() * CalculateLocalMovementDirection();
+		}
+
+		private bool CalculateIsGrounded()
+		{
+			var playerCenter = transform.position;
+			var castedSphereRadius = 0.8f * capsuleCollider.radius;
+			var sphereCastDistance = (capsuleCollider.height / 2);
+			
+			return Physics.SphereCast(new Ray(playerCenter, -transform.up), castedSphereRadius, sphereCastDistance);
 		}
 	}
 }
