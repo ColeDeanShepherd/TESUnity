@@ -23,9 +23,9 @@ namespace TESUnity
 	/// </summary>
 	public class MaterialManager
 	{
-		public MaterialManager(MorrowindDataReader dataReader)
+		public MaterialManager(TextureManager textureManager)
 		{
-			this.dataReader = dataReader;
+			this.textureManager = textureManager;
 		}
 		public Material CreateMaterial(MWMaterialProperties materialProps)
 		{
@@ -40,7 +40,7 @@ namespace TESUnity
 			return material;
 		}
 
-		private MorrowindDataReader dataReader;
+		private TextureManager textureManager;
 		private Dictionary<MWMaterialProperties, Material> cachedMaterials = new Dictionary<MWMaterialProperties, Material>();
 
 		private Material ForceCreateMaterial(MWMaterialProperties materialProps)
@@ -65,7 +65,7 @@ namespace TESUnity
 
 			if(materialProps.mainTextureFileName != null)
 			{
-				material.mainTexture = dataReader.LoadTexture(materialProps.mainTextureFileName);
+				material.mainTexture = textureManager.LoadTexture(materialProps.mainTextureFileName);
 			}
 
 			return material;

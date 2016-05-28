@@ -48,8 +48,9 @@ namespace TESUnity
 		}
 
 		public MorrowindDataReader dataReader;
-		public NIFManager theNIFManager;
+		public TextureManager textureManager;
 		public MaterialManager materialManager;
+		public NIFManager theNIFManager;
 		public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
 
 		public GameObject canvasObj;
@@ -67,7 +68,8 @@ namespace TESUnity
 
 			instance = this;
 			this.dataReader = dataReader;
-			materialManager = new MaterialManager(this.dataReader);
+			textureManager = new TextureManager(this.dataReader);
+			materialManager = new MaterialManager(textureManager);
 			theNIFManager = new NIFManager(this.dataReader, materialManager);
 
 			canvasObj = GUIUtils.CreateCanvas();
@@ -193,7 +195,7 @@ namespace TESUnity
 						var LTEX = dataReader.FindLTEXRecord(textureIndex);
 						var textureFileName = LTEX.DATA.value;
 						var textureName = Path.GetFileNameWithoutExtension(textureFileName);
-						var texture = dataReader.LoadTexture(textureName);
+						var texture = textureManager.LoadTexture(textureName);
 
 						// Create the splat prototype.
 						var splat = new SplatPrototype();

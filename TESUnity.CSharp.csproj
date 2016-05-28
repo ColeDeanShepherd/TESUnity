@@ -98,6 +98,7 @@
     <Compile Include="Assets\Scripts\TES\NIFReader.cs" />
     <Compile Include="Assets\Scripts\TES\PlayerComponent.cs" />
     <Compile Include="Assets\Scripts\TES\TESUnity.cs" />
+    <Compile Include="Assets\Scripts\TES\TextureManager.cs" />
     <Compile Include="Assets\Scripts\TemporalLoadBalancer.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
     <Compile Include="Assets\Scripts\Utils.cs" />

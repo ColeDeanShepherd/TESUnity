@@ -47,26 +47,18 @@ namespace TESUnity
 
 		public Texture2D LoadTexture(string textureName)
 		{
-			Texture2D loadedTexture;
+			var filePath = "textures/" + textureName + ".dds";
 
-			if(!loadedTextures.TryGetValue(textureName, out loadedTexture))
+			if(MorrowindBSAFile.ContainsFile(filePath))
 			{
-				var filePath = "textures/" + textureName + ".dds";
-
-				if(MorrowindBSAFile.ContainsFile(filePath))
-				{
-					var fileData = MorrowindBSAFile.LoadFileData(filePath);
-
-					loadedTexture = DDSReader.LoadDDSTexture(new MemoryStream(fileData));
-					loadedTextures[textureName] = loadedTexture;
-				}
-				else
-				{
-					return null;
-				}
+				var fileData = MorrowindBSAFile.LoadFileData(filePath);
+				return DDSReader.LoadDDSTexture(new MemoryStream(fileData));
 			}
-
-			return loadedTexture;
+			else
+			{
+				Debug.Log("Could not find texture " + textureName);
+				return null;
+			}
 		}
 		public NIF.NiFile LoadNIF(string filePath)
 		{
