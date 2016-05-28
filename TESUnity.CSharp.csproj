@@ -89,6 +89,7 @@
     <Compile Include="Assets\Scripts\TES\Convert.cs" />
     <Compile Include="Assets\Scripts\TES\DoorComponent.cs" />
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
+    <Compile Include="Assets\Scripts\TES\MaterialManager.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindEngine.cs" />
     <Compile Include="Assets\Scripts\TES\NIFManager.cs" />

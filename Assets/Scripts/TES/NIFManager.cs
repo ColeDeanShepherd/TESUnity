@@ -8,9 +8,10 @@ namespace TESUnity
 	/// </summary>
 	public class NIFManager
 	{
-		public NIFManager(MorrowindDataReader dataReader)
+		public NIFManager(MorrowindDataReader dataReader, MaterialManager materialManager)
 		{
 			this.dataReader = dataReader;
+			this.materialManager = materialManager;
 		}
 		public GameObject InstantiateNIF(string filePath)
 		{
@@ -28,7 +29,7 @@ namespace TESUnity
 			{
 				NIF.NiFile file = dataReader.LoadNIF(filePath);
 
-				var objBuilder = new NIFObjectBuilder(file, dataReader);
+				var objBuilder = new NIFObjectBuilder(file, dataReader, materialManager);
 				prefab = objBuilder.BuildObject();
 
 				prefab.transform.parent = prefabContainerObj.transform;
@@ -40,7 +41,8 @@ namespace TESUnity
 		}
 
 		private MorrowindDataReader dataReader;
-		
+		private MaterialManager materialManager;
+
 		private GameObject prefabContainerObj;
 		private Dictionary<string, GameObject> NIFPrefabs = new Dictionary<string, GameObject>();
 	}

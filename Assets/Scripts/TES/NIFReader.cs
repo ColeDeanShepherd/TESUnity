@@ -1795,7 +1795,7 @@ namespace TESUnity
 		public class NiSourceTexture : NiTexture
 		{
 			public byte useExternal;
-			public byte[] fileName;
+			public string fileName;
 			public PixelLayout pixelLayout;
 			public MipMapFormat useMipMaps;
 			public AlphaFormat alphaFormat;
@@ -1806,7 +1806,7 @@ namespace TESUnity
 				base.Deserialize(reader);
 
 				useExternal = reader.ReadByte();
-				fileName = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
+				fileName = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
 				pixelLayout = (PixelLayout)reader.ReadUInt32();
 				useMipMaps = (MipMapFormat)reader.ReadUInt32();
 				alphaFormat = (AlphaFormat)reader.ReadUInt32();

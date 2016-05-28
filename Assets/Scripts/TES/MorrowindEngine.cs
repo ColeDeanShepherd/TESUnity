@@ -49,6 +49,7 @@ namespace TESUnity
 
 		public MorrowindDataReader dataReader;
 		public NIFManager theNIFManager;
+		public MaterialManager materialManager;
 		public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
 
 		public GameObject canvasObj;
@@ -66,7 +67,8 @@ namespace TESUnity
 
 			instance = this;
 			this.dataReader = dataReader;
-			theNIFManager = new NIFManager(this.dataReader);
+			materialManager = new MaterialManager(this.dataReader);
+			theNIFManager = new NIFManager(this.dataReader, materialManager);
 
 			canvasObj = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();

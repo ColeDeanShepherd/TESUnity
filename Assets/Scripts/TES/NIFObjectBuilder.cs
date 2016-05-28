@@ -9,10 +9,11 @@ namespace TESUnity
 	// TODO: Investigate merging collision nodes with visual nodes.
 	public class NIFObjectBuilder
 	{
-		public NIFObjectBuilder(NiFile file, MorrowindDataReader dataReader)
+		public NIFObjectBuilder(NiFile file, MorrowindDataReader dataReader, MaterialManager materialManager)
 		{
 			this.file = file;
 			this.dataReader = dataReader;
+			this.materialManager = materialManager;
 		}
 		public GameObject BuildObject()
 		{
@@ -67,6 +68,7 @@ namespace TESUnity
 
 		private NiFile file;
 		private MorrowindDataReader dataReader;
+		private MaterialManager materialManager;
 
 		private GameObject InstantiateRootNiObject(NiObject obj)
 		{
@@ -208,7 +210,9 @@ namespace TESUnity
 			if(visual)
 			{
 				obj.AddComponent<MeshFilter>().mesh = mesh;
-				obj.AddComponent<MeshRenderer>().material = NiAVObjectPropertiesToMaterial(triShape);
+
+				var materialProps = NiAVObjectPropertiesToMWMaterialProperties(triShape);
+				obj.AddComponent<MeshRenderer>().material = materialManager.CreateMaterial(materialProps);
 			}
 			
 			if(collidable)
@@ -313,7 +317,7 @@ namespace TESUnity
 
 			return mesh;
 		}
-		private Material NiAVObjectPropertiesToMaterial(NiAVObject obj)
+		private MWMaterialProperties NiAVObjectPropertiesToMWMaterialProperties(NiAVObject obj)
 		{
 			// Find relevant properties.
 			NiTexturingProperty texturingProperty = null;
@@ -338,45 +342,44 @@ namespace TESUnity
 				}
 			}
 
-			// Create the material.
-			Material material;
+			// Create the material properties.
+			MWMaterialProperties materialProps = new MWMaterialProperties();
 
 			if(alphaProperty != null)
 			{
 				if(Utils.ContainsBitFlags(alphaProperty.flags, 1))
 				{
-					material = new Material(TESUnity.instance.fadeMaterial);
+					materialProps.type = MWMaterialType.Translucent;
 				}
 				else if(Utils.ContainsBitFlags(alphaProperty.flags, 0x100))
 				{
-					material = new Material(TESUnity.instance.cutoutMaterial);
-					material.SetFloat("alphaCutoff", (float)alphaProperty.threshold / 255);
+					materialProps.type = MWMaterialType.Cutout;
+					materialProps.alphaCutoff = (float)alphaProperty.threshold / 255;
 				}
 				else
 				{
-					material = new Material(TESUnity.instance.defaultMaterial);
+					materialProps.type = MWMaterialType.Opaque;
 				}
 			}
 			else
 			{
-				material = new Material(TESUnity.instance.defaultMaterial);
+				materialProps.type = MWMaterialType.Opaque;
 			}
 
 			// Apply textures.
 			if(texturingProperty != null && texturingProperty.hasBaseTexture)
 			{
 				var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.source.value];
-				var fileNameWithExt = System.Text.Encoding.ASCII.GetString(srcTexture.fileName);
-				var fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileNameWithExt);
+				var fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(srcTexture.fileName);
 
-				material.mainTexture = dataReader.LoadTexture(fileNameWithoutExt);
+				materialProps.mainTextureFileName = fileNameWithoutExt;
 			}
 			else
 			{
 				Debug.Log(file.name + " has no texture.");
 			}
 
-			return material;
+			return materialProps;
 		}
 
 		private void AddColliderFromNiObject(NiObject anNiObject, GameObject gameObject)
