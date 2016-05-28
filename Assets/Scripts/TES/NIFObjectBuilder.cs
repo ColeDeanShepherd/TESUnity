@@ -72,16 +72,27 @@ namespace TESUnity
 		{
 			var gameObject = InstantiateNiObject(obj);
 
+			bool shouldAddMissingColliders, isMarker;
+			ProcessExtraData(obj, out shouldAddMissingColliders, out isMarker);
+
 			// Add colliders to the object if it doesn't already contain one.
-			if(!ShouldNiObjectHaveNoColliders(obj) && (gameObject.GetComponentInChildren<Collider>() == null))
+			if(shouldAddMissingColliders && (gameObject.GetComponentInChildren<Collider>() == null))
 			{
 				GameObjectUtils.AddMissingMeshCollidersRecursively(gameObject);
 			}
 
+			if(isMarker)
+			{
+				gameObject.layer = MorrowindEngine.markerLayer;
+			}
+
 			return gameObject;
 		}
-		private bool ShouldNiObjectHaveNoColliders(NiObject obj)
+		private void ProcessExtraData(NiObject obj, out bool shouldAddMissingColliders, out bool isMarker)
 		{
+			shouldAddMissingColliders = true;
+			isMarker = false;
+
 			if(obj is NiObjectNET)
 			{
 				var objNET = (NiObjectNET)obj;
@@ -89,14 +100,18 @@ namespace TESUnity
 
 				while(extraData != null)
 				{
-					// Return true if the NiObject should have no colliders.
 					if(extraData is NiStringExtraData)
 					{
 						var strExtraData = (NiStringExtraData)extraData;
 
 						if(strExtraData.str == "NCO" || strExtraData.str == "NCC")
 						{
-							return true;
+							shouldAddMissingColliders = false;
+						}
+						else if(strExtraData.str == "MRK")
+						{
+							shouldAddMissingColliders = false;
+							isMarker = true;
 						}
 					}
 
@@ -111,8 +126,6 @@ namespace TESUnity
 					}
 				}
 			}
-
-			return false;
 		}
 
 		/// <summary>

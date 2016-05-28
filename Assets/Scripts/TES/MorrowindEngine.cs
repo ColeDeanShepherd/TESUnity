@@ -412,7 +412,7 @@ namespace TESUnity
 		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
 
-		private int cellRadius = 2;
+		private int cellRadius = 3;
 		private CELLRecord _currentCell;
 
 		private GameObject interactTextObj;

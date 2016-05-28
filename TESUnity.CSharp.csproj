@@ -91,6 +91,7 @@
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindEngine.cs" />
+    <Compile Include="Assets\Scripts\TES\NIFManager.cs" />
     <Compile Include="Assets\Scripts\TES\NIFObjectBuilder.cs" />
     <Compile Include="Assets\Scripts\TES\NIFParserGenerator.cs" />
     <Compile Include="Assets\Scripts\TES\NIFReader.cs" />
@@ -103,7 +104,6 @@
     <Compile Include="Assets\Scripts\VirtualFileSystem.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Misc\nif.xml" />
     <None Include="Assets\Standard Assets\Environment\Water (Basic)\Shaders\FXWaterBasic.shader" />
     <None Include="Assets\Standard Assets\Environment\Water\Water\Shaders\FXWaterPro.shader" />
     <None Include="Assets\Standard Assets\Environment\Water\Water4\Shaders\FXWater4Advanced.shader" />

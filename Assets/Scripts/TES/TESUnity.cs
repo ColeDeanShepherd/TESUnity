@@ -3,13 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// TODO: redesign destructors/idisposable
-// TODO: document audio
-// TODO: add console
-// TODO: optimize
-// TODO: remove hard-coded paths
-// TODO: remove colliders from markers
-
 namespace TESUnity
 {
 	public class TESUnity : MonoBehaviour

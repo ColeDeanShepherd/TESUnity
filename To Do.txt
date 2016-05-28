@@ -1,0 +1,24 @@
+Priority
+========
+-optimize
+-remove hard-coded paths
+-redesign destructors/idisposable
+-improve texture/model searching
+-add material caching
+
+Backlog
+=======
+-document audio
+-add interactive console
+-add underwater FX
+-add support for particle systems
+-display names of items when looking at them
+-add a model viewer
+-add proper support for skinned models
+-add support for loading NPCs and creatures
+-load & use Morrowind.ini?
+-add a collision-free mode
+
+Issues
+======
+-skinned models load with incorrect orientations
