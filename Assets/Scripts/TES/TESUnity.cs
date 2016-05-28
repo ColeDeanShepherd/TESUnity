@@ -8,6 +8,7 @@ using UnityEngine.UI;
 // TODO: add console
 // TODO: optimize
 // TODO: remove hard-coded paths
+// TODO: remove colliders from markers
 
 namespace TESUnity
 {
@@ -170,8 +171,9 @@ namespace TESUnity
 
 					try
 					{
-						var cellObj = MWEngine.InstantiateCell(CELL);
-						DestroyImmediate(cellObj);
+						var cellInfo = MWEngine.InstantiateCell(CELL);
+						MWEngine.temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+						DestroyImmediate(cellInfo.gameObject);
 
 						writer.Write("Pass: ");
 					}

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,9 +7,22 @@ using UnityEngine.UI;
 namespace TESUnity
 {
 	using ESM;
-	
+
+	public class InRangeCellInfo
+	{
+		public GameObject gameObject;
+		public IEnumerator creationCoroutine;
+
+		public InRangeCellInfo(GameObject gameObject, IEnumerator creationCoroutine)
+		{
+			this.gameObject = gameObject;
+			this.creationCoroutine = creationCoroutine;
+		}
+	}
+
 	public class MorrowindEngine
 	{
+		#region Public
 		public static MorrowindEngine instance;
 
 		public const float maxInteractDistance = 3;
@@ -41,6 +55,8 @@ namespace TESUnity
 				return _currentCell;
 			}
 		}
+
+		public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
 
 		public MorrowindEngine(MorrowindDataReader dataReader)
 		{
@@ -95,30 +111,23 @@ namespace TESUnity
 
 			return GameObject.Instantiate(prefab);
 		}
-		public GameObject InstantiateCell(CELLRecord CELL)
+		public InRangeCellInfo InstantiateCell(CELLRecord CELL)
 		{
 			Debug.Assert(CELL != null);
 
 			if(!CELL.isInterior)
 			{
-				var cellIndices = new Vector2i(CELL.DATA.gridX, CELL.DATA.gridY);
-				var LAND = dataReader.FindLANDRecord(cellIndices);
+				var LAND = dataReader.FindLANDRecord(CELL.gridCoords);
 
 				if(LAND != null)
 				{
-					var cellObj = new GameObject("cell " + cellIndices.ToString());
+					var cellObj = new GameObject("cell " + CELL.gridCoords.ToString());
 					cellObj.tag = "Cell";
 
-					var landObj = InstantiateLAND(LAND);
+					var cellCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, LAND, cellObj);
+					temporalLoadBalancer.AddTask(cellCreationCoroutine);
 
-					if(landObj != null)
-					{
-						landObj.transform.parent = cellObj.transform;
-					}
-
-					InstantiateCellObjects(CELL, cellObj);
-
-					return cellObj;
+					return new InRangeCellInfo(cellObj, cellCreationCoroutine);
 				}
 				else
 				{
@@ -130,39 +139,15 @@ namespace TESUnity
 				GameObject cellObj = new GameObject(CELL.NAME.value);
 				cellObj.tag = "Cell";
 
-				InstantiateCellObjects(CELL, cellObj);
+				var cellCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, null, cellObj);
+				temporalLoadBalancer.AddTask(cellCreationCoroutine);
 
-				return cellObj;
-			}
-		}
-		public GameObject InstantiateExteriorCell(Vector2i cellIndices)
-		{
-			var CELL = dataReader.FindExteriorCellRecord(cellIndices);
-
-			if(CELL != null)
-			{
-				return InstantiateCell(CELL);
-			}
-			else
-			{
-				return null;
-			}
-		}
-		public GameObject InstantiateInteriorCell(string cellName)
-		{
-			var CELL = dataReader.FindInteriorCellRecord(cellName);
-
-			if(CELL != null)
-			{
-				return InstantiateCell(CELL);
-			}
-			else
-			{
-				return null;
+				return new InRangeCellInfo(cellObj, cellCreationCoroutine);
 			}
 		}
 		public GameObject InstantiateLAND(LANDRecord LAND)
 		{
+			Debug.Assert(LAND != null);
 			// Don't create anything if the LAND doesn't have height data.
 			if(LAND.VHGT == null)
 			{
@@ -290,9 +275,10 @@ namespace TESUnity
 			var cellIndices = GetExteriorCellIndices(position);
 			_currentCell = dataReader.FindExteriorCellRecord(cellIndices);
 
-			OnExteriorCell(_currentCell);
-
 			playerObj = CreatePlayer(position);
+
+			UpdateExteriorCells(true);
+			OnExteriorCell(_currentCell);
 		}
 		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
 		{
@@ -300,10 +286,12 @@ namespace TESUnity
 
 			Debug.Assert(_currentCell != null);
 
-			CreateInteriorCell(interiorCellName);
-			OnInteriorCell(_currentCell);
-
 			playerObj = CreatePlayer(position);
+
+			var cellInfo = CreateInteriorCell(interiorCellName);
+			temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+
+			OnInteriorCell(_currentCell);
 		}
 		public void Update()
 		{
@@ -312,6 +300,8 @@ namespace TESUnity
 			{
 				UpdateExteriorCells();
 			}
+
+			temporalLoadBalancer.RunTasks(desiredWorkTimePerFrame);
 
 			CastInteractRay();
 		}
@@ -375,14 +365,21 @@ namespace TESUnity
 				// The door leads to another cell, so destroy all currently loaded cells.
 				DestroyAllCells();
 
+				// Move the player.
+				playerObj.transform.position = doorComponent.doorExitPos + new Vector3(0, playerHeight / 2, 0);
+				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
+
 				// Load the new cell.
 				CELLRecord newCell;
 
 				if(doorComponent.leadsToInteriorCell)
 				{
 					newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
-					Debug.Assert(newCell.isInterior);
-					cellObjects[Vector2i.zero] = InstantiateCell(newCell);
+
+					var cellInfo = InstantiateCell(newCell);
+					temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+
+					cellObjects[Vector2i.zero] = cellInfo;
 
 					OnInteriorCell(newCell);
 				}
@@ -390,28 +387,32 @@ namespace TESUnity
 				{
 					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
 					newCell = dataReader.FindExteriorCellRecord(cellIndices);
-					Debug.Assert(!newCell.isInterior);
+
+					UpdateExteriorCells(true);
 
 					OnExteriorCell(newCell);
 				}
 
-				playerObj.transform.position = doorComponent.doorExitPos + new Vector3(0, playerHeight / 2, 0);
-				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
-
 				_currentCell = newCell;
 			}
 		}
+		#endregion
 
+		#region Private
 		private const float playerHeight = 2;
 		private const float playerRadius = 0.4f;
 
 		private MorrowindDataReader dataReader;
 
+		private float desiredWorkTimePerFrame = 1.0f / 50;
+
 		private Dictionary<string, GameObject> loadedNIFObjects = new Dictionary<string, GameObject>();
 		private GameObject prefabContainerObj;
 
-		private Dictionary<Vector2i, GameObject> cellObjects = new Dictionary<Vector2i, GameObject>();
-		private int cellRadius = 1;
+		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
+		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
+
+		private int cellRadius = 2;
 		private CELLRecord _currentCell;
 
 		private GameObject interactTextObj;
@@ -423,69 +424,88 @@ namespace TESUnity
 
 		private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
 
-		private void InstantiateCellObjects(CELLRecord CELL, GameObject parent)
+		private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject parent)
 		{
+			yield return null;
+
+			if(LAND != null)
+			{
+				var landObj = InstantiateLAND(LAND);
+
+				if(landObj != null)
+				{
+					landObj.transform.parent = parent.transform;
+					yield return null;
+				}
+			}
+
 			foreach(var refObjDataGroup in CELL.refObjDataGroups)
 			{
-				Record objRecord;
+				InstantiateCellObject(CELL, parent, refObjDataGroup);
 
-				// Find the ESM record associated with the referenced object.
-				if(dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjDataGroup.NAME.value, out objRecord))
+				yield return null;
+			}
+		}
+		private void InstantiateCellObject(CELLRecord CELL, GameObject parent, CELLRecord.RefObjDataGroup refObjDataGroup)
+		{
+			Record objRecord;
+
+			// Find the ESM record associated with the referenced object.
+			if(dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjDataGroup.NAME.value, out objRecord))
+			{
+				var modelFileName = ESM.RecordUtils.GetModelFileName(objRecord);
+				GameObject modelObj = null;
+
+				// If the model file name is valid, instantiate it.
+				if((modelFileName != null) && (modelFileName != ""))
 				{
-					var modelFileName = ESM.RecordUtils.GetModelFileName(objRecord);
-					GameObject modelObj = null;
+					var modelFilePath = "meshes\\" + modelFileName;
 
-					// If the model file name is valid, instantiate it.
-					if((modelFileName != null) && (modelFileName != ""))
+					modelObj = InstantiateNIF(modelFilePath);
+					PostProcessInstantiatedCellObject(modelObj, objRecord, refObjDataGroup);
+
+					modelObj.transform.parent = parent.transform;
+				}
+
+				if(objRecord is LIGHRecord)
+				{
+					var lightObj = InstantiateLight((LIGHRecord)objRecord, CELL.isInterior);
+
+					if(modelObj != null)
 					{
-						var modelFilePath = "meshes\\" + modelFileName;
+						GameObject attachLightObj = GameObjectUtils.FindChildRecursively(modelObj, "AttachLight");
 
-						modelObj = InstantiateNIF(modelFilePath);
-						PostProcessInstantiatedCellObject(modelObj, objRecord, refObjDataGroup);
-
-						modelObj.transform.parent = parent.transform;
-					}
-
-					if(objRecord is LIGHRecord)
-					{
-						var lightObj = InstantiateLight((LIGHRecord)objRecord, CELL.isInterior);
-
-						if(modelObj != null)
+						if(attachLightObj == null)
 						{
-							GameObject attachLightObj = GameObjectUtils.FindChildRecursively(modelObj, "AttachLight");
+							attachLightObj = GameObjectUtils.FindChildWithNameSubstringRecursively(modelObj, "Emitter");
+						}
 
-							if(attachLightObj == null)
-							{
-								attachLightObj = GameObjectUtils.FindChildWithNameSubstringRecursively(modelObj, "Emitter");
-							}
+						if(attachLightObj != null)
+						{
+							lightObj.transform.position = attachLightObj.transform.position;
+							lightObj.transform.rotation = attachLightObj.transform.rotation;
 
-							if(attachLightObj != null)
-							{
-								lightObj.transform.position = attachLightObj.transform.position;
-								lightObj.transform.rotation = attachLightObj.transform.rotation;
-
-								lightObj.transform.parent = attachLightObj.transform;
-							}
-							else
-							{
-								lightObj.transform.position = GameObjectUtils.GetVisualBoundsRecursive(modelObj).center;
-								lightObj.transform.rotation = modelObj.transform.rotation;
-
-								lightObj.transform.parent = modelObj.transform;
-							}
+							lightObj.transform.parent = attachLightObj.transform;
 						}
 						else
 						{
-							PostProcessInstantiatedCellObject(lightObj, objRecord, refObjDataGroup);
-							lightObj.transform.parent = parent.transform;
+							lightObj.transform.position = GameObjectUtils.GetVisualBoundsRecursive(modelObj).center;
+							lightObj.transform.rotation = modelObj.transform.rotation;
+
+							lightObj.transform.parent = modelObj.transform;
 						}
 					}
+					else
+					{
+						PostProcessInstantiatedCellObject(lightObj, objRecord, refObjDataGroup);
+						lightObj.transform.parent = parent.transform;
+					}
 				}
-				/*else
-				{
-					Debug.Log("Unknown Object: " + refObjDataGroup.NAME.value);
-				}*/
 			}
+			/*else
+			{
+				Debug.Log("Unknown Object: " + refObjDataGroup.NAME.value);
+			}*/
 		}
 		private GameObject InstantiateLight(LIGHRecord LIGH, bool indoors)
 		{
@@ -570,7 +590,7 @@ namespace TESUnity
 		{
 			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
 		}
-		private void UpdateExteriorCells()
+		private void UpdateExteriorCells(bool immediate = false)
 		{
 			var cameraCellIndices = GetExteriorCellIndices(Camera.main.transform.position);
 
@@ -606,44 +626,69 @@ namespace TESUnity
 
 					if(!cellObjects.ContainsKey(cellIndices))
 					{
-						CreateExteriorCell(cellIndices);
+						var cellInfo = CreateExteriorCell(cellIndices);
+						
+						if(immediate)
+						{
+							temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+						}
 					}
 				}
 			}
 		}
-		private GameObject CreateExteriorCell(Vector2i indices)
+		private InRangeCellInfo CreateExteriorCell(Vector2i cellIndices)
 		{
-			var cellObj = InstantiateExteriorCell(indices);
-			cellObjects[indices] = cellObj;
+			var CELL = dataReader.FindExteriorCellRecord(cellIndices);
 
-			return cellObj;
+			if(CELL != null)
+			{
+				var cellInfo = InstantiateCell(CELL);
+				cellObjects[cellIndices] = cellInfo;
+
+				return cellInfo;
+			}
+			else
+			{
+				return null;
+			}
 		}
 		private void DestroyExteriorCell(Vector2i indices)
 		{
-			GameObject cellObj;
+			InRangeCellInfo cellInfo;
 
-			if(cellObjects.TryGetValue(indices, out cellObj))
+			if(cellObjects.TryGetValue(indices, out cellInfo))
 			{
+				temporalLoadBalancer.CancelTask(cellInfo.creationCoroutine);
+				GameObject.Destroy(cellInfo.gameObject);
 				cellObjects.Remove(indices);
-				GameObject.Destroy(cellObj);
 			}
 			else
 			{
 				Debug.LogError("Tried to destroy a cell that isn't created.");
 			}
 		}
-		private GameObject CreateInteriorCell(string cellName)
+		private InRangeCellInfo CreateInteriorCell(string cellName)
 		{
-			var cellObj = InstantiateInteriorCell(cellName);
-			cellObjects[Vector2i.zero] = cellObj;
+			var CELL = dataReader.FindInteriorCellRecord(cellName);
 
-			return cellObj;
+			if(CELL != null)
+			{
+				var cellInfo = InstantiateCell(CELL);
+				cellObjects[Vector2i.zero] = cellInfo;
+
+				return cellInfo;
+			}
+			else
+			{
+				return null;
+			}
 		}
 		private void DestroyAllCells()
 		{
 			foreach(var keyValuePair in cellObjects)
 			{
-				GameObject.Destroy(keyValuePair.Value);
+				temporalLoadBalancer.CancelTask(keyValuePair.Value.creationCoroutine);
+				GameObject.Destroy(keyValuePair.Value.gameObject);
 			}
 
 			cellObjects.Clear();
@@ -736,5 +781,6 @@ namespace TESUnity
 
 			return camera;
 		}
+		#endregion
 	}
 }
