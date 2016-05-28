@@ -328,57 +328,6 @@ namespace TESUnity
 				}
 			}
 		}
-		public void OpenDoor(DoorComponent doorComponent)
-		{
-			if(!doorComponent.leadsToAnotherCell)
-			{
-				if(!doorComponent.isOpen)
-				{
-					doorComponent.gameObject.transform.Rotate(new Vector3(0, -90, 0));
-					doorComponent.isOpen = true;
-				}
-				else
-				{
-					doorComponent.gameObject.transform.Rotate(new Vector3(0, 90, 0));
-					doorComponent.isOpen = false;
-				}
-			}
-			else
-			{
-				// The door leads to another cell, so destroy all currently loaded cells.
-				DestroyAllCells();
-
-				// Move the player.
-				playerObj.transform.position = doorComponent.doorExitPos + new Vector3(0, playerHeight / 2, 0);
-				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
-
-				// Load the new cell.
-				CELLRecord newCell;
-
-				if(doorComponent.leadsToInteriorCell)
-				{
-					newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
-
-					var cellInfo = InstantiateCell(newCell);
-					temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
-
-					cellObjects[Vector2i.zero] = cellInfo;
-
-					OnInteriorCell(newCell);
-				}
-				else
-				{
-					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
-					newCell = dataReader.FindExteriorCellRecord(cellIndices);
-
-					UpdateExteriorCells(true);
-
-					OnExteriorCell(newCell);
-				}
-
-				_currentCell = newCell;
-			}
-		}
 		#endregion
 
 		#region Private
@@ -695,6 +644,58 @@ namespace TESUnity
 			else
 			{
 				waterObj.SetActive(false);
+			}
+		}
+
+		private void OpenDoor(DoorComponent doorComponent)
+		{
+			if(!doorComponent.leadsToAnotherCell)
+			{
+				if(!doorComponent.isOpen)
+				{
+					doorComponent.gameObject.transform.Rotate(new Vector3(0, 90, 0));
+					doorComponent.isOpen = true;
+				}
+				else
+				{
+					doorComponent.gameObject.transform.Rotate(new Vector3(0, -90, 0));
+					doorComponent.isOpen = false;
+				}
+			}
+			else
+			{
+				// The door leads to another cell, so destroy all currently loaded cells.
+				DestroyAllCells();
+
+				// Move the player.
+				playerObj.transform.position = doorComponent.doorExitPos + new Vector3(0, playerHeight / 2, 0);
+				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
+
+				// Load the new cell.
+				CELLRecord newCell;
+
+				if(doorComponent.leadsToInteriorCell)
+				{
+					newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
+
+					var cellInfo = InstantiateCell(newCell);
+					temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+
+					cellObjects[Vector2i.zero] = cellInfo;
+
+					OnInteriorCell(newCell);
+				}
+				else
+				{
+					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
+					newCell = dataReader.FindExteriorCellRecord(cellIndices);
+
+					UpdateExteriorCells(true);
+
+					OnExteriorCell(newCell);
+				}
+
+				_currentCell = newCell;
 			}
 		}
 

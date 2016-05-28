@@ -4,7 +4,6 @@ Priority
 -remove hard-coded paths
 -redesign destructors/idisposable
 -improve texture/model searching
--add material caching
 
 Backlog
 =======

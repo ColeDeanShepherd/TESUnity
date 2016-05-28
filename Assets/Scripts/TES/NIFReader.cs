@@ -887,6 +887,11 @@ namespace TESUnity
 		}
 		public abstract class NiAVObject : NiObjectNET
 		{
+			public enum Flags
+			{
+				Hidden = 0x1
+			}
+
 			public ushort flags;
 			public Vector3 translation;
 			public Matrix4x4 rotation;

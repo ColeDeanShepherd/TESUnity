@@ -212,7 +212,14 @@ namespace TESUnity
 				obj.AddComponent<MeshFilter>().mesh = mesh;
 
 				var materialProps = NiAVObjectPropertiesToMWMaterialProperties(triShape);
-				obj.AddComponent<MeshRenderer>().material = materialManager.CreateMaterial(materialProps);
+
+				var meshRenderer = obj.AddComponent<MeshRenderer>();
+				meshRenderer.material = materialManager.CreateMaterial(materialProps);
+
+				if(Utils.ContainsBitFlags(triShape.flags, (uint)NiAVObject.Flags.Hidden))
+				{
+					meshRenderer.enabled = false;
+				}
 			}
 			
 			if(collidable)
