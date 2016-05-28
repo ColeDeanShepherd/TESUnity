@@ -47,6 +47,10 @@ namespace TESUnity
 					lowerName == "editormarker";
 		}
 
+		public MorrowindDataReader dataReader;
+		public NIFManager theNIFManager;
+		public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
+
 		public GameObject canvasObj;
 		public CELLRecord currentCell
 		{
@@ -56,19 +60,18 @@ namespace TESUnity
 			}
 		}
 
-		public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
-
 		public MorrowindEngine(MorrowindDataReader dataReader)
 		{
 			Debug.Assert(instance == null);
 
 			instance = this;
 			this.dataReader = dataReader;
+			theNIFManager = new NIFManager(this.dataReader);
 
 			canvasObj = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-			interactTextObj = GUIUtils.CreateText("asdffdsa", canvasObj);
+			interactTextObj = GUIUtils.CreateText("", canvasObj);
 			interactTextObj.GetComponent<Text>().color = Color.white;
 
 			var interactTextCSF = interactTextObj.AddComponent<ContentSizeFitter>();
@@ -87,30 +90,6 @@ namespace TESUnity
 			waterObj.SetActive(false);
 		}
 
-		public GameObject InstantiateNIF(string filePath)
-		{
-			NIF.NiFile file = dataReader.LoadNIF(filePath);
-
-			if(prefabContainerObj == null)
-			{
-				prefabContainerObj = new GameObject("Prefabs");
-				prefabContainerObj.SetActive(false);
-			}
-
-			GameObject prefab;
-
-			if(!loadedNIFObjects.TryGetValue(filePath, out prefab))
-			{
-				var objBuilder = new NIFObjectBuilder(file, dataReader);
-				prefab = objBuilder.BuildObject();
-
-				prefab.transform.parent = prefabContainerObj.transform;
-
-				loadedNIFObjects[filePath] = prefab;
-			}
-
-			return GameObject.Instantiate(prefab);
-		}
 		public InRangeCellInfo InstantiateCell(CELLRecord CELL)
 		{
 			Debug.Assert(CELL != null);
@@ -402,12 +381,7 @@ namespace TESUnity
 		private const float playerHeight = 2;
 		private const float playerRadius = 0.4f;
 
-		private MorrowindDataReader dataReader;
-
 		private float desiredWorkTimePerFrame = 1.0f / 50;
-
-		private Dictionary<string, GameObject> loadedNIFObjects = new Dictionary<string, GameObject>();
-		private GameObject prefabContainerObj;
 
 		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
@@ -461,7 +435,7 @@ namespace TESUnity
 				{
 					var modelFilePath = "meshes\\" + modelFileName;
 
-					modelObj = InstantiateNIF(modelFilePath);
+					modelObj = theNIFManager.InstantiateNIF(modelFilePath);
 					PostProcessInstantiatedCellObject(modelObj, objRecord, refObjDataGroup);
 
 					modelObj.transform.parent = parent.transform;

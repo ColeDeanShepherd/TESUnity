@@ -116,7 +116,7 @@ namespace TESUnity
 							testObj = null;
 						}
 
-						testObj = MWEngine.InstantiateNIF(filePath);
+						testObj = MWEngine.theNIFManager.InstantiateNIF(filePath);
 						testObjPath = filePath;
 					});
 
