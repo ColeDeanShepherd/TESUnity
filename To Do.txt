@@ -3,7 +3,7 @@ Priority
 -optimize
 -remove hard-coded paths
 -redesign destructors/idisposable
--improve texture/model searching
+-improve texture searching
 
 Backlog
 =======
@@ -17,6 +17,7 @@ Backlog
 -add support for loading NPCs and creatures
 -load & use Morrowind.ini?
 -add a collision-free mode
+-add support for Bloodmoon & Tribunal
 
 Issues
 ======

@@ -1,4 +1,6 @@
-﻿public struct Vector2i
+﻿using System;
+
+public struct Vector2i : IEquatable<Vector2i>
 {
 	public static Vector2i zero
 	{
@@ -14,6 +16,10 @@
 	{
 		this.x = x;
 		this.y = y;
+	}
+	public bool Equals(Vector2i other)
+	{
+		return (x == other.x) && (y == other.y);
 	}
 	public override int GetHashCode()
 	{

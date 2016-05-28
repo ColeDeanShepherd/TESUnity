@@ -11,11 +11,13 @@ namespace TESUnity
 	public class InRangeCellInfo
 	{
 		public GameObject gameObject;
+		public GameObject objectsContainerGameObject;
 		public IEnumerator creationCoroutine;
 
-		public InRangeCellInfo(GameObject gameObject, IEnumerator creationCoroutine)
+		public InRangeCellInfo(GameObject gameObject, GameObject objectsContainerGameObject, IEnumerator creationCoroutine)
 		{
 			this.gameObject = gameObject;
+			this.objectsContainerGameObject = objectsContainerGameObject;
 			this.creationCoroutine = creationCoroutine;
 		}
 	}
@@ -88,6 +90,7 @@ namespace TESUnity
 			RenderSettings.ambientIntensity = 1.5f;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
+			sunObj.GetComponent<Light>().shadows = LightShadows.Hard;
 			sunObj.SetActive(false);
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
@@ -98,19 +101,16 @@ namespace TESUnity
 		{
 			Debug.Assert(CELL != null);
 
+			string cellObjName = null;
+			LANDRecord LAND = null;
+
 			if(!CELL.isInterior)
 			{
-				var LAND = dataReader.FindLANDRecord(CELL.gridCoords);
+				LAND = dataReader.FindLANDRecord(CELL.gridCoords);
 
 				if(LAND != null)
 				{
-					var cellObj = new GameObject("cell " + CELL.gridCoords.ToString());
-					cellObj.tag = "Cell";
-
-					var cellCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, LAND, cellObj);
-					temporalLoadBalancer.AddTask(cellCreationCoroutine);
-
-					return new InRangeCellInfo(cellObj, cellCreationCoroutine);
+					cellObjName = "cell " + CELL.gridCoords.ToString();
 				}
 				else
 				{
@@ -119,18 +119,24 @@ namespace TESUnity
 			}
 			else
 			{
-				GameObject cellObj = new GameObject(CELL.NAME.value);
-				cellObj.tag = "Cell";
-
-				var cellCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, null, cellObj);
-				temporalLoadBalancer.AddTask(cellCreationCoroutine);
-
-				return new InRangeCellInfo(cellObj, cellCreationCoroutine);
+				cellObjName = CELL.NAME.value;
 			}
+
+			var cellObj = new GameObject(cellObjName);
+			cellObj.tag = "Cell";
+
+			var cellObjectsContainer = new GameObject("objects");
+			cellObjectsContainer.transform.parent = cellObj.transform;
+
+			var cellCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, LAND, cellObj, cellObjectsContainer);
+			temporalLoadBalancer.AddTask(cellCreationCoroutine);
+
+			return new InRangeCellInfo(cellObj, cellObjectsContainer, cellCreationCoroutine);
 		}
 		public GameObject InstantiateLAND(LANDRecord LAND)
 		{
 			Debug.Assert(LAND != null);
+
 			// Don't create anything if the LAND doesn't have height data.
 			if(LAND.VHGT == null)
 			{
@@ -202,6 +208,7 @@ namespace TESUnity
 						splat.texture = texture;
 						splat.smoothness = 0;
 						splat.metallic = 0;
+						splat.tileSize = new Vector2(6, 6);
 
 						// Update collections.
 						var splatIndex = splatPrototypeList.Count;
@@ -334,12 +341,13 @@ namespace TESUnity
 		private const float playerHeight = 2;
 		private const float playerRadius = 0.4f;
 
-		private float desiredWorkTimePerFrame = 1.0f / 50;
+		private float desiredWorkTimePerFrame = 1.0f / 100;
 
 		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
 
-		private int cellRadius = 3;
+		private int cellRadius = 4;
+		private int detailRadius = 2;
 		private CELLRecord _currentCell;
 
 		private GameObject interactTextObj;
@@ -351,7 +359,7 @@ namespace TESUnity
 
 		private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
 
-		private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject parent)
+		private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
 		{
 			yield return null;
 
@@ -361,14 +369,14 @@ namespace TESUnity
 
 				if(landObj != null)
 				{
-					landObj.transform.parent = parent.transform;
+					landObj.transform.parent = cellObj.transform;
 					yield return null;
 				}
 			}
 
 			foreach(var refObjDataGroup in CELL.refObjDataGroups)
 			{
-				InstantiateCellObject(CELL, parent, refObjDataGroup);
+				InstantiateCellObject(CELL, cellObjectsContainer, refObjDataGroup);
 
 				yield return null;
 			}
@@ -560,6 +568,26 @@ namespace TESUnity
 							temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 						}
 					}
+				}
+			}
+
+			// Update LODs.
+			foreach(var keyValuePair in cellObjects)
+			{
+				Vector2i cellIndices = keyValuePair.Key;
+				InRangeCellInfo cellInfo = keyValuePair.Value;
+
+				var cellXDistance = Mathf.Abs(cameraCellIndices.x - cellIndices.x);
+				var cellYDistance = Mathf.Abs(cameraCellIndices.y - cellIndices.y);
+				var cellDistance = Mathf.Max(cellXDistance, cellYDistance);
+
+				if(cellDistance <= detailRadius)
+				{
+					cellInfo.objectsContainerGameObject.SetActive(true);
+				}
+				else
+				{
+					cellInfo.objectsContainerGameObject.SetActive(false);
 				}
 			}
 		}

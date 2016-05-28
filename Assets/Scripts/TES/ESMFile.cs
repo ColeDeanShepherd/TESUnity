@@ -1806,6 +1806,8 @@ namespace TESUnity
 			public Record[] records;
 			public Dictionary<Type, List<Record>> recordsByType;
 			public Dictionary<string, Record> objectsByIDString;
+			public Dictionary<Vector2i, CELLRecord> exteriorCELLRecordsByIndices;
+			public Dictionary<Vector2i, LANDRecord> LANDRecordsByIndices;
 
 			public ESMFile(string filePath)
 			{
@@ -1930,6 +1932,8 @@ namespace TESUnity
 			{
 				recordsByType = new Dictionary<Type, List<Record>>();
 				objectsByIDString = new Dictionary<string, Record>();
+				exteriorCELLRecordsByIndices = new Dictionary<Vector2i, CELLRecord>();
+				LANDRecordsByIndices = new Dictionary<Vector2i, LANDRecord>();
 
 				foreach(var record in records)
 				{
@@ -2038,6 +2042,25 @@ namespace TESUnity
 					else if(record is ALCHRecord)
 					{
 						objectsByIDString.Add(((ALCHRecord)record).NAME.value, record);
+					}
+
+					// Add the record to exteriorCELLRecordsByIndices if applicable.
+					if(record is CELLRecord)
+					{
+						var CELL = (CELLRecord)record;
+
+						if(!CELL.isInterior)
+						{
+							exteriorCELLRecordsByIndices[CELL.gridCoords] = CELL;
+						}
+					}
+
+					// Add the record to LANDRecordsByIndices if applicable.
+					if(record is LANDRecord)
+					{
+						var LAND = (LANDRecord)record;
+
+						LANDRecordsByIndices[LAND.gridCoords] = LAND;
 					}
 				}
 			}
