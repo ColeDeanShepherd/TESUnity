@@ -96,6 +96,7 @@
     <Compile Include="Assets\Scripts\TES\NIFObjectBuilder.cs" />
     <Compile Include="Assets\Scripts\TES\NIFParserGenerator.cs" />
     <Compile Include="Assets\Scripts\TES\NIFReader.cs" />
+    <Compile Include="Assets\Scripts\TES\PathSelectionComponent.cs" />
     <Compile Include="Assets\Scripts\TES\PlayerComponent.cs" />
     <Compile Include="Assets\Scripts\TES\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TES\TextureManager.cs" />

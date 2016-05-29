@@ -8,6 +8,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 477232}
+  - 114: {fileID: 11482094}
   - 114: {fileID: 11464354}
   m_Layer: 0
   m_Name: TESUnity
@@ -34,7 +35,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 156636}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f45c2eae24c43174a92eeaa8e8613dd6, type: 3}
   m_Name: 
@@ -51,6 +52,19 @@ MonoBehaviour:
   cutoutMaterial: {fileID: 2100000, guid: 0f5c23bddac50884b8dfe5bbb5728914, type: 2}
   fadeMaterial: {fileID: 2100000, guid: 7356246cb4b7e3141b93f7cb56e3e638, type: 2}
   waterPrefab: {fileID: 176640, guid: 3c25e01842eb9b64aa17841fb1696f16, type: 2}
+--- !u!114 &11482094
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 156636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6ef97c2ab1832c4195092ffb030a9d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MorrowindDataPath: C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data
+    Files
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

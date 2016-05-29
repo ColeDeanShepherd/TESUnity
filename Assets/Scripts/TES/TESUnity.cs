@@ -7,7 +7,6 @@ namespace TESUnity
 {
 	public class TESUnity : MonoBehaviour
 	{
-		const string MorrowindDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
 		public static TESUnity instance;
 
 		#region Inspector-set Members
@@ -26,6 +25,8 @@ namespace TESUnity
 		public GameObject waterPrefab;
 		#endregion
 
+		public string MWDataPath;
+
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
 		private MusicPlayer musicPlayer;
@@ -39,13 +40,13 @@ namespace TESUnity
 		}
 		private void Start()
 		{
-			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
+			MWDataReader = new MorrowindDataReader(MWDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
 			// Start the music.
 			musicPlayer = new MusicPlayer();
 
-			foreach(var songFilePath in Directory.GetFiles(MorrowindDataPath + "/Music/Explore"))
+			foreach(var songFilePath in Directory.GetFiles(MWDataPath + "/Music/Explore"))
 			{
 				if(!songFilePath.Contains("Morrowind Title"))
 				{
@@ -60,7 +61,11 @@ namespace TESUnity
 		}
 		private void OnDestroy()
 		{
-			MWDataReader.Close();
+			if(MWDataReader != null)
+			{
+				MWDataReader.Close();
+				MWDataReader = null;
+			}
 		}
 
 		private void Update()
@@ -126,9 +131,9 @@ namespace TESUnity
 				}
 			}
 		}
-		private void WriteBSAFilePaths()
+		private void WriteBSAFilePaths(string parentDirectoryPath)
 		{
-			using(var writer = new StreamWriter(new FileStream("C:/Users/Cole/Desktop/MorrowindBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
+			using(var writer = new StreamWriter(new FileStream(parentDirectoryPath + "/MorrowindBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
 			{
 				foreach(var fileMetadata in MWDataReader.MorrowindBSAFile.fileMetadatas)
 				{
@@ -136,7 +141,7 @@ namespace TESUnity
 				}
 			}
 
-			using(var writer = new StreamWriter(new FileStream("C:/Users/Cole/Desktop/BloodmoonBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
+			using(var writer = new StreamWriter(new FileStream(parentDirectoryPath + "/BloodmoonBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
 			{
 				foreach(var fileMetadata in MWDataReader.BloodmoonBSAFile.fileMetadatas)
 				{
@@ -144,7 +149,7 @@ namespace TESUnity
 				}
 			}
 
-			using(var writer = new StreamWriter(new FileStream("C:/Users/Cole/Desktop/TribunalBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
+			using(var writer = new StreamWriter(new FileStream(parentDirectoryPath + "/TribunalBSA.txt", FileMode.OpenOrCreate, FileAccess.Write)))
 			{
 				foreach(var fileMetadata in MWDataReader.TribunalBSAFile.fileMetadatas)
 				{
@@ -152,13 +157,13 @@ namespace TESUnity
 				}
 			}
 		}
-		private void ExtractFileFromMorrowind(string filePath)
+		private void ExtractFileFromMorrowind(string filePathInBSA, string parentDirectoryPath)
 		{
-			File.WriteAllBytes("C:/Users/Cole/Desktop/" + Path.GetFileName(filePath), MWDataReader.MorrowindBSAFile.LoadFileData(filePath));
+			File.WriteAllBytes(parentDirectoryPath + Path.GetFileName(filePathInBSA), MWDataReader.MorrowindBSAFile.LoadFileData(filePathInBSA));
 		}
-		private void TestAllCells()
+		private void TestAllCells(string resultsFilePath)
 		{
-			using(StreamWriter writer = new StreamWriter("C:/Users/Cole/Desktop/cellresults.txt"))
+			using(StreamWriter writer = new StreamWriter(resultsFilePath))
 			{
 				foreach(var record in MWDataReader.MorrowindESMFile.GetRecordsOfType<ESM.CELLRecord>())
 				{

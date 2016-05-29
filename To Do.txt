@@ -1,7 +1,6 @@
 Priority
 ========
 -optimize
--remove hard-coded paths
 
 Backlog
 =======

@@ -425,12 +425,13 @@ public static class GUIUtils
 		return item;
 	}
 
-	public static GameObject CreateInputField(GameObject parent)
+	public static GameObject CreateInputField(string value, Vector3 position, Vector2 size, GameObject parent)
 	{
 		var inputField = CreateUIObject("Input Field", parent);
 
 		var inputFieldTransform = inputField.GetComponent<RectTransform>();
-		inputFieldTransform.sizeDelta = new Vector2(160, 30);
+		inputFieldTransform.anchoredPosition = position;
+		inputFieldTransform.sizeDelta = size;
 
 		inputField.AddComponent<CanvasRenderer>();
 
@@ -480,6 +481,7 @@ public static class GUIUtils
 		// Link everything together.
 		inputFieldComponent.textComponent = textTextComponent;
 		inputFieldComponent.placeholder = placeholderTextTextComponent;
+		inputFieldComponent.text = value;
 
 		return inputField;
 	}
