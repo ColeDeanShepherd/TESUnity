@@ -84,6 +84,10 @@ namespace TESUnity
 			waterObj.SetActive(false);
 		}
 
+		public Vector2i GetExteriorCellIndices(Vector3 point)
+		{
+			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
+		}
 		public InRangeCellInfo InstantiateCell(CELLRecord CELL)
 		{
 			Debug.Assert(CELL != null);
@@ -93,16 +97,8 @@ namespace TESUnity
 
 			if(!CELL.isInterior)
 			{
+				cellObjName = "cell " + CELL.gridCoords.ToString();
 				LAND = dataReader.FindLANDRecord(CELL.gridCoords);
-
-				if(LAND != null)
-				{
-					cellObjName = "cell " + CELL.gridCoords.ToString();
-				}
-				else
-				{
-					return null;
-				}
 			}
 			else
 			{
@@ -251,7 +247,7 @@ namespace TESUnity
 			var cellIndices = GetExteriorCellIndices(position);
 			_currentCell = dataReader.FindExteriorCellRecord(cellIndices);
 
-			playerObj = CreatePlayer(position);
+			playerObj = CreatePlayer(position, out playerCameraObj);
 
 			UpdateExteriorCells(true);
 			OnExteriorCell(_currentCell);
@@ -262,7 +258,7 @@ namespace TESUnity
 
 			Debug.Assert(_currentCell != null);
 
-			playerObj = CreatePlayer(position);
+			playerObj = CreatePlayer(position, out playerCameraObj);
 
 			var cellInfo = CreateInteriorCell(interiorCellName);
 			temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
@@ -286,7 +282,7 @@ namespace TESUnity
 			interactTextObj.SetActive(false);
 
 			// Cast a ray to see what the camera is looking at.
-			var ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
 
 			var raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
 
@@ -340,6 +336,7 @@ namespace TESUnity
 		private GameObject sunObj;
 		private GameObject waterObj;
 		private GameObject playerObj;
+		private GameObject playerCameraObj;
 
 		private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
 
@@ -502,13 +499,9 @@ namespace TESUnity
 			}
 		}
 
-		private Vector2i GetExteriorCellIndices(Vector3 point)
-		{
-			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
-		}
 		private void UpdateExteriorCells(bool immediate = false)
 		{
-			var cameraCellIndices = GetExteriorCellIndices(Camera.main.transform.position);
+			var cameraCellIndices = GetExteriorCellIndices(playerCameraObj.transform.position);
 
 			_currentCell = dataReader.FindExteriorCellRecord(cameraCellIndices);
 
@@ -708,7 +701,7 @@ namespace TESUnity
 			}
 		}
 
-		private GameObject CreatePlayer(Vector3 position)
+		private GameObject CreatePlayer(Vector3 position, out GameObject playerCamera)
 		{
 			// Create the player.
 			var player = new GameObject();
@@ -733,7 +726,7 @@ namespace TESUnity
 			player.transform.position = position;
 
 			// Create the player camera.
-			var playerCamera = CreatePlayerCamera(position);
+			playerCamera = CreatePlayerCamera(position);
 			playerCamera.transform.localPosition = Vector3.zero;
 			playerCamera.transform.SetParent(cameraPoint.transform, false);
 

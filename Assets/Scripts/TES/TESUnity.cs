@@ -75,9 +75,9 @@ namespace TESUnity
 
 			if(Input.GetKeyDown(KeyCode.P))
 			{
-				if(!MWEngine.currentCell.isInterior)
+				if(MWEngine.currentCell == null || !MWEngine.currentCell.isInterior)
 				{
-					Debug.Log(MWEngine.currentCell.gridCoords);
+					Debug.Log(MWEngine.GetExteriorCellIndices(Camera.main.transform.position));
 				}
 				else
 				{
