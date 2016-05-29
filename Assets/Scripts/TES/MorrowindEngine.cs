@@ -186,9 +186,8 @@ namespace TESUnity
 					{
 						// Load terrain texture.
 						var LTEX = dataReader.FindLTEXRecord(textureIndex);
-						var textureFileName = LTEX.DATA.value;
-						var textureName = Path.GetFileNameWithoutExtension(textureFileName);
-						var texture = textureManager.LoadTexture(textureName);
+						var textureFilePath = LTEX.DATA.value;
+						var texture = textureManager.LoadTexture(textureFilePath);
 
 						// Create the splat prototype.
 						var splat = new SplatPrototype();

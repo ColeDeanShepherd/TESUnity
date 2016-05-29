@@ -13,15 +13,15 @@ namespace TESUnity
 		{
 			this.dataReader = dataReader;
 		}
-		public Texture2D LoadTexture(string textureName)
+		public Texture2D LoadTexture(string texturePath)
 		{
 			Texture2D texture;
 
-			if(!cachedTextures.TryGetValue(textureName, out texture))
+			if(!cachedTextures.TryGetValue(texturePath, out texture))
 			{
-				texture = dataReader.LoadTexture(textureName);
+				texture = dataReader.LoadTexture(texturePath);
 
-				cachedTextures[textureName] = texture;
+				cachedTextures[texturePath] = texture;
 			}
 
 			return texture;

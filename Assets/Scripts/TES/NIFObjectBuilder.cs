@@ -378,9 +378,8 @@ namespace TESUnity
 			if(texturingProperty != null && texturingProperty.hasBaseTexture)
 			{
 				var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.source.value];
-				var fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(srcTexture.fileName);
 
-				materialProps.mainTextureFileName = fileNameWithoutExt;
+				materialProps.mainTextureFilePath = srcTexture.fileName;
 			}
 			else
 			{

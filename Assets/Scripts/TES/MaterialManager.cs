@@ -14,7 +14,7 @@ namespace TESUnity
 	public struct MWMaterialProperties
 	{
 		public MWMaterialType type;
-		public string mainTextureFileName;
+		public string mainTextureFilePath;
 		public float alphaCutoff;
 	}
 
@@ -63,9 +63,9 @@ namespace TESUnity
 					throw new NotImplementedException("Unsupported MWMaterialType: " + materialProps.type.ToString());
 			}
 
-			if(materialProps.mainTextureFileName != null)
+			if(materialProps.mainTextureFilePath != null)
 			{
-				material.mainTexture = textureManager.LoadTexture(materialProps.mainTextureFileName);
+				material.mainTexture = textureManager.LoadTexture(materialProps.mainTextureFilePath);
 			}
 
 			return material;
