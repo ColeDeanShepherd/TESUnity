@@ -87,12 +87,18 @@ namespace TESUnity
 		}
 		public LANDRecord FindLANDRecord(Vector2i cellIndices)
 		{
-			return MorrowindESMFile.LANDRecordsByIndices[cellIndices];
+			LANDRecord LAND;
+			MorrowindESMFile.LANDRecordsByIndices.TryGetValue(cellIndices, out LAND);
+
+			return LAND;
 		}
 
 		public CELLRecord FindExteriorCellRecord(Vector2i cellIndices)
 		{
-			return MorrowindESMFile.exteriorCELLRecordsByIndices[cellIndices];
+			CELLRecord CELL;
+			MorrowindESMFile.exteriorCELLRecordsByIndices.TryGetValue(cellIndices, out CELL);
+
+			return CELL;
 		}
 		public CELLRecord FindInteriorCellRecord(string cellName)
 		{

@@ -77,6 +77,12 @@ namespace TESUnity
 			bool shouldAddMissingColliders, isMarker;
 			ProcessExtraData(obj, out shouldAddMissingColliders, out isMarker);
 
+			if((file.name != null) && IsMarkerFileName(file.name))
+			{
+				shouldAddMissingColliders = false;
+				isMarker = true;
+			}
+
 			// Add colliders to the object if it doesn't already contain one.
 			if(shouldAddMissingColliders && (gameObject.GetComponentInChildren<Collider>() == null))
 			{
@@ -85,7 +91,7 @@ namespace TESUnity
 
 			if(isMarker)
 			{
-				gameObject.layer = MorrowindEngine.markerLayer;
+				GameObjectUtils.SetLayerRecursively(gameObject, MorrowindEngine.markerLayer);
 			}
 
 			return gameObject;
@@ -254,11 +260,6 @@ namespace TESUnity
 			obj.transform.position = Convert.NifPointToUnityPoint(anNiAVObject.translation);
 			obj.transform.rotation = Convert.NifRotationMatrixToUnityQuaternion(anNiAVObject.rotation);
 			obj.transform.localScale = anNiAVObject.scale * Vector3.one;
-
-			if(MorrowindEngine.IsMarkerName(anNiAVObject.name))
-			{
-				GameObjectUtils.SetLayerRecursively(obj, MorrowindEngine.markerLayer);
-			}
 		}
 
 		private Mesh NiTriShapeDataToMesh(NiTriShapeData data)
@@ -401,6 +402,24 @@ namespace TESUnity
 			{
 				Debug.Log("Unsupported collider NiObject: " + anNiObject.GetType().Name);
 			}
+		}
+
+		private bool IsMarkerFileName(string name)
+		{
+			var lowerName = name.ToLower();
+
+			return	lowerName == "marker_light" ||
+					lowerName == "marker_north" ||
+					lowerName == "marker_error" ||
+					lowerName == "marker_arrow" ||
+					lowerName == "editormarker" ||
+					lowerName == "marker_creature" ||
+					lowerName == "marker_travel" ||
+					lowerName == "marker_temple" ||
+					lowerName == "marker_prison" ||
+					lowerName == "marker_radius" ||
+					lowerName == "marker_divine" ||
+					lowerName == "editormarker_box_01";
 		}
 	}
 }

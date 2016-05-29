@@ -36,19 +36,6 @@ namespace TESUnity
 			}
 		}
 
-		public static bool IsMarkerName(string name)
-		{
-			var lowerName = name.ToLower();
-
-			return	lowerName == "prisonmarker" ||
-					lowerName == "divinemarker" ||
-					lowerName == "templemarker" ||
-					lowerName == "northmarker" ||
-					lowerName == "doormarker" ||
-					lowerName == "travelmarker" ||
-					lowerName == "editormarker";
-		}
-
 		public MorrowindDataReader dataReader;
 		public TextureManager textureManager;
 		public MaterialManager materialManager;
@@ -514,11 +501,6 @@ namespace TESUnity
 					doorComponent.leadsToAnotherCell = false;
 				}
 			}
-
-			if(IsMarkerName(refObjDataGroup.NAME.value))
-			{
-				GameObjectUtils.SetLayerRecursively(gameObject, markerLayer);
-			}
 		}
 
 		private Vector2i GetExteriorCellIndices(Vector3 point)
@@ -563,7 +545,7 @@ namespace TESUnity
 					{
 						var cellInfo = CreateExteriorCell(cellIndices);
 						
-						if(immediate)
+						if((cellInfo != null) && immediate)
 						{
 							temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 						}

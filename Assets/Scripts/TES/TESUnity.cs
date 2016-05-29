@@ -42,8 +42,7 @@ namespace TESUnity
 			MWDataReader = new MorrowindDataReader(MorrowindDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
-			MWEngine.SpawnPlayerOutside(Vector3.up * 50);
-
+			// Start the music.
 			musicPlayer = new MusicPlayer();
 
 			foreach(var songFilePath in Directory.GetFiles(MorrowindDataPath + "/Music/Explore"))
@@ -55,6 +54,9 @@ namespace TESUnity
 			}
 
 			musicPlayer.Play();
+
+			// Spawn the player.
+			MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
 		}
 		private void OnDestroy()
 		{

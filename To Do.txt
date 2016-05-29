@@ -18,6 +18,9 @@ Backlog
 -load & use Morrowind.ini?
 -add a collision-free mode
 -add support for Bloodmoon & Tribunal
+-add support for weather
+-add support for REGN records
+-use a promise-like API for TemporalLoadBalancer
 
 Issues
 ======
