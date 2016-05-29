@@ -1815,13 +1815,21 @@ namespace TESUnity
 				ReadRecords();
 				PostProcessRecords();
 			}
-			public void Close()
-			{
-				reader.Close();
-			}
 			void IDisposable.Dispose()
 			{
 				Close();
+			}
+			~ESMFile()
+			{
+				Close();
+			}
+			public void Close()
+			{
+				if(reader != null)
+				{
+					reader.Close();
+					reader = null;
+				}
 			}
 
 			public List<Record> GetRecordsOfType<T>() where T : Record

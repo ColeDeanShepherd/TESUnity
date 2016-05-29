@@ -29,6 +29,14 @@ namespace TESUnity
 			TribunalESMFile = new ESMFile(MorrowindFilePath + "/Tribunal.esm");
 			TribunalBSAFile = new BSAFile(MorrowindFilePath + "/Tribunal.bsa");*/
 		}
+		void IDisposable.Dispose()
+		{
+			Close();
+		}
+		~MorrowindDataReader()
+		{
+			Close();
+		}
 		public void Close()
 		{
 			/*TribunalBSAFile.Close();
@@ -39,10 +47,6 @@ namespace TESUnity
 
 			MorrowindBSAFile.Close();
 			MorrowindESMFile.Close();
-		}
-		void IDisposable.Dispose()
-		{
-			Close();
 		}
 
 		public Texture2D LoadTexture(string texturePath)

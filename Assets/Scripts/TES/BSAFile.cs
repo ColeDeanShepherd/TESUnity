@@ -44,13 +44,21 @@ namespace TESUnity
 
 			ReadMetadata();
 		}
-		public void Close()
-		{
-			reader.Close();
-		}
 		void IDisposable.Dispose()
 		{
 			Close();
+		}
+		~BSAFile()
+		{
+			Close();
+		}
+		public void Close()
+		{
+			if(reader != null)
+			{
+				reader.Close();
+				reader = null;
+			}
 		}
 
 		public bool ContainsFile(string filePath)

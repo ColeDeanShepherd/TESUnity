@@ -2,7 +2,6 @@ Priority
 ========
 -optimize
 -remove hard-coded paths
--redesign destructors/idisposable
 
 Backlog
 =======
