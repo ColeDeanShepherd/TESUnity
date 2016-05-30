@@ -159,7 +159,7 @@ namespace TESUnity
 		}
 		private void ExtractFileFromMorrowind(string filePathInBSA, string parentDirectoryPath)
 		{
-			File.WriteAllBytes(parentDirectoryPath + Path.GetFileName(filePathInBSA), MWDataReader.MorrowindBSAFile.LoadFileData(filePathInBSA));
+			File.WriteAllBytes(parentDirectoryPath + '/' + Path.GetFileName(filePathInBSA), MWDataReader.MorrowindBSAFile.LoadFileData(filePathInBSA));
 		}
 		private void TestAllCells(string resultsFilePath)
 		{

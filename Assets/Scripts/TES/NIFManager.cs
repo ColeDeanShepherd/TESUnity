@@ -27,6 +27,7 @@ namespace TESUnity
 
 			if(!NIFPrefabs.TryGetValue(filePath, out prefab))
 			{
+				// Load the NIF file and instantiate it.
 				NIF.NiFile file = dataReader.LoadNIF(filePath);
 
 				var objBuilder = new NIFObjectBuilder(file, dataReader, materialManager);
@@ -34,6 +35,17 @@ namespace TESUnity
 
 				prefab.transform.parent = prefabContainerObj.transform;
 
+				// Add LOD support to the prefab.
+				var LODComponent = prefab.AddComponent<LODGroup>();
+
+				var LODs = new LOD[1]
+				{
+					new LOD(0.025f, prefab.GetComponentsInChildren<Renderer>())
+				};
+				
+				LODComponent.SetLODs(LODs);
+
+				// Cache the prefab.
 				NIFPrefabs[filePath] = prefab;
 			}
 
