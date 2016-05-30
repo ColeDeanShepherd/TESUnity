@@ -10,7 +10,6 @@ Backlog
 -add support for particle systems
 -display names of items when looking at them
 -add a model viewer
--add proper support for skinned models
 -add support for loading NPCs and creatures
 -load & use Morrowind.ini?
 -add a collision-free mode
@@ -19,8 +18,8 @@ Backlog
 -add support for REGN records
 -use a promise-like API for TemporalLoadBalancer
 -load files in background threads
--add support for big endian platforms
 
 Issues
 ======
--skinned models load with incorrect orientations
+-skinned models don't load correctly
+-big endian platforms aren't supported
