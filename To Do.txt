@@ -18,6 +18,8 @@ Backlog
 -add support for weather
 -add support for REGN records
 -use a promise-like API for TemporalLoadBalancer
+-load files in background threads
+-add support for big endian platforms
 
 Issues
 ======

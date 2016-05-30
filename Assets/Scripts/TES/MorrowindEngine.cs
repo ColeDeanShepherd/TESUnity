@@ -249,7 +249,7 @@ namespace TESUnity
 
 			playerObj = CreatePlayer(position, out playerCameraObj);
 
-			UpdateExteriorCells(true);
+			UpdateExteriorCells(true, 1);
 			OnExteriorCell(_currentCell);
 		}
 		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
@@ -323,13 +323,13 @@ namespace TESUnity
 		private const float playerHeight = 2;
 		private const float playerRadius = 0.4f;
 
-		private float desiredWorkTimePerFrame = 1.0f / 100;
+		private float desiredWorkTimePerFrame = 1.0f / 120;
 
 		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
 
-		private int cellRadius = 4;
-		private int detailRadius = 2;
+		private int cellRadius = 6;
+		private int detailRadius = 4;
 		private CELLRecord _currentCell;
 
 		private GameObject interactTextObj;
@@ -499,12 +499,13 @@ namespace TESUnity
 			}
 		}
 
-		private void UpdateExteriorCells(bool immediate = false)
+		private void UpdateExteriorCells(bool immediate = false, int cellRadiusOverride = -1)
 		{
 			var cameraCellIndices = GetExteriorCellIndices(playerCameraObj.transform.position);
 
 			_currentCell = dataReader.FindExteriorCellRecord(cameraCellIndices);
 
+			var cellRadius = (cellRadiusOverride >= 0) ? cellRadiusOverride : this.cellRadius;
 			var minCellX = cameraCellIndices.x - cellRadius;
 			var maxCellX = cameraCellIndices.x + cellRadius;
 			var minCellY = cameraCellIndices.y - cellRadius;
@@ -527,19 +528,26 @@ namespace TESUnity
 			}
 
 			// Create new cells.
-			for(int x = minCellX; x <= maxCellX; x++)
+			for(int r = 0; r <= cellRadius; r++)
 			{
-				for(int y = minCellY; y <= maxCellY; y++)
+				for(int x = minCellX; x <= maxCellX; x++)
 				{
-					var cellIndices = new Vector2i(x, y);
-
-					if(!cellObjects.ContainsKey(cellIndices))
+					for(int y = minCellY; y <= maxCellY; y++)
 					{
-						var cellInfo = CreateExteriorCell(cellIndices);
-						
-						if((cellInfo != null) && immediate)
+						var cellIndices = new Vector2i(x, y);
+
+						var cellXDistance = Mathf.Abs(cameraCellIndices.x - cellIndices.x);
+						var cellYDistance = Mathf.Abs(cameraCellIndices.y - cellIndices.y);
+						var cellDistance = Mathf.Max(cellXDistance, cellYDistance);
+
+						if((cellDistance == r) && !cellObjects.ContainsKey(cellIndices))
 						{
-							temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+							var cellInfo = CreateExteriorCell(cellIndices);
+
+							if((cellInfo != null) && immediate)
+							{
+								temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+							}
 						}
 					}
 				}
@@ -692,7 +700,7 @@ namespace TESUnity
 					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
 					newCell = dataReader.FindExteriorCellRecord(cellIndices);
 
-					UpdateExteriorCells(true);
+					UpdateExteriorCells(true, 1);
 
 					OnExteriorCell(newCell);
 				}
