@@ -8,6 +8,7 @@ namespace TESUnity
 		public float normalSpeed = 5;
 		public float fastSpeed = 10;
 		public float flightSpeedMultiplier = 3;
+		public float airborneForceMultiplier = 5;
 
 		public float mouseSensitivity = 3;
 		public float minVerticalAngle = -90;
@@ -79,6 +80,10 @@ namespace TESUnity
 			{
 				SetVelocity();
 			}
+			else if(!isGrounded || !isFlying)
+			{
+				ApplyAirborneForce();
+			}
 		}
 
 		private void Rotate()
@@ -114,6 +119,17 @@ namespace TESUnity
 			}
 
 			rigidbody.velocity = velocity;
+		}
+		private void ApplyAirborneForce()
+		{
+			var forceDirection = transform.TransformVector(CalculateLocalMovementDirection());
+			forceDirection.y = 0;
+
+			forceDirection.Normalize();
+
+			var force = airborneForceMultiplier * rigidbody.mass * forceDirection;
+
+			rigidbody.AddForce(force);
 		}
 
 		private Vector3 CalculateLocalMovementDirection()
