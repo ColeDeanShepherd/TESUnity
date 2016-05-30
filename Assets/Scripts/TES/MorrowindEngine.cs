@@ -249,7 +249,7 @@ namespace TESUnity
 
 			playerObj = CreatePlayer(position, out playerCameraObj);
 
-			UpdateExteriorCells(true, 1);
+			UpdateExteriorCells(true, cellRadiusOnLoad);
 			OnExteriorCell(_currentCell);
 		}
 		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
@@ -328,8 +328,9 @@ namespace TESUnity
 		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
 
-		private int cellRadius = 6;
-		private int detailRadius = 4;
+		private int cellRadius = 4;
+		private int detailRadius = 3;
+		private int cellRadiusOnLoad = 2;
 		private CELLRecord _currentCell;
 
 		private GameObject interactTextObj;
@@ -700,7 +701,7 @@ namespace TESUnity
 					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
 					newCell = dataReader.FindExteriorCellRecord(cellIndices);
 
-					UpdateExteriorCells(true, 1);
+					UpdateExteriorCells(true, cellRadiusOnLoad);
 
 					OnExteriorCell(newCell);
 				}
