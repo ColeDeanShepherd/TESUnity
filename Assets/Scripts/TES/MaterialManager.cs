@@ -19,10 +19,12 @@ namespace TESUnity
 	}
 
 	/// <summary>
-	/// Manages loading and instantiation of Morrowind materials.
+	/// Manages loading and instantiation of Morrowind materials. Not thread safe.
 	/// </summary>
 	public class MaterialManager
 	{
+		public TextureManager textureManager;
+
 		public MaterialManager(TextureManager textureManager)
 		{
 			this.textureManager = textureManager;
@@ -40,7 +42,6 @@ namespace TESUnity
 			return material;
 		}
 
-		private TextureManager textureManager;
 		private Dictionary<MWMaterialProperties, Material> cachedMaterials = new Dictionary<MWMaterialProperties, Material>();
 
 		private Material ForceCreateMaterial(MWMaterialProperties materialProps)

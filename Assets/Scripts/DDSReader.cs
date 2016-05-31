@@ -275,15 +275,13 @@ public static class DDSReader
 	}
 
 	// Assumes the color table has already been built.
-	private static uint[] DecodeDXT1TexelBlockColorIndicesPreAlloc = new uint[16]; // preallocate to avoid GC
-	private static byte[] DecodeDXT1TexelBlockColorIndexBytesPreAlloc = new byte[4];
 	private static Color32[] DecodeDXT1TexelBlock(BinaryReader reader, Color[] colorTable)
 	{
 		Debug.Assert(colorTable.Length == 4);
 
 		// Read pixel color indices.
-		var colorIndices = DecodeDXT1TexelBlockColorIndicesPreAlloc;
-		var colorIndexBytes = DecodeDXT1TexelBlockColorIndexBytesPreAlloc;
+		var colorIndices = new uint[16];
+		var colorIndexBytes = new byte[4];
 		reader.Read(colorIndexBytes, 0, colorIndexBytes.Length);
 
 		for(uint i = 0; i < 4; i++) // row
@@ -309,12 +307,11 @@ public static class DDSReader
 
 		return colors;
 	}
-
-	private static Color[] DecodeDXT1TexelBlockColorTablePreAlloc = new Color[4]; // preallocate to avoid GC
+	
 	private static Color32[] DecodeDXT1TexelBlock(BinaryReader reader, bool containsAlpha)
 	{
 		// Create the color table.
-		var colorTable = DecodeDXT1TexelBlockColorTablePreAlloc;
+		var colorTable = new Color[4];
 		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 
@@ -332,14 +329,11 @@ public static class DDSReader
 		// Calculate pixel colors.
 		return DecodeDXT1TexelBlock(reader, colorTable);
 	}
-
-	private static byte[] DecodeDXT3TexelBlockCompressedAlphasPreAlloc = new byte[16]; // preallocate to avoid GC
-	private static byte[] DecodeDXT3TexelBlockAlphasPreAlloc = new byte[16]; // preallocate to avoid GC
-	private static Color[] DecodeDXT3TexelBlockColorTablePreAlloc = new Color[4]; // preallocate to avoid GC
+	
 	private static Color32[] DecodeDXT3TexelBlock(BinaryReader reader)
 	{
 		// Read compressed pixel alphas.
-		var compressedAlphas = DecodeDXT3TexelBlockCompressedAlphasPreAlloc;
+		var compressedAlphas = new byte[16];
 
 		for(int i = 0; i < 4; i++) // row
 		{
@@ -352,7 +346,7 @@ public static class DDSReader
 		}
 
 		// Calculate pixel alphas.
-		var alphas = DecodeDXT3TexelBlockAlphasPreAlloc;
+		var alphas = new byte[16];
 
 		for(int i = 0; i < 16; i++)
 		{
@@ -361,7 +355,7 @@ public static class DDSReader
 		}
 
 		// Create the color table.
-		var colorTable = DecodeDXT3TexelBlockColorTablePreAlloc;
+		var colorTable = new Color[4];
 		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 		colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
@@ -377,16 +371,11 @@ public static class DDSReader
 
 		return colors;
 	}
-
-	private static float[] DecodeDXT5TexelBlockAlphaTablePreAlloc = new float[8]; // preallocate to avoid GC
-	private static uint[] DecodeDXT5TexelBlockAlphaIndicesPreAlloc = new uint[16]; // preallocate to avoid GC
-	private static Color[] DecodeDXT5TexelBlockColorTablePreAlloc = new Color[4]; // preallocate to avoid GC
-	private static byte[] DecodeDXT5TexelBlockAlphaIndexBytesRow0PreAlloc = new byte[3]; // preallocate to avoid GC
-	private static byte[] DecodeDXT5TexelBlockAlphaIndexBytesRow1PreAlloc = new byte[3]; // preallocate to avoid GC
+	
 	private static Color32[] DecodeDXT5TexelBlock(BinaryReader reader)
 	{
 		// Create the alpha table.
-		var alphaTable = DecodeDXT5TexelBlockAlphaTablePreAlloc;
+		var alphaTable = new float[8];
 		alphaTable[0] = reader.ReadByte();
 		alphaTable[1] = reader.ReadByte();
 
@@ -409,13 +398,13 @@ public static class DDSReader
 		}
 
 		// Read pixel alpha indices.
-		var alphaIndices = DecodeDXT5TexelBlockAlphaIndicesPreAlloc;
+		var alphaIndices = new uint[16];
 
-		var alphaIndexBytesRow0 = DecodeDXT5TexelBlockAlphaIndexBytesRow0PreAlloc;
+		var alphaIndexBytesRow0 = new byte[3];
 		reader.Read(alphaIndexBytesRow0, 0, alphaIndexBytesRow0.Length);
 		Array.Reverse(alphaIndexBytesRow0); // Take care of little-endianness.
 
-		var alphaIndexBytesRow1 = DecodeDXT5TexelBlockAlphaIndexBytesRow1PreAlloc;
+		var alphaIndexBytesRow1 = new byte[3];
 		reader.Read(alphaIndexBytesRow1, 0, alphaIndexBytesRow1.Length);
 		Array.Reverse(alphaIndexBytesRow1); // Take care of little-endianness.
 
@@ -437,7 +426,7 @@ public static class DDSReader
 		alphaIndices[15] = (uint)Utils.GetBits(0, 3, alphaIndexBytesRow1); // p
 
 		// Create the color table.
-		var colorTable = DecodeDXT5TexelBlockColorTablePreAlloc;
+		var colorTable = new Color[4];
 		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
 		colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);

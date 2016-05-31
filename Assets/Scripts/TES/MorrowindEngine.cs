@@ -116,6 +116,11 @@ namespace TESUnity
 
 			return new InRangeCellInfo(cellObj, cellObjectsContainer, cellCreationCoroutine);
 		}
+
+		/// <summary>
+		/// Creates terrain representing a LAND record.
+		/// </summary>
+		/// <returns>A GameObject, or null if the LAND record does not contain sufficient data.</returns>
 		public GameObject InstantiateLAND(LANDRecord LAND)
 		{
 			Debug.Assert(LAND != null);
@@ -345,8 +350,10 @@ namespace TESUnity
 
 		private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
 		{
+			// Return before doing any work to provide an IEnumerator handle to the coroutine.
 			yield return null;
 
+			// Instantiate terrain.
 			if(LAND != null)
 			{
 				var landObj = InstantiateLAND(LAND);
