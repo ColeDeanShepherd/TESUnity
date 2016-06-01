@@ -27,14 +27,20 @@ namespace TESUnity
 		/* Public */
 		public byte[] version; // 4 bytes
 		public FileMetadata[] fileMetadatas;
+
+		// Not modified after constructor, so thread safe to read.
 		public Dictionary<FileNameHash, FileMetadata> fileMetadataHashTable;
+		
 		public VirtualFileSystem.Directory rootDir;
 
 		public bool isAtEOF
 		{
 			get
 			{
-				return reader.BaseStream.Position >= reader.BaseStream.Length;
+				lock(readerLock)
+				{
+					return reader.BaseStream.Position >= reader.BaseStream.Length;
+				}
 			}
 		}
 
@@ -54,17 +60,27 @@ namespace TESUnity
 		}
 		public void Close()
 		{
-			if(reader != null)
+			lock(readerLock)
 			{
-				reader.Close();
-				reader = null;
+				if(reader != null)
+				{
+					reader.Close();
+					reader = null;
+				}
 			}
 		}
 
+		/// <summary>
+		/// Determines whether the BSA archive contains a file. Thread safe.
+		/// </summary>
 		public bool ContainsFile(string filePath)
 		{
 			return fileMetadataHashTable.ContainsKey(HashFilePath(filePath));
 		}
+
+		/// <summary>
+		/// Loads an archived file's data. Thread safe.
+		/// </summary>
 		public byte[] LoadFileData(string filePath)
 		{
 			var hash = HashFilePath(filePath);
@@ -79,18 +95,30 @@ namespace TESUnity
 				throw new FileNotFoundException("Could not find file \"" + filePath + "\" in a BSA file.");
 			}
 		}
+
+		/// <summary>
+		/// Loads an archived file's data. Thread safe.
+		/// </summary>
 		public byte[] LoadFileData(FileMetadata fileMetadata)
 		{
-			reader.BaseStream.Position = fileDataSectionPostion + fileMetadata.offsetInDataSection;
+			lock(readerLock)
+			{
+				reader.BaseStream.Position = fileDataSectionPostion + fileMetadata.offsetInDataSection;
 
-			return reader.ReadBytes((int)fileMetadata.size);
+				return reader.ReadBytes((int)fileMetadata.size);
+			}
 		}
 
 		/* Private */
+		private object readerLock = new object();
 		private BinaryReader reader;
+
 		private long hashTablePosition;
 		private long fileDataSectionPostion;
 
+		/// <summary>
+		/// Only called in the constructor. Not thread safe, but doesn't need to be.
+		/// </summary>
 		private void ReadMetadata()
 		{
 			// Read the header.
@@ -204,7 +232,7 @@ namespace TESUnity
 				temp = (uint)(filePath[i]) << (off & 0x1F);
 				sum ^= temp;
 				n = temp & 0x1F;
-				sum = (sum << (32 - (int)n)) | (sum >> (int)n);  // binary "rotate right"
+				sum = (sum << (32 - (int)n)) | (sum >> (int)n);
 				off += 8;
 			}
 

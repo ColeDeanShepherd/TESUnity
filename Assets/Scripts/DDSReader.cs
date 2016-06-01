@@ -4,11 +4,11 @@ using UnityEngine;
 
 public static class DDSReader
 {
-	public static Texture2D LoadDDSTexture(string filePath, bool flipVertically = false)
+	public static Texture2DInfo LoadDDSTexture(string filePath, bool flipVertically = false)
 	{
 		return LoadDDSTexture(File.Open(filePath, FileMode.Open, FileAccess.Read), flipVertically);
 	}
-	public static Texture2D LoadDDSTexture(Stream inputStream, bool flipVertically = false)
+	public static Texture2DInfo LoadDDSTexture(Stream inputStream, bool flipVertically = false)
 	{
 		using(BinaryReader reader = new BinaryReader(inputStream))
 		{
@@ -141,11 +141,7 @@ public static class DDSReader
 				}
 			}
 
-			var texture = new Texture2D((int)header.dwWidth, (int)header.dwHeight, textureFormat, hasMipMaps);
-			texture.LoadRawTextureData(textureData);
-			texture.Apply();
-
-			return texture;
+			return new Texture2DInfo((int)header.dwWidth, (int)header.dwHeight, textureFormat, hasMipMaps, textureData);
 		}
 	}
 

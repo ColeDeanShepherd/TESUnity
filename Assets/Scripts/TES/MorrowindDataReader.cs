@@ -49,7 +49,7 @@ namespace TESUnity
 			MorrowindESMFile.Close();
 		}
 
-		public Texture2D LoadTexture(string texturePath)
+		public Texture2DInfo LoadTexture(string texturePath)
 		{
 			var filePath = FindTexture(texturePath);
 
@@ -65,10 +65,9 @@ namespace TESUnity
 		}
 		public NIF.NiFile LoadNIF(string filePath)
 		{
-			NIF.NiFile file;
 			var fileData = MorrowindBSAFile.LoadFileData(filePath);
 
-			file = new NIF.NiFile(Path.GetFileNameWithoutExtension(filePath));
+			var file = new NIF.NiFile(Path.GetFileNameWithoutExtension(filePath));
 			file.Deserialize(new BinaryReader(new MemoryStream(fileData)));
 
 			return file;
@@ -118,9 +117,6 @@ namespace TESUnity
 			return null;
 		}
 
-		private Dictionary<string, Texture2D> loadedTextures = new Dictionary<string, Texture2D>();
-		private Dictionary<string, NIF.NiFile> loadedNIFs = new Dictionary<string, NIF.NiFile>();
-
 		/// <summary>
 		/// Finds the actual path of a texture.
 		/// </summary>
@@ -155,6 +151,7 @@ namespace TESUnity
 				return filePath;
 			}
 
+			// Could not find the file.
 			return null;
 		}
 	}

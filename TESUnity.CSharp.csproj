@@ -100,6 +100,7 @@
     <Compile Include="Assets\Scripts\TES\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TES\TextureManager.cs" />
     <Compile Include="Assets\Scripts\TemporalLoadBalancer.cs" />
+    <Compile Include="Assets\Scripts\Texture2DInfo.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
     <Compile Include="Assets\Scripts\Utils.cs" />
     <Compile Include="Assets\Scripts\Vector2i.cs" />

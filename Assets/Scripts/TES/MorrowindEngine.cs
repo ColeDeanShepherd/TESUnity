@@ -1,6 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -270,6 +270,7 @@ namespace TESUnity
 
 			OnInteriorCell(_currentCell);
 		}
+
 		public void Update()
 		{
 			// The current cell can be null if the player is outside of the defined game world.
@@ -328,7 +329,7 @@ namespace TESUnity
 		private const float playerHeight = 2;
 		private const float playerRadius = 0.4f;
 
-		private float desiredWorkTimePerFrame = 1.0f / 120;
+		private float desiredWorkTimePerFrame = 1.0f / 160;
 
 		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
@@ -361,44 +362,120 @@ namespace TESUnity
 				if(landObj != null)
 				{
 					landObj.transform.parent = cellObj.transform;
-					yield return null;
 				}
-			}
-
-			foreach(var refObjDataGroup in CELL.refObjDataGroups)
-			{
-				InstantiateCellObject(CELL, cellObjectsContainer, refObjDataGroup);
 
 				yield return null;
 			}
-		}
-		private void InstantiateCellObject(CELLRecord CELL, GameObject parent, CELLRecord.RefObjDataGroup refObjDataGroup)
-		{
-			Record objRecord;
 
-			// Find the ESM record associated with the referenced object.
-			if(dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjDataGroup.NAME.value, out objRecord))
+			// Extract information about referenced objects. Do this all at once because it's fast.
+			RefCellObjInfo[] refCellObjInfos = new RefCellObjInfo[CELL.refObjDataGroups.Count];
+			
+			for(int i = 0; i < CELL.refObjDataGroups.Count; i++)
 			{
-				var modelFileName = ESM.RecordUtils.GetModelFileName(objRecord);
+				var refObjInfo = new RefCellObjInfo();
+				refObjInfo.refObjDataGroup = CELL.refObjDataGroups[i];
+
+				// Get the record the RefObjDataGroup references.
+				dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjInfo.refObjDataGroup.NAME.value, out refObjInfo.referencedRecord);
+
+				if(refObjInfo.referencedRecord != null)
+				{
+					var modelFileName = ESM.RecordUtils.GetModelFileName(refObjInfo.referencedRecord);
+
+					// If the model file name is valid, store the model file path.
+					if((modelFileName != null) && (modelFileName != ""))
+					{
+						refObjInfo.modelFilePath = "meshes\\" + modelFileName;
+					}
+				}
+
+				refCellObjInfos[i] = refObjInfo;
+			}
+
+			yield return null;
+
+			// Start loading all required assets in background threads.
+			foreach(var refCellObjInfo in refCellObjInfos)
+			{
+				if(refCellObjInfo.modelFilePath != null)
+				{
+					theNIFManager.PreLoadNIFAsync(refCellObjInfo.modelFilePath);
+				}
+			}
+
+			yield return null;
+			
+			// Instantiate objects when they are done loading, or if they don't need to load.
+			int instantiatedObjectCount = 0;
+
+			while(instantiatedObjectCount < refCellObjInfos.Length)
+			{
+				foreach(var refCellObjInfo in refCellObjInfos)
+				{
+					// Ignore objects that have already been instantiated.
+					if(refCellObjInfo.isInstantiated)
+					{
+						continue;
+					}
+
+					// If the referenced object has a model and it has just finished pre-loading, instantiate the model.
+					if(refCellObjInfo.modelFilePath != null)
+					{
+						Debug.Assert(!refCellObjInfo.isDonePreLoading);
+
+						// Update isDonePreloading.
+						refCellObjInfo.isDonePreLoading = theNIFManager.IsDonePreLoading(refCellObjInfo.modelFilePath);
+
+						// If the model just finished pre-loading, instantiate it.
+						if(refCellObjInfo.isDonePreLoading)
+						{
+							InstantiatePreLoadedCellObject(CELL, cellObjectsContainer, refCellObjInfo);
+							refCellObjInfo.isInstantiated = true;
+
+							instantiatedObjectCount++;
+
+							yield return null;
+						}
+					}
+					else // If the referenced object doesn't have a model, there is no loading to be done, so try to instantiate it.
+					{
+						InstantiatePreLoadedCellObject(CELL, cellObjectsContainer, refCellObjInfo);
+						refCellObjInfo.isInstantiated = true;
+
+						instantiatedObjectCount++;
+
+						yield return null;
+					}
+				}
+
+				// Yield after every foreach to prevent spinning if all models are loading.
+				yield return null;
+			}
+		}
+		private void InstantiatePreLoadedCellObject(CELLRecord CELL, GameObject parent, RefCellObjInfo refCellObjInfo)
+		{
+			if(refCellObjInfo.referencedRecord != null)
+			{
 				GameObject modelObj = null;
 
-				// If the model file name is valid, instantiate it.
-				if((modelFileName != null) && (modelFileName != ""))
+				// If the object has a model, instantiate it.
+				if(refCellObjInfo.modelFilePath != null)
 				{
-					var modelFilePath = "meshes\\" + modelFileName;
-
-					modelObj = theNIFManager.InstantiateNIF(modelFilePath);
-					PostProcessInstantiatedCellObject(modelObj, objRecord, refObjDataGroup);
+					modelObj = theNIFManager.InstantiateNIF(refCellObjInfo.modelFilePath);
+					PostProcessInstantiatedCellObject(modelObj, refCellObjInfo);
 
 					modelObj.transform.parent = parent.transform;
 				}
-
-				if(objRecord is LIGHRecord)
+				
+				// If the object has a light, instantiate it.
+				if(refCellObjInfo.referencedRecord is LIGHRecord)
 				{
-					var lightObj = InstantiateLight((LIGHRecord)objRecord, CELL.isInterior);
+					var lightObj = InstantiateLight((LIGHRecord)refCellObjInfo.referencedRecord, CELL.isInterior);
 
+					// If the object also has a model, parent the model to the light.
 					if(modelObj != null)
 					{
+						// Some NIF files have nodes named "AttachLight". Parent it to the light if it exists.
 						GameObject attachLightObj = GameObjectUtils.FindChildRecursively(modelObj, "AttachLight");
 
 						if(attachLightObj == null)
@@ -413,7 +490,7 @@ namespace TESUnity
 
 							lightObj.transform.parent = attachLightObj.transform;
 						}
-						else
+						else // If there is no "AttachLight", center the light in the model's bounds.
 						{
 							lightObj.transform.position = GameObjectUtils.GetVisualBoundsRecursive(modelObj).center;
 							lightObj.transform.rotation = modelObj.transform.rotation;
@@ -421,16 +498,16 @@ namespace TESUnity
 							lightObj.transform.parent = modelObj.transform;
 						}
 					}
-					else
+					else // If the light has no associated model, instantiate the light as a standalone object.
 					{
-						PostProcessInstantiatedCellObject(lightObj, objRecord, refObjDataGroup);
+						PostProcessInstantiatedCellObject(lightObj, refCellObjInfo);
 						lightObj.transform.parent = parent.transform;
 					}
 				}
 			}
 			/*else
 			{
-				Debug.Log("Unknown Object: " + refObjDataGroup.NAME.value);
+				Debug.Log("Unknown Object: " + refCellObjInfo.refObjDataGroup.NAME.value);
 			}*/
 		}
 		private GameObject InstantiateLight(LIGHRecord LIGH, bool indoors)
@@ -451,8 +528,11 @@ namespace TESUnity
 			return lightObj;
 		}
 		// Called by InstantiateCellObjects.
-		private void PostProcessInstantiatedCellObject(GameObject gameObject, ESM.Record record, CELLRecord.RefObjDataGroup refObjDataGroup)
+		private void PostProcessInstantiatedCellObject(GameObject gameObject, RefCellObjInfo refCellObjInfo)
 		{
+			var refObjDataGroup = refCellObjInfo.refObjDataGroup;
+
+			// Handle object transforms.
 			if(refObjDataGroup.XSCL != null)
 			{
 				gameObject.transform.localScale = Vector3.one * refObjDataGroup.XSCL.value;
@@ -461,12 +541,13 @@ namespace TESUnity
 			gameObject.transform.position += Convert.NifPointToUnityPoint(refObjDataGroup.DATA.position);
 			gameObject.transform.rotation *= Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DATA.eulerAngles);
 
-			if(record is DOORRecord)
+			// Handle doors.
+			if(refCellObjInfo.referencedRecord is DOORRecord)
 			{
 				gameObject.tag = "Door";
 
 				// Add a door component.
-				var DOOR = (DOORRecord)record;
+				var DOOR = (DOORRecord)refCellObjInfo.referencedRecord;
 				var doorComponent = gameObject.AddComponent<DoorComponent>();
 
 				if(DOOR.FNAM != null)
@@ -474,10 +555,12 @@ namespace TESUnity
 					doorComponent.doorName = DOOR.FNAM.value;
 				}
 
+				// If the door leads to another cell (as opposed to just rotating to open).
 				if((refObjDataGroup.DNAM != null) || (refObjDataGroup.DODT != null))
 				{
 					doorComponent.leadsToAnotherCell = true;
 
+					// Does the door lead to an exterior cell or an interior cell?
 					if(refObjDataGroup.DNAM != null)
 					{
 						doorComponent.doorExitName = refObjDataGroup.DNAM.value;
@@ -488,11 +571,13 @@ namespace TESUnity
 						doorComponent.leadsToInteriorCell = false;
 					}
 
+					// Store the door's exit position and orientation.
 					if(refObjDataGroup.DODT != null)
 					{
 						doorComponent.doorExitPos = Convert.NifPointToUnityPoint(refObjDataGroup.DODT.position);
 						doorComponent.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
 
+						// If the door leads to an exterior cell, store the name of the region containing the cell as the door's exit name.
 						if(!doorComponent.leadsToInteriorCell)
 						{
 							var doorExitCell = dataReader.FindExteriorCellRecord(GetExteriorCellIndices(doorComponent.doorExitPos));
@@ -779,5 +864,14 @@ namespace TESUnity
 			return camera;
 		}
 		#endregion
+	}
+
+	internal class RefCellObjInfo
+	{
+		public CELLRecord.RefObjDataGroup refObjDataGroup;
+		public Record referencedRecord;
+		public string modelFilePath;
+		public bool isDonePreLoading;
+		public bool isInstantiated;
 	}
 }

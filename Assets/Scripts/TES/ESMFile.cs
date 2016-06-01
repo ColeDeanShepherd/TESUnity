@@ -1811,8 +1811,7 @@ namespace TESUnity
 
 			public ESMFile(string filePath)
 			{
-				reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
-				ReadRecords();
+				ReadRecords(filePath);
 				PostProcessRecords();
 			}
 			void IDisposable.Dispose()
@@ -1823,14 +1822,7 @@ namespace TESUnity
 			{
 				Close();
 			}
-			public void Close()
-			{
-				if(reader != null)
-				{
-					reader.Close();
-					reader = null;
-				}
-			}
+			public void Close() { }
 
 			public List<Record> GetRecordsOfType<T>() where T : Record
 			{
@@ -1846,8 +1838,6 @@ namespace TESUnity
 
 			/* Private */
 			private const int recordHeaderSizeInBytes = 16;
-
-			private BinaryReader reader;
 
 			private Record CreateUninitializedRecord(string recordName)
 			{
@@ -1905,8 +1895,9 @@ namespace TESUnity
 						return null;
 				}
 			}
-			private void ReadRecords()
+			private void ReadRecords(string filePath)
 			{
+				var reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
 				var recordList = new List<Record>();
 
 				while(reader.BaseStream.Position < reader.BaseStream.Length)
