@@ -32,7 +32,7 @@ public static class GameObjectUtils
 	}
 
 	/// <summary>
-	/// Creates terrain from runtime data.
+	/// Creates terrain data from heights.
 	/// </summary>
 	/// <param name="heightPercents">Terrain height percentages ranging from 0 to 1.</param>
 	/// <param name="maxHeight">The maximum height of the terrain, corresponding to a height percentage of 1.</param>
@@ -41,10 +41,10 @@ public static class GameObjectUtils
 	/// <param name="alphaMap">Texture blending information.</param>
 	/// <param name="position">The position of the terrain.</param>
 	/// <returns>A terrain GameObject.</returns>
-	public static GameObject CreateTerrain(float[,] heightPercents, float maxHeight, float heightSampleDistance, SplatPrototype[] splatPrototypes, float[,,] alphaMap, Vector3 position)
+	public static TerrainData CreateTerrainData(float[,] heightPercents, float maxHeight, float heightSampleDistance, SplatPrototype[] splatPrototypes, float[,,] alphaMap)
 	{
 		Debug.Assert((heightPercents.GetLength(0) == heightPercents.GetLength(1)) && (maxHeight >= 0) && (heightSampleDistance >= 0));
-		
+
 		// Create the TerrainData.
 		var terrainData = new TerrainData();
 		terrainData.heightmapResolution = heightPercents.GetLength(0);
@@ -67,12 +67,24 @@ public static class GameObjectUtils
 		if((splatPrototypes != null) && (alphaMap != null))
 		{
 			Debug.Assert(alphaMap.GetLength(0) == alphaMap.GetLength(1));
-			
+
 			terrainData.alphamapResolution = alphaMap.GetLength(0);
 			terrainData.splatPrototypes = splatPrototypes;
 			terrainData.SetAlphamaps(0, 0, alphaMap);
 		}
 
+		return terrainData;
+	}
+
+	public static GameObject CreateTerrain(float[,] heightPercents, float maxHeight, float heightSampleDistance, SplatPrototype[] splatPrototypes, float[,,] alphaMap, Vector3 position)
+	{
+		var terrainData = CreateTerrainData(heightPercents, maxHeight, heightSampleDistance, splatPrototypes, alphaMap);
+
+		return CreateTerrainFromTerrainData(terrainData, position);
+	}
+
+	public static GameObject CreateTerrainFromTerrainData(TerrainData terrainData, Vector3 position)
+	{
 		// Create the terrain game object.
 		GameObject terrainObject = new GameObject("terrain");
 
@@ -85,6 +97,7 @@ public static class GameObjectUtils
 
 		return terrainObject;
 	}
+
 	public static Bounds GetVisualBoundsRecursive(GameObject gameObject)
 	{
 		Debug.Assert(gameObject != null);

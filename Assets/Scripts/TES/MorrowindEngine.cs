@@ -400,11 +400,13 @@ namespace TESUnity
 				if(refCellObjInfo.modelFilePath != null)
 				{
 					theNIFManager.PreLoadNIFAsync(refCellObjInfo.modelFilePath);
+
+					yield return null;
 				}
 			}
 
 			yield return null;
-			
+
 			// Instantiate objects when they are done loading, or if they don't need to load.
 			int instantiatedObjectCount = 0;
 
