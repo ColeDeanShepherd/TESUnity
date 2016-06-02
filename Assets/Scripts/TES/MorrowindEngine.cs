@@ -773,7 +773,7 @@ namespace TESUnity
 				DestroyAllCells();
 
 				// Move the player.
-				playerObj.transform.position = doorComponent.doorExitPos + new Vector3(0, playerHeight / 2, 0);
+				playerObj.transform.position = doorComponent.doorExitPos;
 				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
 
 				// Load the new cell.
