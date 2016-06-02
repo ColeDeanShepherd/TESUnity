@@ -95,7 +95,7 @@ namespace TESUnity
 
 				var LODs = new LOD[1]
 				{
-					new LOD(0.025f, prefab.GetComponentsInChildren<Renderer>())
+					new LOD(0.015f, prefab.GetComponentsInChildren<Renderer>())
 				};
 
 				LODComponent.SetLODs(LODs);
