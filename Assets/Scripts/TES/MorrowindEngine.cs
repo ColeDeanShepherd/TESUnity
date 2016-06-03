@@ -66,6 +66,7 @@ namespace TESUnity
 
 			interactTextObj = GUIUtils.CreateText("", canvasObj);
 			interactTextObj.GetComponent<Text>().color = Color.white;
+			interactText = interactTextObj.GetComponent<Text>();
 
 			var interactTextCSF = interactTextObj.AddComponent<ContentSizeFitter>();
 			interactTextCSF.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -285,33 +286,33 @@ namespace TESUnity
 		}
 		public void CastInteractRay()
 		{
-			interactTextObj.SetActive(false);
-
 			// Cast a ray to see what the camera is looking at.
-			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
+			Ray ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
 
-			var raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
+			int raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
 
 			for(int i = 0; i < raycastHitCount; i++)
 			{
-				var hitInfo = interactRaycastHitBuffer[i];
+				RaycastHit hitInfo = interactRaycastHitBuffer[i];
 
 				// Find the door associated with the hit collider.
 				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
 
 				if(doorObj != null)
 				{
-					var doorComponent = doorObj.GetComponent<DoorComponent>();
+					DoorComponent doorComponent = doorObj.GetComponent<DoorComponent>();
 
-					interactTextObj.SetActive(true);
+					if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
 
 					if(doorComponent.leadsToAnotherCell)
 					{
-						interactTextObj.GetComponent<Text>().text = doorComponent.doorExitName;
+						if ( interactText.text != doorComponent.doorExitName )
+							interactText.text = doorComponent.doorExitName;
 					}
 					else
 					{
-						interactTextObj.GetComponent<Text>().text = doorComponent.doorName;
+						if ( interactText.text != doorComponent.doorName )
+							interactText.text = doorComponent.doorName;
 					}
 
 					if(Input.GetKeyDown(KeyCode.E))
@@ -320,6 +321,10 @@ namespace TESUnity
 					}
 
 					break;
+				}
+				else
+				{
+					if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false ); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 				}
 			}
 		}
@@ -340,6 +345,7 @@ namespace TESUnity
 		private CELLRecord _currentCell;
 
 		private GameObject interactTextObj;
+		private Text interactText;
 		private GameObject sunObj;
 		private GameObject waterObj;
 		private GameObject playerObj;
@@ -854,7 +860,7 @@ namespace TESUnity
 		{
 			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-
+			Camera.main.renderingPath = RenderingPath.DeferredShading;
 			return camera;
 		}
 		private GameObject CreateFlyingCamera(Vector3 position)
