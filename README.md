@@ -7,7 +7,9 @@ World viewers for Elder Scrolls games in the Unity game engine.
 Getting Started
 ---------------
 
-TESUnity requires a valid installation of Morrowind to run!
+**TESUnity requires a valid installation of Morrowind to run!**
+
+**Big endian CPUs are currently not supported!**
 
 To get started, download the source code as a ZIP file, extract it, and open the TESUnity folder in Unity.
 
