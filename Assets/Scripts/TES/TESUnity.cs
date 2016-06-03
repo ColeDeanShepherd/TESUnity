@@ -10,6 +10,8 @@ namespace TESUnity
 		public static TESUnity instance;
 
 		#region Inspector-set Members
+		public bool music = false;
+
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
 		public Sprite UIDropdownArrowImg;
@@ -43,18 +45,20 @@ namespace TESUnity
 			MWDataReader = new MorrowindDataReader(MWDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
-			// Start the music.
-			musicPlayer = new MusicPlayer();
+			if ( music )
+			{// Start the music.
+				musicPlayer = new MusicPlayer();
 
-			foreach(var songFilePath in Directory.GetFiles(MWDataPath + "/Music/Explore"))
-			{
-				if(!songFilePath.Contains("Morrowind Title"))
+				foreach ( var songFilePath in Directory.GetFiles( MWDataPath + "/Music/Explore" ) )
 				{
-					musicPlayer.AddSong(songFilePath);
+					if ( !songFilePath.Contains( "Morrowind Title" ) )
+					{
+						musicPlayer.AddSong( songFilePath );
+					}
 				}
-			}
 
-			musicPlayer.Play();
+				musicPlayer.Play();
+			}
 
 			// Spawn the player.
 			MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
@@ -71,7 +75,7 @@ namespace TESUnity
 		private void Update()
 		{
 			MWEngine.Update();
-			musicPlayer.Update();
+			if ( music ) musicPlayer.Update();
 
 			if(Input.GetKeyDown(KeyCode.P))
 			{
