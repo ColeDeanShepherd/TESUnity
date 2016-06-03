@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using ur = UnityEngine.Rendering;
+
 namespace TESUnity
 {
-	public enum MWMaterialType
-	{
-		Opaque,
-		Translucent,
-		Cutout
-	}
+	public enum MatTestMode { Always, Less, LEqual, Equal, GEqual, Greater, NotEqual, Never }
 
-	public struct MWMaterialProperties
+	public struct MWMaterialProps
 	{
-		public MWMaterialType type;
 		public string mainTextureFilePath;
+		public bool alphaBlended;
+		public ur.BlendMode srcBlendMode;
+		public ur.BlendMode dstBlendMode;
+		public bool alphaTest;
 		public float alphaCutoff;
+		public bool zWrite;
 	}
 
 	/// <summary>
@@ -24,52 +25,52 @@ namespace TESUnity
 	public class MaterialManager
 	{
 		public TextureManager textureManager;
+		private Dictionary<MWMaterialProps , Material> existingMaterials = new Dictionary<MWMaterialProps , Material>();
+		public MaterialManager ( TextureManager textureManager ){ this.textureManager = textureManager; }
 
-		public MaterialManager(TextureManager textureManager)
+		public Material BuildMaterialFromProperties ( MWMaterialProps mp )
 		{
-			this.textureManager = textureManager;
+			Material m;
+			//check if the material is already cached
+			if ( !existingMaterials.TryGetValue( mp , out m ) )
+			{
+				//otherwise create a new material and cache it
+				if ( mp.alphaBlended )
+					m = BuildMaterialBlended( mp.srcBlendMode , mp.dstBlendMode );
+				else if ( mp.alphaTest )
+					m = BuildMaterialTested( mp.alphaCutoff );
+				else
+					m = BuildMaterial();
+
+				if ( mp.mainTextureFilePath != null )
+				{
+					m.mainTexture = textureManager.LoadTexture( mp.mainTextureFilePath );
+				}
+				m.SetFloat( "_Metallic" , 0f );
+				m.SetFloat( "_Glossiness" , 0f );
+				existingMaterials[ mp ] = m;
+			}
+			return m;
 		}
-		public Material CreateMaterial(MWMaterialProperties materialProps)
+
+		private Material BuildMaterial ()
 		{
-			Material material;
-
-			if(!cachedMaterials.TryGetValue(materialProps, out material))
-			{
-				material = ForceCreateMaterial(materialProps);
-				cachedMaterials[materialProps] = material;
-			}
-
-			return material;
+			return new Material( Shader.Find( "TES Unity/Standard" ) );
 		}
 
-		private Dictionary<MWMaterialProperties, Material> cachedMaterials = new Dictionary<MWMaterialProperties, Material>();
-
-		private Material ForceCreateMaterial(MWMaterialProperties materialProps)
+		private Material BuildMaterialBlended ( ur.BlendMode sourceBlendMode , ur.BlendMode destinationBlendMode )
 		{
-			Material material;
+			Material m = new Material( Shader.Find( "TES Unity/Standard Blended" ) );
+			m.SetInt( "_SrcBlend" , ( int )sourceBlendMode );
+			m.SetInt( "_DstBlend" , ( int )destinationBlendMode );
+			return m;
+		}
 
-			switch(materialProps.type)
-			{
-				case MWMaterialType.Opaque:
-					material = new Material(TESUnity.instance.defaultMaterial);
-					break;
-				case MWMaterialType.Translucent:
-					material = new Material(TESUnity.instance.fadeMaterial);
-					break;
-				case MWMaterialType.Cutout:
-					material = new Material(TESUnity.instance.cutoutMaterial);
-					material.SetFloat("alphaCutoff", materialProps.alphaCutoff);
-					break;
-				default:
-					throw new NotImplementedException("Unsupported MWMaterialType: " + materialProps.type.ToString());
-			}
-
-			if(materialProps.mainTextureFilePath != null)
-			{
-				material.mainTexture = textureManager.LoadTexture(materialProps.mainTextureFilePath);
-			}
-
-			return material;
+		private Material BuildMaterialTested ( float cutoff = 0.5f )
+		{
+			Material m = new Material( Shader.Find( "TES Unity/Standard Blended" ) );
+			m.SetFloat( "_Cutoff" , cutoff );
+			return m;
 		}
 	}
 }

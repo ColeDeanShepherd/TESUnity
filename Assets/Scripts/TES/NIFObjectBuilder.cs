@@ -220,7 +220,7 @@ namespace TESUnity
 				var materialProps = NiAVObjectPropertiesToMWMaterialProperties(triShape);
 
 				var meshRenderer = obj.AddComponent<MeshRenderer>();
-				meshRenderer.material = materialManager.CreateMaterial(materialProps);
+				meshRenderer.material = materialManager.BuildMaterialFromProperties(materialProps);
 
 				if(Utils.ContainsBitFlags(triShape.flags, (uint)NiAVObject.Flags.Hidden))
 				{
@@ -325,7 +325,7 @@ namespace TESUnity
 
 			return mesh;
 		}
-		private MWMaterialProperties NiAVObjectPropertiesToMWMaterialProperties(NiAVObject obj)
+		private MWMaterialProps NiAVObjectPropertiesToMWMaterialProperties(NiAVObject obj)
 		{
 			// Find relevant properties.
 			NiTexturingProperty texturingProperty = null;
@@ -351,27 +351,76 @@ namespace TESUnity
 			}
 
 			// Create the material properties.
-			MWMaterialProperties materialProps = new MWMaterialProperties();
+			MWMaterialProps mp = new MWMaterialProps();
 
-			if(alphaProperty != null)
+			#region AlphaProperty Cheat Sheet
+			/*
+			14 bits used:
+
+			1 bit for alpha blend bool
+			4 bits for src blend mode
+			4 bits for dest blend mode
+			1 bit for alpha test bool
+			3 bits for alpha test mode
+			1 bit for zwrite bool ( opposite value )
+
+			Bit 0 : alpha blending enable
+            Bits 1-4 : source blend mode 
+            Bits 5-8 : destination blend mode
+            Bit 9 : alpha test enable
+            Bit 10-12 : alpha test mode
+            Bit 13 : no sorter flag ( disables triangle sorting ) ( Unity ZWrite )
+
+			blend modes (glBlendFunc):
+            0000 GL_ONE
+            0001 GL_ZERO
+            0010 GL_SRC_COLOR
+            0011 GL_ONE_MINUS_SRC_COLOR
+            0100 GL_DST_COLOR
+            0101 GL_ONE_MINUS_DST_COLOR
+            0110 GL_SRC_ALPHA
+            0111 GL_ONE_MINUS_SRC_ALPHA
+            1000 GL_DST_ALPHA
+            1001 GL_ONE_MINUS_DST_ALPHA
+            1010 GL_SRC_ALPHA_SATURATE
+
+            test modes (glAlphaFunc):
+            000 GL_ALWAYS
+            001 GL_LESS
+            010 GL_EQUAL
+            011 GL_LEQUAL
+            100 GL_GREATER
+            101 GL_NOTEQUAL
+            110 GL_GEQUAL
+            111 GL_NEVER
+			*/
+			#endregion
+
+			if ( alphaProperty != null)
 			{
-				if(Utils.ContainsBitFlags(alphaProperty.flags, 1))
+				ushort flags = alphaProperty.flags;
+				ushort oldflags = flags;
+				byte srcbm = (byte)(BitConverter.GetBytes( flags >> 1 )[0] & 15);
+				byte dstbm = ( byte )( BitConverter.GetBytes( flags >> 5 )[ 0 ] & 15);
+				mp.zWrite = BitConverter.GetBytes( flags >> 15 )[ 0 ] == 1;//smush
+
+				if ( Utils.ContainsBitFlags( flags , 0x01) ) // if flags contain the alpha blend flag at bit 0 in byte 0
 				{
-					materialProps.type = MWMaterialType.Translucent;
+					mp.alphaBlended = true;
+					mp.srcBlendMode = FigureBlendMode( srcbm );
+					mp.dstBlendMode = FigureBlendMode( dstbm );
 				}
-				else if(Utils.ContainsBitFlags(alphaProperty.flags, 0x100))
+
+				else if(Utils.ContainsBitFlags( flags , 0x100)) // if flags contain the alpha test flag
 				{
-					materialProps.type = MWMaterialType.Cutout;
-					materialProps.alphaCutoff = (float)alphaProperty.threshold / 255;
-				}
-				else
-				{
-					materialProps.type = MWMaterialType.Opaque;
+					mp.alphaTest = true;
+					mp.alphaCutoff = (float)alphaProperty.threshold / 255;
 				}
 			}
 			else
 			{
-				materialProps.type = MWMaterialType.Opaque;
+				mp.alphaBlended = false;
+				mp.alphaTest= false;
 			}
 
 			// Apply textures.
@@ -379,14 +428,49 @@ namespace TESUnity
 			{
 				var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.source.value];
 
-				materialProps.mainTextureFilePath = srcTexture.fileName;
+				mp.mainTextureFilePath = srcTexture.fileName;
 			}
 			else
 			{
-				Debug.Log(file.name + " has no texture.");
+				//Debug.Log(file.name + " has no texture.");
 			}
 
-			return materialProps;
+			return mp;
+		}
+
+		private UnityEngine.Rendering.BlendMode FigureBlendMode ( byte b )
+		{
+			switch (b)
+			{
+				case  0: return UnityEngine.Rendering.BlendMode.One;
+				case  1: return UnityEngine.Rendering.BlendMode.Zero;
+				case  2: return UnityEngine.Rendering.BlendMode.SrcColor;
+				case  3: return UnityEngine.Rendering.BlendMode.OneMinusSrcColor;
+				case  4: return UnityEngine.Rendering.BlendMode.DstColor;
+				case  5: return UnityEngine.Rendering.BlendMode.OneMinusDstColor;
+				case  6: return UnityEngine.Rendering.BlendMode.SrcAlpha;
+				case  7: return UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+				case  8: return UnityEngine.Rendering.BlendMode.DstAlpha;
+				case  9: return UnityEngine.Rendering.BlendMode.OneMinusDstAlpha;
+				case 10: return UnityEngine.Rendering.BlendMode.SrcAlphaSaturate;
+			}
+			return UnityEngine.Rendering.BlendMode.Zero;
+		}
+
+		private MatTestMode FigureTestMode ( byte b )
+		{
+			switch ( b )
+			{
+				case 0: return MatTestMode.Always;
+				case 1: return MatTestMode.Less;
+				case 2: return MatTestMode.LEqual;
+				case 3: return MatTestMode.Equal;
+				case 4: return MatTestMode.GEqual;
+				case 5: return MatTestMode.Greater;
+				case 6: return MatTestMode.NotEqual;
+				case 7: return MatTestMode.Never;
+			}
+			return MatTestMode.Always;
 		}
 
 		private void AddColliderFromNiObject(NiObject anNiObject, GameObject gameObject)
