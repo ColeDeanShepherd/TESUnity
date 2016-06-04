@@ -345,7 +345,7 @@ namespace TESUnity
 						BookComponent component = bookObj.GetComponentInParent<BookComponent>();
 						SetInteractText( "Take " + component.bookTitle );
 						TryRemoveObject( bookObj );
-						if ( Input.GetKeyDown( KeyCode.F ) && component.bookText != null ) //dump unformatted text contents to log
+						if ( Input.GetKeyDown( KeyCode.F ) && component.bookText != "" ) //dump unformatted text contents to log if they're not empty
 							Debug.Log( component.bookText );
 						break;
 					}
@@ -364,7 +364,7 @@ namespace TESUnity
 			}
 		}
 
-		private void TryRemoveObject ( GameObject obj )
+		private void TryRemoveObject ( GameObject obj ) // temp utility function
 		{
 			if ( Input.GetKeyDown( KeyCode.E ) )
 			{
@@ -374,7 +374,7 @@ namespace TESUnity
 			}
 		}
 
-		public void ShowInteractiveText()
+		public void ShowInteractText()
 		{
 			if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
 		}
@@ -387,7 +387,7 @@ namespace TESUnity
 		public void SetInteractText ( string text )
 		{
 			if ( interactText.text != text ) interactText.text = text;
-			ShowInteractiveText();
+			ShowInteractText();
 		}
 		#endregion
 
@@ -713,8 +713,9 @@ namespace TESUnity
 				var BOOK = ( BOOKRecord )refCellObjInfo.referencedRecord;
 
 				BookComponent component = gameObject.AddComponent<BookComponent>();
-				component.bookTitle = BOOK.FNAM.value;
-				if ( BOOK.TEXT != null ) component.bookText = BOOK.TEXT.value;
+				component.record = BOOK;
+				//component.bookTitle = BOOK.FNAM.value;
+				//if ( BOOK.TEXT != null ) component.bookText = BOOK.TEXT.value;
 			}
 			#endregion
 
