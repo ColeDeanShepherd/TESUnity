@@ -4,7 +4,7 @@ public class FlyingCameraComponent : MonoBehaviour
 {
 	public float slowSpeed = 10;
 	public float normalSpeed = 20;
-	public float fastSpeed = 80;
+	public float fastSpeed = 200;
 
 	public float mouseSensitivity = 3;
 	public float minVerticalAngle = -90;

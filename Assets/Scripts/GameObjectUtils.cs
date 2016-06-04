@@ -121,6 +121,14 @@ public static class GameObjectUtils
 		}
 	}
 
+	public static GameObject FindTopLevelObject( GameObject baseObject )
+	{
+		if ( baseObject.transform.parent == null ) return null;
+		var p = baseObject.transform;
+		while ( p.parent != null && p.parent.gameObject.name != "objects" ) p = p.parent;
+		return p.gameObject;
+	}
+
 	public static GameObject FindChildRecursively(GameObject parent, string name)
 	{
 		var resultTransform = parent.transform.Find(name);

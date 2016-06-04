@@ -46,14 +46,19 @@ namespace TESUnity
 			this.record = record;
 			if ( record is ESM.DOORRecord ) SetupDoorData(record);
 			if ( record is ESM.LIGHRecord ) SetupLightData(record);
-			if ( record is ESM.CONTRecord ) objData.name = ( record as ESM.CONTRecord ).FNAM.value;
 			if ( record is ESM.ACTIRecord ) objData.name = ( record as ESM.ACTIRecord ).FNAM.value;
-			if ( record is ESM.MISCRecord ) objData.name = ( record as ESM.MISCRecord ).FNAM.value;
-			if ( record is ESM.BOOKRecord ) objData.name = ( record as ESM.BOOKRecord ).FNAM.value;
-			if ( record is ESM.INGRRecord ) objData.name = ( record as ESM.INGRRecord ).FNAM.value;
+			if ( record is ESM.CONTRecord ) objData.name = ( record as ESM.CONTRecord ).FNAM.value;
+			if ( record is ESM.LOCKRecord ) objData.name = ( record as ESM.LOCKRecord ).FNAM.value;
+			if ( record is ESM.PROBRecord ) objData.name = ( record as ESM.PROBRecord ).FNAM.value;
+			if ( record is ESM.REPARecord ) objData.name = ( record as ESM.REPARecord ).FNAM.value;
+			if ( record is ESM.WEAPRecord ) objData.name = ( record as ESM.WEAPRecord ).FNAM.value;
 			if ( record is ESM.CLOTRecord ) objData.name = ( record as ESM.CLOTRecord ).FNAM.value;
 			if ( record is ESM.ARMORecord ) objData.name = ( record as ESM.ARMORecord ).FNAM.value;
-			if ( record is ESM.WEAPRecord ) objData.name = ( record as ESM.WEAPRecord ).FNAM.value;
+			if ( record is ESM.INGRRecord ) objData.name = ( record as ESM.INGRRecord ).FNAM.value;
+			if ( record is ESM.ALCHRecord ) objData.name = ( record as ESM.ALCHRecord ).FNAM.value;
+			if ( record is ESM.APPARecord ) objData.name = ( record as ESM.APPARecord ).FNAM.value;
+			if ( record is ESM.BOOKRecord ) objData.name = ( record as ESM.BOOKRecord ).FNAM.value;
+			if ( record is ESM.MISCRecord ) objData.name = ( record as ESM.MISCRecord ).FNAM.value;
 		}
 
 		public void SetupDoorData( ESM.Record record )

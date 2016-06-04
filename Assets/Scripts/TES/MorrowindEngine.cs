@@ -304,16 +304,22 @@ namespace TESUnity
 					{
 						if ( !string.IsNullOrEmpty( component.objData.name ) )
 						{
+							
 							switch ( component.gameObject.tag )
 							{
 								case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
 								case "Container": SetInteractText("Open " + component.objData.name); break;
 								case "Activator": SetInteractText("" + component.objData.name); break;
-								case "Light": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+								case "Lock": SetInteractText("Locked: " + component.objData.name); break;
+								case "Light":
+								case "Probe":
+								case "RepairTool":
 								case "Clothing":
 								case "Armor":
 								case "Weapon":
 								case "Ingredient":
+								case "Alchemical":
+								case "Apparatus":
 								case "MiscObj": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
 								case "Book": SetInteractText("" + component.objData.name); TryRemoveObject(component.gameObject); if ( Input.GetKeyDown(KeyCode.F) ) component.Interact(); break;
 							}
@@ -588,10 +594,15 @@ namespace TESUnity
 			ProcessObjectType<CONTRecord>( tagTarget , refCellObjInfo , "Container");
 			ProcessObjectType<ACTIRecord>( tagTarget , refCellObjInfo , "Activator");
 			ProcessObjectType<LIGHRecord>( tagTarget , refCellObjInfo , "Light");
+			ProcessObjectType<LOCKRecord>( tagTarget , refCellObjInfo , "Lock");
+			ProcessObjectType<PROBRecord>( tagTarget , refCellObjInfo , "Probe");
+			ProcessObjectType<REPARecord>( tagTarget , refCellObjInfo , "RepairTool");
 			ProcessObjectType<WEAPRecord>( tagTarget , refCellObjInfo , "Weapon");
 			ProcessObjectType<CLOTRecord>( tagTarget , refCellObjInfo , "Clothing");
 			ProcessObjectType<ARMORecord>( tagTarget , refCellObjInfo , "Armor");
 			ProcessObjectType<INGRRecord>( tagTarget , refCellObjInfo , "Ingredient");
+			ProcessObjectType<ALCHRecord>( tagTarget , refCellObjInfo , "Alchemical");
+			ProcessObjectType<APPARecord>( tagTarget , refCellObjInfo , "Apparatus");
 			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
 			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
 
@@ -599,12 +610,12 @@ namespace TESUnity
 
 		private void ProcessObjectType <RecordType> ( GameObject gameObject , RefCellObjInfo info , string tag ) where RecordType : Record
 		{
-			Record record = info.referencedRecord;
+			var record = info.referencedRecord;
 			if ( record is RecordType )
 			{
-				var p = gameObject.transform;
-				while ( p.parent != null && p.GetComponent<LODGroup>() == null ) p = p.parent;
-				GenericObjectComponent component = p.gameObject.AddComponent<GenericObjectComponent>();
+				var obj = GameObjectUtils.FindTopLevelObject(gameObject);
+				if ( obj == null ) return;
+				var component = obj.AddComponent< GenericObjectComponent>();
 
 				if ( record is DOORRecord ) component.refObjDataGroup = info.refObjDataGroup; //only door records need access to the cell object data group so far
 				component.init(( RecordType )record , tag);

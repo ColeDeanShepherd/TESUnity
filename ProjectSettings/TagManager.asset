@@ -15,6 +15,11 @@ TagManager:
   - Armor
   - Light
   - Activator
+  - RepairTool
+  - Lock
+  - Probe
+  - Apparatus
+  - Alchemical
   layers:
   - Default
   - TransparentFX
