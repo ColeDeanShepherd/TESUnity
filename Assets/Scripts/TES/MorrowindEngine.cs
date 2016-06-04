@@ -304,7 +304,6 @@ namespace TESUnity
 					{
 						if ( !string.IsNullOrEmpty( component.objData.name ) )
 						{
-							
 							switch ( component.gameObject.tag )
 							{
 								case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
@@ -591,8 +590,8 @@ namespace TESUnity
 			if ( coll != null ) tagTarget = coll.gameObject;
 
 			ProcessObjectType<DOORRecord>( tagTarget , refCellObjInfo , "Door");
-			ProcessObjectType<CONTRecord>( tagTarget , refCellObjInfo , "Container");
 			ProcessObjectType<ACTIRecord>( tagTarget , refCellObjInfo , "Activator");
+			ProcessObjectType<CONTRecord>( tagTarget , refCellObjInfo , "Container");
 			ProcessObjectType<LIGHRecord>( tagTarget , refCellObjInfo , "Light");
 			ProcessObjectType<LOCKRecord>( tagTarget , refCellObjInfo , "Lock");
 			ProcessObjectType<PROBRecord>( tagTarget , refCellObjInfo , "Probe");
