@@ -289,71 +289,31 @@ namespace TESUnity
 			// Cast a ray to see what the camera is looking at.
 			Ray ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
 
-			int raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
-			if ( raycastHitCount < 1 )
-			{
-				RemoveInteractText(); //deactivate text if no objects are hit
-			}
-			else
+			int raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance );
+
+			if ( raycastHitCount > 0 )
 			{
 				for ( int i = 0 ; i < raycastHitCount ; i++ )
 				{
 					RaycastHit hitInfo = interactRaycastHitBuffer[ i ];
+					GameObject hitObj = hitInfo.collider.gameObject;
 
-					// Find the door associated with the hit collider.
-					GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Door" );
-					GameObject containerObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Container" );
-					GameObject weapObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Weapon" );
-					GameObject ingrObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Ingredient" );
-					GameObject bookObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Book" );
-					GameObject miscObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "MiscObj" );
-
-					if ( doorObj != null )
+					GenericObjectComponent component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
+					if ( component != null )
 					{
-						DoorComponent doorComponent = doorObj.GetComponent<DoorComponent>();
-						SetInteractText( doorComponent.leadsToAnotherCell ? doorComponent.doorExitName : "Use " + doorComponent.doorName );
-
-						if ( Input.GetKeyDown( KeyCode.E ) )
+						switch ( component.gameObject.tag )
 						{
-							OpenDoor( doorComponent );
+							case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
+							case "Container": SetInteractText("Open " + component.objData.name); break;
+							case "Activator": if ( component.objData.name != "" ) SetInteractText("" + component.objData.name); break;
+							case "Light": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+							case "Clothing":
+							case "Armor":
+							case "Weapon":
+							case "Ingredient":
+							case "MiscObj": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+							case "Book": SetInteractText("" + component.objData.name); TryRemoveObject(component.gameObject); if ( Input.GetKeyDown(KeyCode.F) ) component.Interact(); break;
 						}
-
-						break;
-					}
-					else if ( containerObj != null )
-					{
-						ContainerComponent component = containerObj.GetComponentInParent<ContainerComponent>();
-						SetInteractText( "Open " + component.containerName );
-						break;
-					}
-					else if ( weapObj != null )
-					{
-						WeaponComponent component = weapObj.GetComponentInParent<WeaponComponent>();
-						SetInteractText( "Take " + component.weaponName );
-						TryRemoveObject( weapObj );
-						break;
-					}
-					else if ( ingrObj != null )
-					{
-						IngredientComponent component = ingrObj.GetComponentInParent<IngredientComponent>();
-						SetInteractText( "Take " + component.ingredientName );
-						TryRemoveObject( ingrObj );
-						break;
-					}
-					else if ( bookObj != null )
-					{
-						BookComponent component = bookObj.GetComponentInParent<BookComponent>();
-						SetInteractText( "Take " + component.bookTitle );
-						TryRemoveObject( bookObj );
-						if ( Input.GetKeyDown( KeyCode.F ) && component.bookText != "" ) //dump unformatted text contents to log if they're not empty
-							Debug.Log( component.bookText );
-						break;
-					}
-					else if ( miscObj != null )
-					{
-						MiscComponent component = miscObj.GetComponentInParent<MiscComponent>();
-						SetInteractText( "Take " + component.itemName );
-						TryRemoveObject( miscObj );
 						break;
 					}
 					else
@@ -361,6 +321,10 @@ namespace TESUnity
 						RemoveInteractText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 					}
 				}
+			}
+			else
+			{
+				RemoveInteractText(); //deactivate text if nothing is raycasted against
 			}
 		}
 
@@ -610,132 +574,35 @@ namespace TESUnity
 			gameObject.transform.position += Convert.NifPointToUnityPoint(refObjDataGroup.DATA.position);
 			gameObject.transform.rotation *= Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DATA.eulerAngles);
 
-			#region doors
-			// Handle doors.
-			if(refCellObjInfo.referencedRecord is DOORRecord)
+			var tagTarget = gameObject;
+			var coll = gameObject.GetComponentInChildren<Collider>(); // if the collider is on a child object and not on the object with the component, we need to set that object's tag instead.
+			if ( coll != null ) tagTarget = coll.gameObject;
+
+			ProcessObjectType<DOORRecord>( tagTarget , refCellObjInfo , "Door");
+			ProcessObjectType<CONTRecord>( tagTarget , refCellObjInfo , "Container");
+			ProcessObjectType<ACTIRecord>( tagTarget , refCellObjInfo , "Activator");
+			ProcessObjectType<LIGHRecord>( tagTarget , refCellObjInfo , "Light");
+			ProcessObjectType<WEAPRecord>( tagTarget , refCellObjInfo , "Weapon");
+			ProcessObjectType<CLOTRecord>( tagTarget , refCellObjInfo , "Clothing");
+			ProcessObjectType<ARMORecord>( tagTarget , refCellObjInfo , "Armor");
+			ProcessObjectType<INGRRecord>( tagTarget , refCellObjInfo , "Ingredient");
+			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
+			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
+
+		}
+
+		private void ProcessObjectType <RecordType> ( GameObject gameObject , RefCellObjInfo info , string tag ) where RecordType : Record
+		{
+			Record record = info.referencedRecord;
+			if ( record is RecordType )
 			{
-				gameObject.tag = "Door";
+				var p = gameObject.transform;
+				while ( p.parent != null && p.GetComponent<LODGroup>() == null ) p = p.parent;
+				GenericObjectComponent component = p.gameObject.AddComponent<GenericObjectComponent>();
 
-				// Add a door component.
-				var DOOR = (DOORRecord)refCellObjInfo.referencedRecord;
-				var doorComponent = gameObject.AddComponent<DoorComponent>();
-
-				if(DOOR.FNAM != null)
-				{
-					doorComponent.doorName = DOOR.FNAM.value;
-				}
-
-				// If the door leads to another cell (as opposed to just rotating to open).
-				if((refObjDataGroup.DNAM != null) || (refObjDataGroup.DODT != null))
-				{
-					doorComponent.leadsToAnotherCell = true;
-
-					// Does the door lead to an exterior cell or an interior cell?
-					if(refObjDataGroup.DNAM != null)
-					{
-						doorComponent.doorExitName = refObjDataGroup.DNAM.value;
-						doorComponent.leadsToInteriorCell = true;
-					}
-					else
-					{
-						doorComponent.leadsToInteriorCell = false;
-					}
-
-					// Store the door's exit position and orientation.
-					if(refObjDataGroup.DODT != null)
-					{
-						doorComponent.doorExitPos = Convert.NifPointToUnityPoint(refObjDataGroup.DODT.position);
-						doorComponent.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
-
-						// If the door leads to an exterior cell, store the name of the region containing the cell as the door's exit name.
-						if(!doorComponent.leadsToInteriorCell)
-						{
-							var doorExitCell = dataReader.FindExteriorCellRecord(GetExteriorCellIndices(doorComponent.doorExitPos));
-							doorComponent.doorExitName = (doorExitCell != null) ? doorExitCell.RGNN.value : doorComponent.doorName;
-						}
-					}
-				}
-				else
-				{
-					doorComponent.leadsToAnotherCell = false;
-				}
+				if ( record is DOORRecord ) component.refObjDataGroup = info.refObjDataGroup; //only door records need access to the cell object data group so far
+				component.init(( RecordType )record , tag);
 			}
-			#endregion
-
-			#region containers
-			if ( refCellObjInfo.referencedRecord is CONTRecord )
-			{
-				gameObject.tag = "Container";
-				var CONT = ( CONTRecord )refCellObjInfo.referencedRecord;
-
-				ContainerComponent component = gameObject.AddComponent<ContainerComponent>();
-				component.containerName = CONT.FNAM.value;
-
-				/*
-				Do More Containery Stuff
-				*/
-			}
-			#endregion
-
-			#region weapon items
-			if ( refCellObjInfo.referencedRecord is WEAPRecord )
-			{
-				Collider coll = gameObject.GetComponentInChildren<Collider>();
-				if ( coll != null ) coll.gameObject.tag = "Weapon";
-				gameObject.tag = "Weapon";
-				var WEAP = ( WEAPRecord )refCellObjInfo.referencedRecord;
-
-				WeaponComponent component = gameObject.AddComponent<WeaponComponent>();
-				component.weaponName = WEAP.FNAM.value;
-			}
-			#endregion
-
-			#region ingredient items
-			if ( refCellObjInfo.referencedRecord is INGRRecord )
-			{
-				Collider coll = gameObject.GetComponentInChildren<Collider>();
-				if ( coll != null ) coll.gameObject.tag = "Ingredient";
-				gameObject.tag = "Ingredient";
-				var INGR = ( INGRRecord )refCellObjInfo.referencedRecord;
-
-				IngredientComponent component = gameObject.AddComponent<IngredientComponent>();
-				component.ingredientName = INGR.FNAM.value;
-			}
-			#endregion
-
-
-			#region book items
-			if ( refCellObjInfo.referencedRecord is BOOKRecord )
-			{
-				Collider coll = gameObject.GetComponentInChildren<Collider>();
-				if ( coll != null ) coll.gameObject.tag = "Book";
-				gameObject.tag = "Book";
-				var BOOK = ( BOOKRecord )refCellObjInfo.referencedRecord;
-
-				BookComponent component = gameObject.AddComponent<BookComponent>();
-				component.record = BOOK;
-				//component.bookTitle = BOOK.FNAM.value;
-				//if ( BOOK.TEXT != null ) component.bookText = BOOK.TEXT.value;
-			}
-			#endregion
-
-			#region misc items
-			if ( refCellObjInfo.referencedRecord is MISCRecord )
-			{
-				Collider coll = gameObject.GetComponentInChildren<Collider>();
-				if ( coll != null )
-					coll.gameObject.tag = "MiscObj";
-				gameObject.tag = "MiscObj";
-				var MISC = ( MISCRecord )refCellObjInfo.referencedRecord;
-
-				MiscComponent component = gameObject.AddComponent<MiscComponent>();
-				component.itemName = MISC.FNAM.value;
-
-				/*
-				Do More Containery Stuff
-				*/
-			}
-			#endregion
 		}
 
 		private void UpdateExteriorCells(bool immediate = false, int cellRadiusOverride = -1)
@@ -898,11 +765,11 @@ namespace TESUnity
 			}
 		}
 
-		private void OpenDoor(DoorComponent doorComponent)
+		private void OpenDoor(GenericObjectComponent component)
 		{
-			if(!doorComponent.leadsToAnotherCell)
+			if(!component.doorData.leadsToAnotherCell)
 			{
-				doorComponent.UseDoor();
+				component.Interact();
 			}
 			else
 			{
@@ -910,15 +777,15 @@ namespace TESUnity
 				DestroyAllCells();
 
 				// Move the player.
-				playerObj.transform.position = doorComponent.doorExitPos;
-				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
+				playerObj.transform.position = component.doorData.doorExitPos;
+				playerObj.transform.localEulerAngles = new Vector3(0, component.doorData.doorExitOrientation.eulerAngles.y, 0);
 
 				// Load the new cell.
 				CELLRecord newCell;
 
-				if(doorComponent.leadsToInteriorCell)
+				if( component.doorData.leadsToInteriorCell )
 				{
-					newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
+					newCell = dataReader.FindInteriorCellRecord(component.doorData.doorExitName);
 
 					var cellInfo = InstantiateCell(newCell);
 					temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
@@ -929,7 +796,7 @@ namespace TESUnity
 				}
 				else
 				{
-					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
+					var cellIndices = GetExteriorCellIndices(component.doorData.doorExitPos);
 					newCell = dataReader.FindExteriorCellRecord(cellIndices);
 
 					UpdateExteriorCells(true, cellRadiusOnLoad);

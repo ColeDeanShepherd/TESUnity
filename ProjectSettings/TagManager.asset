@@ -11,6 +11,10 @@ TagManager:
   - MiscObj
   - Weapon
   - Ingredient
+  - Clothing
+  - Armor
+  - Light
+  - Activator
   layers:
   - Default
   - TransparentFX

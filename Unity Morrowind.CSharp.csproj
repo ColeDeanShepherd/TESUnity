@@ -98,12 +98,7 @@
     <Compile Include="Assets\Scripts\TES\PlayerComponent.cs" />
     <Compile Include="Assets\Scripts\TES\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TES\TextureManager.cs" />
-    <Compile Include="Assets\Scripts\TES\World Object Components\BookComponent.cs" />
-    <Compile Include="Assets\Scripts\TES\World Object Components\ContainerComponent.cs" />
-    <Compile Include="Assets\Scripts\TES\World Object Components\DoorComponent.cs" />
-    <Compile Include="Assets\Scripts\TES\World Object Components\IngredientComponent.cs" />
-    <Compile Include="Assets\Scripts\TES\World Object Components\MiscComponent.cs" />
-    <Compile Include="Assets\Scripts\TES\World Object Components\WeaponComponent.cs" />
+    <Compile Include="Assets\Scripts\TES\World Object Components\GenericObjectComponent.cs" />
     <Compile Include="Assets\Scripts\TemporalLoadBalancer.cs" />
     <Compile Include="Assets\Scripts\Texture2DInfo.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
