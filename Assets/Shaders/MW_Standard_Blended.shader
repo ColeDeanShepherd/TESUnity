@@ -9,6 +9,7 @@
 
 		[HideInInspector] _SrcBlend("__src", Float) = 1.0
 		[HideInInspector] _DstBlend("__dst", Float) = 0.0
+		[HideInInspector]_Cutoff("cutoff", Float) = 0.5
 	}
 	SubShader
 	{
@@ -27,7 +28,6 @@
 			float2 uv_MainTex;
 		};
 		
-		fixed _Cutoff;
 		half _Glossiness;
 		half _Metallic;
 		half4 _Color;
@@ -36,8 +36,6 @@
 		{
 			half4 c = tex2D (_MainTex, i.uv_MainTex) * _Color;
 
-			//if ( c.a <= 0.0 ) discard;
-
 			o.Albedo = c.rgb;
 			o.Metallic = _Metallic;
 			o.Smoothness = _Glossiness;
@@ -45,5 +43,5 @@
 		}
 		ENDCG
 	}
-	FallBack "Diffuse"
+	FallBack "Transparent/Cutout/Diffuse"
 }
