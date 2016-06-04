@@ -86,6 +86,7 @@
     <Compile Include="Assets\Scripts\TES\BSAFile.cs" />
     <Compile Include="Assets\Scripts\TES\Convert.cs" />
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
+    <Compile Include="Assets\Scripts\TES\LocalSettingsObject.cs" />
     <Compile Include="Assets\Scripts\TES\MaterialManager.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindEngine.cs" />
