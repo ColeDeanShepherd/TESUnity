@@ -303,13 +303,15 @@ namespace TESUnity
 					// Find the door associated with the hit collider.
 					GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Door" );
 					GameObject containerObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Container" );
+					GameObject weapObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Weapon" );
+					GameObject ingrObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Ingredient" );
 					GameObject bookObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Book" );
 					GameObject miscObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "MiscObj" );
 
 					if ( doorObj != null )
 					{
 						DoorComponent doorComponent = doorObj.GetComponent<DoorComponent>();
-						SetInteractText( doorComponent.leadsToAnotherCell ? doorComponent.doorExitName : doorComponent.doorName );
+						SetInteractText( doorComponent.leadsToAnotherCell ? doorComponent.doorExitName : "Use " + doorComponent.doorName );
 
 						if ( Input.GetKeyDown( KeyCode.E ) )
 						{
@@ -321,20 +323,34 @@ namespace TESUnity
 					else if ( containerObj != null )
 					{
 						ContainerComponent component = containerObj.GetComponentInParent<ContainerComponent>();
-						SetInteractText( component.containerName );
+						SetInteractText( "Open " + component.containerName );
+						break;
+					}
+					else if ( weapObj != null )
+					{
+						WeaponComponent component = weapObj.GetComponentInParent<WeaponComponent>();
+						SetInteractText( "Take " + component.weaponName );
+						TryRemoveObject( weapObj );
+						break;
+					}
+					else if ( ingrObj != null )
+					{
+						IngredientComponent component = ingrObj.GetComponentInParent<IngredientComponent>();
+						SetInteractText( "Take " + component.ingredientName );
+						TryRemoveObject( ingrObj );
 						break;
 					}
 					else if ( bookObj != null )
 					{
 						BookComponent component = bookObj.GetComponentInParent<BookComponent>();
-						SetInteractText( component.bookTitle );
+						SetInteractText( "Take " + component.bookTitle );
 						TryRemoveObject( bookObj );
 						break;
 					}
 					else if ( miscObj != null )
 					{
 						MiscComponent component = miscObj.GetComponentInParent<MiscComponent>();
-						SetInteractText( component.itemName );
+						SetInteractText( "Take " + component.itemName );
 						TryRemoveObject( miscObj );
 						break;
 					}
@@ -659,6 +675,33 @@ namespace TESUnity
 			}
 			#endregion
 
+			#region weapon items
+			if ( refCellObjInfo.referencedRecord is WEAPRecord )
+			{
+				Collider coll = gameObject.GetComponentInChildren<Collider>();
+				if ( coll != null ) coll.gameObject.tag = "Weapon";
+				gameObject.tag = "Weapon";
+				var WEAP = ( WEAPRecord )refCellObjInfo.referencedRecord;
+
+				WeaponComponent component = gameObject.AddComponent<WeaponComponent>();
+				component.weaponName = WEAP.FNAM.value;
+			}
+			#endregion
+
+			#region ingredient items
+			if ( refCellObjInfo.referencedRecord is INGRRecord )
+			{
+				Collider coll = gameObject.GetComponentInChildren<Collider>();
+				if ( coll != null ) coll.gameObject.tag = "Ingredient";
+				gameObject.tag = "Ingredient";
+				var INGR = ( INGRRecord )refCellObjInfo.referencedRecord;
+
+				IngredientComponent component = gameObject.AddComponent<IngredientComponent>();
+				component.ingredientName = INGR.FNAM.value;
+			}
+			#endregion
+
+
 			#region book items
 			if ( refCellObjInfo.referencedRecord is BOOKRecord )
 			{
@@ -669,10 +712,6 @@ namespace TESUnity
 
 				BookComponent component = gameObject.AddComponent<BookComponent>();
 				component.bookTitle = BOOK.FNAM.value;
-
-				/*
-				Do More Containery Stuff
-				*/
 			}
 			#endregion
 

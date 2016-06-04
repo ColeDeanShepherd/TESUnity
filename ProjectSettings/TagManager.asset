@@ -9,6 +9,8 @@ TagManager:
   - Container
   - Book
   - MiscObj
+  - Weapon
+  - Ingredient
   layers:
   - Default
   - TransparentFX
