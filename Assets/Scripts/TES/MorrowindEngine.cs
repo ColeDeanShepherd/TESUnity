@@ -292,7 +292,7 @@ namespace TESUnity
 			int raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
 			if ( raycastHitCount < 1 )
 			{
-				if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false ); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
+				RemoveInteractText(); //deactivate text if no objects are hit
 			}
 			else
 			{
@@ -302,23 +302,13 @@ namespace TESUnity
 
 					// Find the door associated with the hit collider.
 					GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Door" );
+					GameObject containerObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Container" );
 
 					if ( doorObj != null )
 					{
 						DoorComponent doorComponent = doorObj.GetComponent<DoorComponent>();
 
-						if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
-
-						if ( doorComponent.leadsToAnotherCell )
-						{
-							if ( interactText.text != doorComponent.doorExitName )
-								interactText.text = doorComponent.doorExitName;
-						}
-						else
-						{
-							if ( interactText.text != doorComponent.doorName )
-								interactText.text = doorComponent.doorName;
-						}
+						SetInteractText( doorComponent.leadsToAnotherCell ? doorComponent.doorExitName : doorComponent.doorName );
 
 						if ( Input.GetKeyDown( KeyCode.E ) )
 						{
@@ -327,12 +317,33 @@ namespace TESUnity
 
 						break;
 					}
+					else if ( containerObj != null )
+					{
+						SetInteractText( containerObj.name );
+						break;
+					}
 					else
 					{
-						if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false ); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
+						RemoveInteractText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 					}
 				}
 			}
+		}
+
+		public void ShowInteractiveText()
+		{
+			if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
+		}
+
+		public void RemoveInteractText ()
+		{
+			if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false );
+		}
+
+		public void SetInteractText ( string text )
+		{
+			if ( interactText.text != text ) interactText.text = text;
+			ShowInteractiveText();
 		}
 		#endregion
 
@@ -555,6 +566,7 @@ namespace TESUnity
 			gameObject.transform.position += Convert.NifPointToUnityPoint(refObjDataGroup.DATA.position);
 			gameObject.transform.rotation *= Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DATA.eulerAngles);
 
+			#region doors
 			// Handle doors.
 			if(refCellObjInfo.referencedRecord is DOORRecord)
 			{
@@ -604,6 +616,22 @@ namespace TESUnity
 					doorComponent.leadsToAnotherCell = false;
 				}
 			}
+			#endregion
+
+			#region containers
+			if ( refCellObjInfo.referencedRecord is CONTRecord )
+			{
+				gameObject.tag = "Container";
+				var CONT = ( CONTRecord )refCellObjInfo.referencedRecord;
+
+				ContainerComponent component = gameObject.AddComponent<ContainerComponent>();
+				component.name = CONT.FNAM.value;
+
+				/*
+				Do More Containery Stuff
+				*/
+			}
+			#endregion
 		}
 
 		private void UpdateExteriorCells(bool immediate = false, int cellRadiusOverride = -1)

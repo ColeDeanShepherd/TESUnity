@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Cell
   - Door
+  - Container
   layers:
   - Default
   - TransparentFX
