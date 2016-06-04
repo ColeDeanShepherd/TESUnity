@@ -85,7 +85,6 @@
     <Compile Include="Assets\Scripts\TES\AutoNIFReader.cs" />
     <Compile Include="Assets\Scripts\TES\BSAFile.cs" />
     <Compile Include="Assets\Scripts\TES\Convert.cs" />
-    <Compile Include="Assets\Scripts\TES\DoorComponent.cs" />
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
     <Compile Include="Assets\Scripts\TES\MaterialManager.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
@@ -98,6 +97,7 @@
     <Compile Include="Assets\Scripts\TES\PlayerComponent.cs" />
     <Compile Include="Assets\Scripts\TES\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TES\TextureManager.cs" />
+    <Compile Include="Assets\Scripts\TES\World Object Components\GenericObjectComponent.cs" />
     <Compile Include="Assets\Scripts\TemporalLoadBalancer.cs" />
     <Compile Include="Assets\Scripts\Texture2DInfo.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
@@ -107,6 +107,9 @@
     <Compile Include="Assets\Scripts\VirtualFileSystem.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\MW_Standard.shader" />
+    <None Include="Assets\Shaders\MW_Standard_Blended.shader" />
+    <None Include="Assets\Shaders\MW_Standard_Tested.shader" />
     <None Include="Assets\Standard Assets\Environment\Water (Basic)\Shaders\FXWaterBasic.shader" />
     <None Include="Assets\Standard Assets\Environment\Water\Water\Shaders\FXWaterPro.shader" />
     <None Include="Assets\Standard Assets\Environment\Water\Water4\Shaders\FXWater4Advanced.shader" />
