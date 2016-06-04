@@ -88,6 +88,22 @@ namespace TESUnity
 
 		private void Rotate()
 		{
+			if ( Cursor.lockState != CursorLockMode.Locked )
+			{
+				if ( Input.GetMouseButtonDown( 0 ) )
+					Cursor.lockState = CursorLockMode.Locked;
+				else
+					return;
+			}
+			else
+			{
+				if ( Input.GetKeyDown( KeyCode.BackQuote ) )
+				{
+					Cursor.lockState = CursorLockMode.None;
+					Cursor.visible = true;
+				}
+			}
+
 			var eulerAngles = new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0);
 
 			// Make eulerAngles.x range from -180 to 180 so we can clamp it between a negative and positive angle.
