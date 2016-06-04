@@ -7,5 +7,6 @@ namespace TESUnity
 	public class BookComponent : MonoBehaviour
 	{
 		public string bookTitle;
+		public string bookText;
 	}
 }

@@ -31,6 +31,8 @@ Tab - Toggle Flight Mode
 
 L - Toggle Lantern
 
+Backquote - Free Cursor Lock ( Unity likes to hog the escape key and it causes some weird behaviour )
+
 
 Contribute
 ----------

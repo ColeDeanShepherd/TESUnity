@@ -345,6 +345,8 @@ namespace TESUnity
 						BookComponent component = bookObj.GetComponentInParent<BookComponent>();
 						SetInteractText( "Take " + component.bookTitle );
 						TryRemoveObject( bookObj );
+						if ( Input.GetKeyDown( KeyCode.F ) && component.bookText != null ) //dump unformatted text contents to log
+							Debug.Log( component.bookText );
 						break;
 					}
 					else if ( miscObj != null )
@@ -712,6 +714,7 @@ namespace TESUnity
 
 				BookComponent component = gameObject.AddComponent<BookComponent>();
 				component.bookTitle = BOOK.FNAM.value;
+				if ( BOOK.TEXT != null ) component.bookText = BOOK.TEXT.value;
 			}
 			#endregion
 
