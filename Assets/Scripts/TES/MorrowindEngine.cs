@@ -288,7 +288,7 @@ namespace TESUnity
 		public void CastInteractRay()
 		{
 			// Cast a ray to see what the camera is looking at.
-			Ray ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
+			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
 
 			int raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance );
 
@@ -296,10 +296,10 @@ namespace TESUnity
 			{
 				for ( int i = 0 ; i < raycastHitCount ; i++ )
 				{
-					RaycastHit hitInfo = interactRaycastHitBuffer[ i ];
-					GameObject hitObj = hitInfo.collider.gameObject;
+					var hitInfo = interactRaycastHitBuffer[ i ];
+					var hitObj = hitInfo.collider.gameObject;
 
-					GenericObjectComponent component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
+					var component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
 					if ( component != null )
 					{
 						if ( !string.IsNullOrEmpty( component.objData.name ) )
@@ -337,7 +337,7 @@ namespace TESUnity
 			if ( Input.GetKeyDown( KeyCode.E ) )
 			{
 				var p = obj.transform;
-				while ( p.parent != null && p.GetComponent<LODGroup>() == null ) p = p.parent; //kind of a hacky way to check when youre referencing the entirety of an individual object
+				while ( p.parent != null && p.parent.gameObject.name != "objects" ) p = p.parent; //kind of a hacky way to reference the entirety of an individual object
 				UnityEngine.Object.Destroy( p.gameObject );
 			}
 		}
@@ -559,7 +559,7 @@ namespace TESUnity
 			lightComponent.bounceIntensity = 0f;
 			//lightComponent.shadows = LightShadows.Soft;
 
-			if(!indoors & false)//disabling exterior cell lights because there is no day/night cycle
+			if(!indoors && !TESUnity.instance.exteriorCellLights )//disabling exterior cell lights because there is no day/night cycle
 			{
 				lightComponent.enabled = false;
 			}

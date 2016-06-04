@@ -13,6 +13,7 @@ namespace TESUnity
 		public bool music = false;
 		public bool sunShadows = false;
 		public RenderingPath renderPath = RenderingPath.Forward;
+		public bool exteriorCellLights;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
@@ -43,7 +44,7 @@ namespace TESUnity
 
 		public void TryFindSettings()
 		{
-			LocalSettingsObject[] foundSettings = Resources.LoadAll<LocalSettingsObject>("");
+			var foundSettings = Resources.LoadAll<LocalSettingsObject>("");
 			if ( foundSettings.Length > 0 )
 				settingsFile = foundSettings[ 0 ]; // search for and load the first found Settings file from a Resources folder
 		}
@@ -52,9 +53,10 @@ namespace TESUnity
 		{
 			if ( settingsFile != null )
 			{
-				MWDataPath = settingsFile.dataFilesPath;
-				music = settingsFile.enableMusic;
-				renderPath = settingsFile.preferredRenderMode;
+				MWDataPath = settingsFile.engine.dataFilesPath;
+				music = settingsFile.audio.enableMusic;
+				renderPath = settingsFile.graphics.preferredRenderMode;
+				exteriorCellLights = settingsFile.graphics.exteriorCellLights;
 			}
 
 			MWDataReader = new MorrowindDataReader(MWDataPath);

@@ -15,8 +15,26 @@ namespace TESUnity
 	[CreateAssetMenu(fileName = "TES Unity Settings", menuName = "TES Unity/Local Settings", order = 1)]
 	public class LocalSettingsObject : ScriptableObject
 	{
-		public string dataFilesPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
-		public RenderingPath preferredRenderMode = RenderingPath.Forward;
-		public bool enableMusic = true;
+		[System.Serializable]
+		public class Engine
+		{
+			public string dataFilesPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
+		}
+		public Engine engine = new Engine();
+
+		[System.Serializable]
+		public class Graphics
+		{
+			public RenderingPath preferredRenderMode = RenderingPath.Forward;
+			public bool exteriorCellLights = false;
+		}
+		public Graphics graphics = new Graphics();
+
+		[System.Serializable]
+		public class Audio
+		{
+			public bool enableMusic = true;
+		}
+		public Audio audio = new Audio();
 	}
 }

@@ -23,7 +23,6 @@ namespace TESUnity
 		}
 		public DoorData doorData = null;
 
-		[System.Serializable]
 		public class LightData
 		{
 			public Light lightComponent;
@@ -95,7 +94,12 @@ namespace TESUnity
 			{
 				lightData.flags = LIGH.LHDT.flags;
 				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.OffDefault) ) lightData.lightComponent.enabled = false;
-				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.CanCarry) ) gameObject.AddComponent<BoxCollider>(); //very weak
+				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.CanCarry) )
+				{
+					gameObject.AddComponent<BoxCollider>(); //very weak-- adding a box collider to light objects so we can interact with them
+					//adding kinematic rigidbodies to static colliders prevents the physics collision tree from being rebuilt, which impacts performance
+					gameObject.AddComponent<Rigidbody>().isKinematic = true; 
+				}
 
 				if ( lightData.lightComponent != null )
 				{

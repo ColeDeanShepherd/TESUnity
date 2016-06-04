@@ -196,7 +196,15 @@ public static class GameObjectUtils
 
 			if((meshFilter != null) && (meshFilter.mesh != null))
 			{
-				gameObject.AddComponent<MeshCollider>();
+				gameObject.AddComponent<MeshCollider>();//.convex = true;
+				var p = gameObject.transform;
+				while ( p.parent != null )
+				{
+					if ( p.parent.gameObject.name == "objects" )
+						break;
+					p = p.parent;
+				}
+				if ( p.GetComponent<Rigidbody>() == null ) p.gameObject.AddComponent<Rigidbody>().isKinematic = true;
 			}
 		}
 
