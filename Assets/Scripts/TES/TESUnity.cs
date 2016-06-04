@@ -26,6 +26,8 @@ namespace TESUnity
 
 		public string MWDataPath;
 
+		private LocalSettingsObject settingsFile;
+		public bool FoundSettingsFile { get { return settingsFile != null; } }
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
 		private MusicPlayer musicPlayer;
@@ -37,8 +39,20 @@ namespace TESUnity
 		{
 			instance = this;
 		}
+
+		public void TryFindSettings()
+		{
+			settingsFile = Resources.LoadAll<LocalSettingsObject>("")[ 0 ]; // search for and load the first found Settings file from a Resources folder
+		}
+
 		private void Start()
 		{
+			if ( settingsFile != null )
+			{
+				MWDataPath = settingsFile.dataFilesPath;
+				music = settingsFile.enableMusic;
+			}
+
 			MWDataReader = new MorrowindDataReader(MWDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader , sunShadows );
 
