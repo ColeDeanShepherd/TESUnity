@@ -284,6 +284,7 @@ namespace TESUnity
 
 			CastInteractRay();
 		}
+
 		public void CastInteractRay()
 		{
 			// Cast a ray to see what the camera is looking at.
@@ -328,13 +329,13 @@ namespace TESUnity
 			}
 		}
 
-		private void TryRemoveObject ( GameObject obj ) // temp utility function
+		private void TryRemoveObject ( GameObject obj ) // temp utility function representing character adding items to inventory
 		{
 			if ( Input.GetKeyDown( KeyCode.E ) )
 			{
-				Transform p = obj.transform;
+				var p = obj.transform;
 				while ( p.parent != null && p.GetComponent<LODGroup>() == null ) p = p.parent; //kind of a hacky way to check when youre referencing the entirety of an individual object
-				GameObject.Destroy( p.gameObject );
+				UnityEngine.Object.Destroy( p.gameObject );
 			}
 		}
 
@@ -350,6 +351,7 @@ namespace TESUnity
 
 		public void SetInteractText ( string text )
 		{
+			if ( text == "" ) return; // remove this if we change to clearing text rather than activating/deactivating the interactText text object
 			if ( interactText.text != text ) interactText.text = text;
 			ShowInteractText();
 		}
@@ -551,9 +553,10 @@ namespace TESUnity
 			lightComponent.range = 3 * (LIGH.LHDT.radius / Convert.meterInMWUnits);
 			lightComponent.color = new Color32(LIGH.LHDT.red, LIGH.LHDT.green, LIGH.LHDT.blue, 255);
 			lightComponent.intensity = 1.5f;
+			lightComponent.bounceIntensity = 0f;
 			//lightComponent.shadows = LightShadows.Soft;
 
-			if(!indoors)
+			if(!indoors & false)//disabling exterior cell lights because there is no day/night cycle
 			{
 				lightComponent.enabled = false;
 			}

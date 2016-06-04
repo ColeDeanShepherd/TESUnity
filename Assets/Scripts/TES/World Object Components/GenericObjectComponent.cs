@@ -7,7 +7,6 @@ namespace TESUnity
 	public class GenericObjectComponent : MonoBehaviour
 	{
 		public ESM.CELLRecord.RefObjDataGroup refObjDataGroup = null;
-		[System.Serializable]
 		public class DoorData
 		{
 			public string doorName;
@@ -25,6 +24,14 @@ namespace TESUnity
 		public DoorData doorData = null;
 
 		[System.Serializable]
+		public class LightData
+		{
+			public Light lightComponent;
+			public enum LightFlags { Dynamic = 0x0001 , CanCarry = 0x0002 , Negative = 0x0004 , Flicker = 0x0008 , Fire = 0x0010 , OffDefault = 0x0020 , FlickerSlow = 0x0040 , Pulse = 0x0080 , PulseSlow = 0x0100 }
+			public int flags;
+		}
+		public LightData lightData = null;
+
 		public class ObjectData
 		{
 			public string name;
@@ -39,8 +46,8 @@ namespace TESUnity
 			foreach ( Transform c in transform ) c.tag = tag;
 			this.record = record;
 			if ( record is ESM.DOORRecord ) SetupDoorData(record);
+			if ( record is ESM.LIGHRecord ) SetupLightData(record);
 			if ( record is ESM.CONTRecord ) objData.name = ( record as ESM.CONTRecord ).FNAM.value;
-			if ( record is ESM.LIGHRecord && ( record as ESM.LIGHRecord ).FNAM != null ) objData.name = ( record as ESM.LIGHRecord ).FNAM.value;
 			if ( record is ESM.ACTIRecord ) objData.name = ( record as ESM.ACTIRecord ).FNAM.value;
 			if ( record is ESM.MISCRecord ) objData.name = ( record as ESM.MISCRecord ).FNAM.value;
 			if ( record is ESM.BOOKRecord ) objData.name = ( record as ESM.BOOKRecord ).FNAM.value;
@@ -76,6 +83,40 @@ namespace TESUnity
 			}
 
 			objData.name = doorData.leadsToAnotherCell ? doorData.doorExitName : "Use " + doorData.doorName;
+		}
+
+		public void SetupLightData( ESM.Record record )
+		{
+			lightData = new LightData();
+			ESM.LIGHRecord LIGH = record as ESM.LIGHRecord;
+			lightData.lightComponent = gameObject.GetComponentInChildren<Light>(true);
+			if ( LIGH.FNAM != null ) objData.name = LIGH.FNAM.value;
+			if ( LIGH.LHDT != null )
+			{
+				lightData.flags = LIGH.LHDT.flags;
+				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.OffDefault) ) lightData.lightComponent.enabled = false;
+				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.CanCarry) ) gameObject.AddComponent<BoxCollider>(); //very weak
+
+				if ( lightData.lightComponent != null )
+				{
+					bool flicker = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Flicker);
+					bool flickerSlow = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.FlickerSlow);
+					bool pulse = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Pulse);
+					bool pulseSlow = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.PulseSlow);
+					bool fire = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Fire);
+					bool animated = flicker || flickerSlow || pulse || pulseSlow || fire;
+
+					if ( animated )
+					{
+						LightAnim lightAnim = lightData.lightComponent.gameObject.AddComponent<LightAnim>();
+						if ( flicker ) lightAnim.mode = LightAnimMode.Flicker;
+						if ( flickerSlow ) lightAnim.mode = LightAnimMode.FlickerSlow;
+						if ( pulse ) lightAnim.mode = LightAnimMode.Pulse;
+						if ( pulseSlow ) lightAnim.mode = LightAnimMode.PulseSlow;
+						if ( fire ) lightAnim.mode = LightAnimMode.Fire;
+					}
+				}
+			}
 		}
 
 		public void Interact ()
