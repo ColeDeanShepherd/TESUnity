@@ -26,7 +26,6 @@ namespace TESUnity
 
 		public void UseDoor ()
 		{
-			Debug.Log( "Used Door" );
 			if ( isOpen ) Close(); else Open();
 		}
 

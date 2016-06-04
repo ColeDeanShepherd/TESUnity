@@ -8,9 +8,19 @@ namespace TESUnity
 {
 	public enum MatTestMode { Always, Less, LEqual, Equal, GEqual, Greater, NotEqual, Never }
 
+	public struct MWMaterialTextures
+	{
+		public string mainFilePath;
+		public string darkFilePath;
+		public string detailFilePath;
+		public string glossFilePath;
+		public string glowFilePath;
+		public string bumpFilePath;
+	}
+
 	public struct MWMaterialProps
 	{
-		public string mainTextureFilePath;
+		public MWMaterialTextures textures;
 		public bool alphaBlended;
 		public ur.BlendMode srcBlendMode;
 		public ur.BlendMode dstBlendMode;
@@ -42,9 +52,9 @@ namespace TESUnity
 				else
 					m = BuildMaterial();
 
-				if ( mp.mainTextureFilePath != null )
+				if ( mp.textures.mainFilePath != null )
 				{
-					m.mainTexture = textureManager.LoadTexture( mp.mainTextureFilePath );
+					m.mainTexture = textureManager.LoadTexture( mp.textures.mainFilePath );
 				}
 				m.SetFloat( "_Metallic" , 0f );
 				m.SetFloat( "_Glossiness" , 0f );

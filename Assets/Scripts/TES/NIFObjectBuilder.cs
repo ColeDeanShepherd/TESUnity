@@ -424,22 +424,51 @@ namespace TESUnity
 			}
 
 			// Apply textures.
-			if(texturingProperty != null && texturingProperty.hasBaseTexture)
-			{
-				var srcTexture = (NiSourceTexture)file.blocks[texturingProperty.baseTexture.source.value];
-
-				mp.mainTextureFilePath = srcTexture.fileName;
-			}
-			else
-			{
-				//Debug.Log(file.name + " has no texture.");
-			}
+			if(texturingProperty != null) mp.textures = ConfigureTextureProperties( texturingProperty );
 
 			return mp;
 		}
 
+		private MWMaterialTextures ConfigureTextureProperties ( NiTexturingProperty ntp )
+		{
+			MWMaterialTextures tp = new MWMaterialTextures();
+			if ( ntp.textureCount < 1 ) return tp;
+			if ( ntp.hasBaseTexture )
+			{
+				NiSourceTexture src = ( NiSourceTexture )file.blocks[ ntp.baseTexture.source.value ];
+				tp.mainFilePath = src.fileName;
+			}
+			if ( ntp.hasDarkTexture )
+			{
+				NiSourceTexture src = ( NiSourceTexture )file.blocks[ ntp.darkTexture.source.value ];
+				tp.darkFilePath = src.fileName;
+			}
+			if ( ntp.hasDetailTexture )
+			{
+				NiSourceTexture src = ( NiSourceTexture )file.blocks[ ntp.detailTexture.source.value ];
+				tp.detailFilePath = src.fileName;
+			}
+			if ( ntp.hasGlossTexture )
+			{
+				NiSourceTexture src = ( NiSourceTexture )file.blocks[ ntp.glossTexture.source.value ];
+				tp.glossFilePath = src.fileName;
+			}
+			if ( ntp.hasGlowTexture )
+			{
+				NiSourceTexture src = ( NiSourceTexture )file.blocks[ ntp.glowTexture.source.value ];
+				tp.glowFilePath = src.fileName;
+			}
+			if ( ntp.hasBumpMapTexture )
+			{
+				NiSourceTexture src = ( NiSourceTexture )file.blocks[ ntp.bumpMapTexture.source.value ];
+				tp.bumpFilePath = src.fileName;
+			}
+			return tp;
+		}
+
 		private UnityEngine.Rendering.BlendMode FigureBlendMode ( byte b )
 		{
+			return ( UnityEngine.Rendering.BlendMode )Mathf.Min( b , 10 );
 			switch (b)
 			{
 				case  0: return UnityEngine.Rendering.BlendMode.One;
@@ -459,6 +488,7 @@ namespace TESUnity
 
 		private MatTestMode FigureTestMode ( byte b )
 		{
+			return ( MatTestMode )Mathf.Min( b , 7 );
 			switch ( b )
 			{
 				case 0: return MatTestMode.Always;

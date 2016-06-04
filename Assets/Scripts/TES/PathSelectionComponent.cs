@@ -44,6 +44,7 @@ namespace TESUnity
 			}
 		}
 
-		private GameObject camera, eventSystem, canvas, inputField;
+		private new GameObject camera;
+		private GameObject eventSystem, canvas, inputField;
 	}
 }

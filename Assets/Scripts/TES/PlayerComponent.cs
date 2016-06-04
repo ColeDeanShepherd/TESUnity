@@ -39,7 +39,7 @@ namespace TESUnity
 		public GameObject lantern;
 
 		private CapsuleCollider capsuleCollider;
-		private Rigidbody rigidbody;
+		private new Rigidbody rigidbody;
 
 		private bool isGrounded;
 		private bool _isFlying = false;
