@@ -52,12 +52,19 @@ namespace TESUnity
 				else
 					m = BuildMaterial();
 
-				if ( mp.textures.mainFilePath != null )
+				if ( mp.textures.mainFilePath != null && m.HasProperty( "_MainTex" ) ) m.SetTexture( "_MainTex" , textureManager.LoadTexture( mp.textures.mainFilePath ) );
+				if ( mp.textures.detailFilePath != null && m.HasProperty( "_DetailTex" ) ) m.SetTexture( "_DetailTex" , textureManager.LoadTexture( mp.textures.detailFilePath ) );
+				if ( mp.textures.darkFilePath != null && m.HasProperty( "_DarkTex" ) ) m.SetTexture( "_DarkTex" , textureManager.LoadTexture( mp.textures.darkFilePath ) );
+				if ( mp.textures.glossFilePath != null && m.HasProperty( "_GlossTex" ) ) m.SetTexture( "_GlossTex" , textureManager.LoadTexture( mp.textures.glossFilePath ) );
+				if ( mp.textures.glowFilePath != null && m.HasProperty( "_Glowtex" ) )
 				{
-					m.mainTexture = textureManager.LoadTexture( mp.textures.mainFilePath );
+					m.SetTexture( "_Glowtex" , textureManager.LoadTexture( mp.textures.glowFilePath ) );
+					Debug.Log( "Glowing Mat Created" );
 				}
-				m.SetFloat( "_Metallic" , 0f );
-				m.SetFloat( "_Glossiness" , 0f );
+				if ( mp.textures.bumpFilePath != null && m.HasProperty( "_BumpTex" ) ) m.SetTexture( "_BumpTex" , textureManager.LoadTexture( mp.textures.bumpFilePath ) );
+
+				if ( m.HasProperty( "_Metallic" ) ) m.SetFloat( "_Metallic" , 0f );
+				if ( m.HasProperty( "_Glossiness" ) ) m.SetFloat( "_Glossiness" , 0f );
 				existingMaterials[ mp ] = m;
 			}
 			return m;
