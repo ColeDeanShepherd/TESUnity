@@ -18,9 +18,9 @@ namespace TESUnity
 				}
 			}
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				value = reader.ReadInt32();
+				value = reader.ReadLEInt32();
 			}
 		}
 
@@ -36,31 +36,31 @@ namespace TESUnity
 				}
 			}
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				value = reader.ReadInt32();
+				value = reader.ReadLEInt32();
 			}
 		}
 
 		public class NiReaderUtils
 		{
-			public static Ptr<T> ReadPtr<T>(BinaryReader reader)
+			public static Ptr<T> ReadPtr<T>(UnityBinaryReader reader)
 			{
 				var ptr = new Ptr<T>();
 				ptr.Deserialize(reader);
 
 				return ptr;
 			}
-			public static Ref<T> ReadRef<T>(BinaryReader reader)
+			public static Ref<T> ReadRef<T>(UnityBinaryReader reader)
 			{
 				var readRef = new Ref<T>();
 				readRef.Deserialize(reader);
 
 				return readRef;
 			}
-			public static Ref<T>[] ReadLengthPrefixedRefs32<T>(BinaryReader reader)
+			public static Ref<T>[] ReadLengthPrefixedRefs32<T>(UnityBinaryReader reader)
 			{
-				var refs = new Ref<T>[reader.ReadUInt32()];
+				var refs = new Ref<T>[reader.ReadLEUInt32()];
 
 				for(int i = 0; i < refs.Length; i++)
 				{
@@ -69,15 +69,15 @@ namespace TESUnity
 
 				return refs;
 			}
-			public static ushort ReadFlags(BinaryReader reader)
+			public static ushort ReadFlags(UnityBinaryReader reader)
 			{
-				return reader.ReadUInt16();
+				return reader.ReadLEUInt16();
 			}
-			public static T Read<T>(BinaryReader reader)
+			public static T Read<T>(UnityBinaryReader reader)
 			{
 				if(typeof(T) == typeof(float))
 				{
-					return (T)((object)reader.ReadSingle());
+					return (T)((object)reader.ReadLESingle());
 				}
 				else if(typeof(T) == typeof(byte))
 				{
@@ -85,15 +85,15 @@ namespace TESUnity
 				}
 				else if(typeof(T) == typeof(string))
 				{
-					return (T)((object)BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader));
+					return (T)((object)reader.ReadLELength32PrefixedASCIIString());
 				}
 				else if(typeof(T) == typeof(Vector3))
 				{
-					return (T)((object)BinaryReaderExtensions.ReadVector3(reader));
+					return (T)((object)reader.ReadLEVector3());
 				}
 				else if(typeof(T) == typeof(Quaternion))
 				{
-					return (T)((object)BinaryReaderExtensions.ReadQuaternionWFirst(reader));
+					return (T)((object)reader.ReadLEQuaternionWFirst());
 				}
 				else if(typeof(T) == typeof(Color4))
 				{
@@ -107,9 +107,9 @@ namespace TESUnity
 					throw new NotImplementedException("Tried to read an unsupported type.");
 				}
 			}
-			public static NiObject ReadNiObject(BinaryReader reader)
+			public static NiObject ReadNiObject(UnityBinaryReader reader)
 			{
-				var nodeTypeBytes = BinaryReaderExtensions.ReadLength32PrefixedBytes(reader);
+				var nodeTypeBytes = reader.ReadLELength32PrefixedBytes();
 
 				if(StringUtils.Equals(nodeTypeBytes, "NiNode"))
 				{
@@ -410,9 +410,9 @@ namespace TESUnity
 					throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
 				}
 			}
-			public static Matrix4x4 Read3x3RotationMatrix(BinaryReader reader)
+			public static Matrix4x4 Read3x3RotationMatrix(UnityBinaryReader reader)
 			{
-				return BinaryReaderExtensions.ReadRowMajorMatrix3x3(reader);
+				return reader.ReadLERowMajorMatrix3x3();
 			}
 		}
 
@@ -427,7 +427,7 @@ namespace TESUnity
 			public NiObject[] blocks;
 			public NiFooter footer;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
 				header = new NiHeader();
 				header.Deserialize(reader);
@@ -549,12 +549,12 @@ namespace TESUnity
 			public Matrix4x4 rotation;
 			public Vector3 radius;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				unknownInt = reader.ReadUInt32();
-				translation = BinaryReaderExtensions.ReadVector3(reader);
+				unknownInt = reader.ReadLEUInt32();
+				translation = reader.ReadLEVector3();
 				rotation = NiReaderUtils.Read3x3RotationMatrix(reader);
-				radius = BinaryReaderExtensions.ReadVector3(reader);
+				radius = reader.ReadLEVector3();
 			}
 		}
 		
@@ -564,11 +564,11 @@ namespace TESUnity
 			public float g;
 			public float b;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				r = reader.ReadSingle();
-				g = reader.ReadSingle();
-				b = reader.ReadSingle();
+				r = reader.ReadLESingle();
+				g = reader.ReadLESingle();
+				b = reader.ReadLESingle();
 			}
 		}
 		public class Color4
@@ -578,12 +578,12 @@ namespace TESUnity
 			public float b;
 			public float a;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				r = reader.ReadSingle();
-				g = reader.ReadSingle();
-				b = reader.ReadSingle();
-				a = reader.ReadSingle();
+				r = reader.ReadLESingle();
+				g = reader.ReadLESingle();
+				b = reader.ReadLESingle();
+				a = reader.ReadLESingle();
 			}
 		}
 
@@ -597,15 +597,15 @@ namespace TESUnity
 			public short PS2K;
 			public ushort unknown1;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
 				source = NiReaderUtils.ReadRef<NiSourceTexture>(reader);
-				clampMode = (TexClampMode)reader.ReadUInt32();
-				filterMode = (TexFilterMode)reader.ReadUInt32();
-				UVSet = reader.ReadUInt32();
-				PS2L = reader.ReadInt16();
-				PS2K = reader.ReadInt16();
-				unknown1 = reader.ReadUInt16();
+				clampMode = (TexClampMode)reader.ReadLEUInt32();
+				filterMode = (TexFilterMode)reader.ReadLEUInt32();
+				UVSet = reader.ReadLEUInt32();
+				PS2L = reader.ReadLEInt16();
+				PS2K = reader.ReadLEInt16();
+				unknown1 = reader.ReadLEUInt16();
 			}
 		}
 		public class TexCoord
@@ -613,10 +613,10 @@ namespace TESUnity
 			public float u;
 			public float v;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				u = reader.ReadSingle();
-				v = reader.ReadSingle();
+				u = reader.ReadLESingle();
+				v = reader.ReadLESingle();
 			}
 		}
 
@@ -626,11 +626,11 @@ namespace TESUnity
 			public ushort v2;
 			public ushort v3;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				v1 = reader.ReadUInt16();
-				v2 = reader.ReadUInt16();
-				v3 = reader.ReadUInt16();
+				v1 = reader.ReadLEUInt16();
+				v2 = reader.ReadLEUInt16();
+				v3 = reader.ReadLEUInt16();
 			}
 		}
 
@@ -639,14 +639,14 @@ namespace TESUnity
 			public ushort numVertices;
 			public ushort[] vertexIndices;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				numVertices = reader.ReadUInt16();
+				numVertices = reader.ReadLEUInt16();
 
 				vertexIndices = new ushort[numVertices];
 				for(int i = 0; i < vertexIndices.Length; i++)
 				{
-					vertexIndices[i] = reader.ReadUInt16();
+					vertexIndices[i] = reader.ReadLEUInt16();
 				}
 			}
 		}
@@ -657,11 +657,11 @@ namespace TESUnity
 			public float b;
 			public float c;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				t = reader.ReadSingle();
-				b = reader.ReadSingle();
-				c = reader.ReadSingle();
+				t = reader.ReadLESingle();
+				b = reader.ReadLESingle();
+				c = reader.ReadLESingle();
 			}
 		}
 
@@ -673,9 +673,9 @@ namespace TESUnity
 			public T backward;
 			public TBC TBC;
 
-			public void Deserialize(BinaryReader reader, KeyType keyType)
+			public void Deserialize(UnityBinaryReader reader, KeyType keyType)
 			{
-				time = reader.ReadSingle();
+				time = reader.ReadLESingle();
 				value = NiReaderUtils.Read<T>(reader);
 
 				if(keyType == KeyType.QUADRATIC_KEY)
@@ -696,13 +696,13 @@ namespace TESUnity
 			public KeyType interpolation;
 			public Key<T>[] keys;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				numKeys = reader.ReadUInt32();
+				numKeys = reader.ReadLEUInt32();
 
 				if(numKeys != 0)
 				{
-					interpolation = (KeyType)reader.ReadUInt32();
+					interpolation = (KeyType)reader.ReadLEUInt32();
 				}
 
 				keys = new Key<T>[numKeys];
@@ -719,9 +719,9 @@ namespace TESUnity
 			public T value;
 			public TBC TBC;
 
-			public void Deserialize(BinaryReader reader, KeyType keyType)
+			public void Deserialize(UnityBinaryReader reader, KeyType keyType)
 			{
-				time = reader.ReadSingle();
+				time = reader.ReadLESingle();
 
 				if(keyType != KeyType.XYZ_ROTATION_KEY)
 				{
@@ -744,14 +744,14 @@ namespace TESUnity
 			public ushort numVertices;
 			public SkinWeight[] vertexWeights;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
 				skinTransform = new SkinTransform();
 				skinTransform.Deserialize(reader);
 
-				boundingSphereOffset = BinaryReaderExtensions.ReadVector3(reader);
-				boundingSphereRadius = reader.ReadSingle();
-				numVertices = reader.ReadUInt16();
+				boundingSphereOffset = reader.ReadLEVector3();
+				boundingSphereRadius = reader.ReadLESingle();
+				numVertices = reader.ReadLEUInt16();
 
 				vertexWeights = new SkinWeight[numVertices];
 				for(int i = 0; i < vertexWeights.Length; i++)
@@ -766,10 +766,10 @@ namespace TESUnity
 			public ushort index;
 			public float weight;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				index = reader.ReadUInt16();
-				weight = reader.ReadSingle();
+				index = reader.ReadLEUInt16();
+				weight = reader.ReadLESingle();
 			}
 		}
 		public class SkinTransform
@@ -778,11 +778,11 @@ namespace TESUnity
 			public Vector3 translation;
 			public float scale;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
 				rotation = NiReaderUtils.Read3x3RotationMatrix(reader);
-				translation = BinaryReaderExtensions.ReadVector3(reader);
-				scale = reader.ReadSingle();
+				translation = reader.ReadLEVector3();
+				scale = reader.ReadLESingle();
 			}
 		}
 
@@ -796,15 +796,15 @@ namespace TESUnity
 			public ushort unknownShort;
 			public ushort vertexID;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				velocity = BinaryReaderExtensions.ReadVector3(reader);
-				unknownVector = BinaryReaderExtensions.ReadVector3(reader);
-				lifetime = reader.ReadSingle();
-				lifespan = reader.ReadSingle();
-				timestamp = reader.ReadSingle();
-				unknownShort = reader.ReadUInt16();
-				vertexID = reader.ReadUInt16();
+				velocity = reader.ReadLEVector3();
+				unknownVector = reader.ReadLEVector3();
+				lifetime = reader.ReadLESingle();
+				lifespan = reader.ReadLESingle();
+				timestamp = reader.ReadLESingle();
+				unknownShort = reader.ReadLEUInt16();
+				vertexID = reader.ReadLEUInt16();
 			}
 		}
 
@@ -815,10 +815,10 @@ namespace TESUnity
 			public Key<float>[] keys;
 			public Vector3[] vectors;
 
-			public void Deserialize(BinaryReader reader, uint numVertices)
+			public void Deserialize(UnityBinaryReader reader, uint numVertices)
 			{
-				numKeys = reader.ReadUInt32();
-				interpolation = (KeyType)reader.ReadUInt32();
+				numKeys = reader.ReadLEUInt32();
+				interpolation = (KeyType)reader.ReadLEUInt32();
 
 				keys = new Key<float>[numKeys];
 				for(int i = 0; i < keys.Length; i++)
@@ -830,7 +830,7 @@ namespace TESUnity
 				vectors = new Vector3[numVertices];
 				for(int i = 0; i < vectors.Length; i++)
 				{
-					vectors[i] = BinaryReaderExtensions.ReadVector3(reader);
+					vectors[i] = reader.ReadLEVector3();
 				}
 			}
 		}
@@ -842,11 +842,11 @@ namespace TESUnity
 			public uint version;
 			public uint numBlocks;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
 				str = reader.ReadBytes(40);
-				version = reader.ReadUInt32();
-				numBlocks = reader.ReadUInt32();
+				version = reader.ReadLEUInt32();
+				numBlocks = reader.ReadLEUInt32();
 			}
 		}
 		public class NiFooter
@@ -854,21 +854,21 @@ namespace TESUnity
 			public uint numRoots;
 			public int[] roots;
 
-			public void Deserialize(BinaryReader reader)
+			public void Deserialize(UnityBinaryReader reader)
 			{
-				numRoots = reader.ReadUInt32();
+				numRoots = reader.ReadLEUInt32();
 
 				roots = new int[numRoots];
 				for(int i = 0; i < numRoots; i++)
 				{
-					roots[i] = reader.ReadInt32();
+					roots[i] = reader.ReadLEInt32();
 				}
 			}
 		}
 
 		public abstract class NiObject
 		{
-			public virtual void Deserialize(BinaryReader reader) {}
+			public virtual void Deserialize(UnityBinaryReader reader) {}
 		}
 		public abstract class NiObjectNET : NiObject
 		{
@@ -876,11 +876,11 @@ namespace TESUnity
 			public Ref<NiExtraData> extraData;
 			public Ref<NiTimeController> controller;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				name = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
+				name = reader.ReadLELength32PrefixedASCIIString();
 				extraData = NiReaderUtils.ReadRef<NiExtraData>(reader);
 				controller = NiReaderUtils.ReadRef<NiTimeController>(reader);
 			}
@@ -902,17 +902,17 @@ namespace TESUnity
 			public bool hasBoundingBox;
 			public BoundingBox boundingBox;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				flags = NiReaderUtils.ReadFlags(reader);
-				translation = BinaryReaderExtensions.ReadVector3(reader);
+				translation = reader.ReadLEVector3();
 				rotation = NiReaderUtils.Read3x3RotationMatrix(reader);
-				scale = reader.ReadSingle();
-				velocity = BinaryReaderExtensions.ReadVector3(reader);
+				scale = reader.ReadLESingle();
+				velocity = reader.ReadLEVector3();
 				properties = NiReaderUtils.ReadLengthPrefixedRefs32<NiProperty>(reader);
-				hasBoundingBox = BinaryReaderExtensions.ReadBool32(reader);
+				hasBoundingBox = reader.ReadLEBool32();
 
 				if(hasBoundingBox)
 				{
@@ -930,7 +930,7 @@ namespace TESUnity
 			//public uint numEffects;
 			public Ref<NiDynamicEffect>[] effects;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -949,7 +949,7 @@ namespace TESUnity
 			public Ref<NiGeometryData> data;
 			public Ref<NiSkinInstance> skinInstance;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -972,36 +972,36 @@ namespace TESUnity
 			public bool hasUV;
 			public TexCoord[,] UVSets;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numVertices = reader.ReadUInt16();
-				hasVertices = BinaryReaderExtensions.ReadBool32(reader);
+				numVertices = reader.ReadLEUInt16();
+				hasVertices = reader.ReadLEBool32();
 
 				if(hasVertices)
 				{
 					vertices = new Vector3[numVertices];
 					for(int i = 0; i < vertices.Length; i++)
 					{
-						vertices[i] = BinaryReaderExtensions.ReadVector3(reader);
+						vertices[i] = reader.ReadLEVector3();
 					}
 				}
 
-				hasNormals = BinaryReaderExtensions.ReadBool32(reader);
+				hasNormals = reader.ReadLEBool32();
 
 				if(hasNormals)
 				{
 					normals = new Vector3[numVertices];
 					for(int i = 0; i < normals.Length; i++)
 					{
-						normals[i] = BinaryReaderExtensions.ReadVector3(reader);
+						normals[i] = reader.ReadLEVector3();
 					}
 				}
 
-				center = BinaryReaderExtensions.ReadVector3(reader);
-				radius = reader.ReadSingle();
-				hasVertexColors = BinaryReaderExtensions.ReadBool32(reader);
+				center = reader.ReadLEVector3();
+				radius = reader.ReadLESingle();
+				hasVertexColors = reader.ReadLEBool32();
 
 				if(hasVertexColors)
 				{
@@ -1013,8 +1013,8 @@ namespace TESUnity
 					}
 				}
 
-				numUVSets = reader.ReadUInt16();
-				hasUV = BinaryReaderExtensions.ReadBool32(reader);
+				numUVSets = reader.ReadLEUInt16();
+				hasUV = reader.ReadLEBool32();
 
 				if(hasUV)
 				{
@@ -1033,7 +1033,7 @@ namespace TESUnity
 		}
 		public abstract class NiTriBasedGeom : NiGeometry
 		{
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 			}
@@ -1042,16 +1042,16 @@ namespace TESUnity
 		{
 			public ushort numTriangles;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numTriangles = reader.ReadUInt16();
+				numTriangles = reader.ReadLEUInt16();
 			}
 		}
 		public class NiTriShape : NiTriBasedGeom
 		{
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 			}
@@ -1063,11 +1063,11 @@ namespace TESUnity
 			public ushort numMatchGroups;
 			public MatchGroup[] matchGroups;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numTrianglePoints = reader.ReadUInt32();
+				numTrianglePoints = reader.ReadLEUInt32();
 
 				triangles = new Triangle[numTriangles];
 				for(int i = 0; i < triangles.Length; i++)
@@ -1076,7 +1076,7 @@ namespace TESUnity
 					triangles[i].Deserialize(reader);
 				}
 
-				numMatchGroups = reader.ReadUInt16();
+				numMatchGroups = reader.ReadLEUInt16();
 
 				matchGroups = new MatchGroup[numMatchGroups];
 				for(int i = 0; i < matchGroups.Length; i++)
@@ -1090,7 +1090,7 @@ namespace TESUnity
 		// Properties
 		public abstract class NiProperty : NiObjectNET
 		{
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 			}
@@ -1123,58 +1123,58 @@ namespace TESUnity
 			public bool hasDecal0Texture;
 			public TexDesc decal0Texture;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				flags = NiReaderUtils.ReadFlags(reader);
 
-				applyMode = (ApplyMode)reader.ReadUInt32();
-				textureCount = reader.ReadUInt32();
+				applyMode = (ApplyMode)reader.ReadLEUInt32();
+				textureCount = reader.ReadLEUInt32();
 
-				hasBaseTexture = BinaryReaderExtensions.ReadBool32(reader);
+				hasBaseTexture = reader.ReadLEBool32();
 				if(hasBaseTexture)
 				{
 					baseTexture = new TexDesc();
 					baseTexture.Deserialize(reader);
 				}
 
-				hasDarkTexture = BinaryReaderExtensions.ReadBool32(reader);
+				hasDarkTexture = reader.ReadLEBool32();
 				if(hasDarkTexture)
 				{
 					darkTexture = new TexDesc();
 					darkTexture.Deserialize(reader);
 				}
 
-				hasDetailTexture = BinaryReaderExtensions.ReadBool32(reader);
+				hasDetailTexture = reader.ReadLEBool32();
 				if(hasDetailTexture)
 				{
 					detailTexture = new TexDesc();
 					detailTexture.Deserialize(reader);
 				}
 
-				hasGlossTexture = BinaryReaderExtensions.ReadBool32(reader);
+				hasGlossTexture = reader.ReadLEBool32();
 				if(hasGlossTexture)
 				{
 					glossTexture = new TexDesc();
 					glossTexture.Deserialize(reader);
 				}
 
-				hasGlowTexture = BinaryReaderExtensions.ReadBool32(reader);
+				hasGlowTexture = reader.ReadLEBool32();
 				if(hasGlowTexture)
 				{
 					glowTexture = new TexDesc();
 					glowTexture.Deserialize(reader);
 				}
 
-				hasBumpMapTexture = BinaryReaderExtensions.ReadBool32(reader);
+				hasBumpMapTexture = reader.ReadLEBool32();
 				if(hasBumpMapTexture)
 				{
 					bumpMapTexture = new TexDesc();
 					bumpMapTexture.Deserialize(reader);
 				}
 
-				hasDecal0Texture = BinaryReaderExtensions.ReadBool32(reader);
+				hasDecal0Texture = reader.ReadLEBool32();
 				if(hasDecal0Texture)
 				{
 					decal0Texture = new TexDesc();
@@ -1187,11 +1187,11 @@ namespace TESUnity
 			public ushort flags;
 			public byte threshold;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				flags = reader.ReadUInt16();
+				flags = reader.ReadLEUInt16();
 				threshold = reader.ReadByte();
 			}
 		}
@@ -1199,11 +1199,11 @@ namespace TESUnity
 		{
 			public ushort flags;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				flags = reader.ReadUInt16();
+				flags = reader.ReadLEUInt16();
 			}
 		}
 		public class NiVertexColorProperty : NiProperty
@@ -1212,13 +1212,13 @@ namespace TESUnity
 			public VertMode vertexMode;
 			public LightMode lightingMode;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				flags = reader.ReadUInt16();
-				vertexMode = (VertMode)reader.ReadUInt32();
-				lightingMode = (LightMode)reader.ReadUInt32();
+				flags = reader.ReadLEUInt16();
+				vertexMode = (VertMode)reader.ReadLEUInt32();
+				lightingMode = (LightMode)reader.ReadLEUInt32();
 			}
 		}
 
@@ -1227,7 +1227,7 @@ namespace TESUnity
 		{
 			public KeyGroup<float>[] UVGroups;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1250,15 +1250,15 @@ namespace TESUnity
 			public KeyGroup<Vector3> translations;
 			public KeyGroup<float> scales;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numRotationKeys = reader.ReadUInt32();
+				numRotationKeys = reader.ReadLEUInt32();
 
 				if(numRotationKeys != 0)
 				{
-					rotationType = (KeyType)reader.ReadUInt32();
+					rotationType = (KeyType)reader.ReadLEUInt32();
 
 					if(rotationType != KeyType.XYZ_ROTATION_KEY)
 					{
@@ -1271,7 +1271,7 @@ namespace TESUnity
 					}
 					else
 					{
-						unknownFloat = reader.ReadSingle();
+						unknownFloat = reader.ReadLESingle();
 
 						XYZRotations = new KeyGroup<float>[3];
 						for(int i = 0; i < XYZRotations.Length; i++)
@@ -1293,7 +1293,7 @@ namespace TESUnity
 		{
 			public KeyGroup<Color4> data;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1308,12 +1308,12 @@ namespace TESUnity
 			public byte relativeTargets;
 			public Morph[] morphs;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numMorphs = reader.ReadUInt32();
-				numVertices = reader.ReadUInt32();
+				numMorphs = reader.ReadLEUInt32();
+				numVertices = reader.ReadLEUInt32();
 				relativeTargets = reader.ReadByte();
 
 				morphs = new Morph[numMorphs];
@@ -1329,11 +1329,11 @@ namespace TESUnity
 			public uint numKeys;
 			public Key<byte>[] keys;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numKeys = reader.ReadUInt32();
+				numKeys = reader.ReadLEUInt32();
 
 				keys = new Key<byte>[numKeys];
 				for(int i = 0; i < keys.Length; i++)
@@ -1347,7 +1347,7 @@ namespace TESUnity
 		{
 			public KeyGroup<float> data;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1360,7 +1360,7 @@ namespace TESUnity
 		{
 			public Ref<NiExtraData> nextExtraData;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1372,12 +1372,12 @@ namespace TESUnity
 			public uint bytesRemaining;
 			public string str;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				bytesRemaining = reader.ReadUInt32();
-				str = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
+				bytesRemaining = reader.ReadLEUInt32();
+				str = reader.ReadLELength32PrefixedASCIIString();
 			}
 		}
 		public class NiTextKeyExtraData : NiExtraData
@@ -1386,12 +1386,12 @@ namespace TESUnity
 			uint numTextKeys;
 			Key<string>[] textKeys;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				unknownInt1 = reader.ReadUInt32();
-				numTextKeys = reader.ReadUInt32();
+				unknownInt1 = reader.ReadLEUInt32();
+				numTextKeys = reader.ReadLEUInt32();
 
 				textKeys = new Key<string>[numTextKeys];
 				for(int i = 0; i < textKeys.Length; i++)
@@ -1412,21 +1412,21 @@ namespace TESUnity
 			public bool hasSizes;
 			public float[] sizes;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numParticles = reader.ReadUInt16();
-				particleRadius = reader.ReadSingle();
-				numActive = reader.ReadUInt16();
+				numParticles = reader.ReadLEUInt16();
+				particleRadius = reader.ReadLESingle();
+				numActive = reader.ReadLEUInt16();
 
-				hasSizes = BinaryReaderExtensions.ReadBool32(reader);
+				hasSizes = reader.ReadLEBool32();
 				if(hasSizes)
 				{
 					sizes = new float[numVertices];
 					for(int i = 0; i < sizes.Length; i++)
 					{
-						sizes[i] = reader.ReadSingle();
+						sizes[i] = reader.ReadLESingle();
 					}
 				}
 			}
@@ -1437,18 +1437,18 @@ namespace TESUnity
 			public bool hasRotations;
 			public Quaternion[] rotations;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				hasRotations = BinaryReaderExtensions.ReadBool32(reader);
+				hasRotations = reader.ReadLEBool32();
 
 				if(hasRotations)
 				{
 					rotations = new Quaternion[numVertices];
 					for(int i = 0; i < rotations.Length; i++)
 					{
-						rotations[i] = BinaryReaderExtensions.ReadQuaternionWFirst(reader);
+						rotations[i] = reader.ReadLEQuaternionWFirst();
 					}
 				}
 			}
@@ -1489,38 +1489,38 @@ namespace TESUnity
 			public Ref<NiObject> unknownLink2;
 			public byte trailer;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				speed = reader.ReadSingle();
-				speedRandom = reader.ReadSingle();
-				verticalDirection = reader.ReadSingle();
-				verticalAngle = reader.ReadSingle();
-				horizontalDirection = reader.ReadSingle();
-				horizontalAngle = reader.ReadSingle();
-				unknownNormal = BinaryReaderExtensions.ReadVector3(reader);
+				speed = reader.ReadLESingle();
+				speedRandom = reader.ReadLESingle();
+				verticalDirection = reader.ReadLESingle();
+				verticalAngle = reader.ReadLESingle();
+				horizontalDirection = reader.ReadLESingle();
+				horizontalAngle = reader.ReadLESingle();
+				unknownNormal = reader.ReadLEVector3();
 
 				unknownColor = new Color4();
 				unknownColor.Deserialize(reader);
 
-				size = reader.ReadSingle();
-				emitStartTime = reader.ReadSingle();
-				emitStopTime = reader.ReadSingle();
+				size = reader.ReadLESingle();
+				emitStartTime = reader.ReadLESingle();
+				emitStopTime = reader.ReadLESingle();
 				unknownByte = reader.ReadByte();
-				emitRate = reader.ReadSingle();
-				lifetime = reader.ReadSingle();
-				lifetimeRandom = reader.ReadSingle();
-				emitFlags = reader.ReadUInt16();
-				startRandom = BinaryReaderExtensions.ReadVector3(reader);
+				emitRate = reader.ReadLESingle();
+				lifetime = reader.ReadLESingle();
+				lifetimeRandom = reader.ReadLESingle();
+				emitFlags = reader.ReadLEUInt16();
+				startRandom = reader.ReadLEVector3();
 				emitter = NiReaderUtils.ReadPtr<NiObject>(reader);
-				unknownShort2 = reader.ReadUInt16();
-				unknownFloat13 = reader.ReadSingle();
-				unknownInt1 = reader.ReadUInt32();
-				unknownInt2 = reader.ReadUInt32();
-				unknownShort3 = reader.ReadUInt16();
-				numParticles = reader.ReadUInt16();
-				numValid = reader.ReadUInt16();
+				unknownShort2 = reader.ReadLEUInt16();
+				unknownFloat13 = reader.ReadLESingle();
+				unknownInt1 = reader.ReadLEUInt32();
+				unknownInt2 = reader.ReadLEUInt32();
+				unknownShort3 = reader.ReadLEUInt16();
+				numParticles = reader.ReadLEUInt16();
+				numValid = reader.ReadLEUInt16();
 
 				particles = new Particle[numParticles];
 				for(int i = 0; i < particles.Length; i++)
@@ -1542,7 +1542,7 @@ namespace TESUnity
 			public Ref<NiParticleModifier> nextModifier;
 			public Ptr<NiParticleSystemController> controller;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1558,15 +1558,15 @@ namespace TESUnity
 			public Vector3 position;
 			public Vector3 direction;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				unknownFloat1 = reader.ReadSingle();
-				force = reader.ReadSingle();
-				type = (FieldType)reader.ReadUInt32();
-				position = BinaryReaderExtensions.ReadVector3(reader);
-				direction = BinaryReaderExtensions.ReadVector3(reader);
+				unknownFloat1 = reader.ReadLESingle();
+				force = reader.ReadLESingle();
+				type = (FieldType)reader.ReadLEUInt32();
+				position = reader.ReadLEVector3();
+				direction = reader.ReadLEVector3();
 			}
 		}
 		public class NiParticleBomb : NiParticleModifier
@@ -1579,24 +1579,24 @@ namespace TESUnity
 			public Vector3 position;
 			public Vector3 direction;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				decay = reader.ReadSingle();
-				duration = reader.ReadSingle();
-				deltaV = reader.ReadSingle();
-				start = reader.ReadSingle();
-				decayType = (DecayType)reader.ReadUInt32();
-				position = BinaryReaderExtensions.ReadVector3(reader);
-				direction = BinaryReaderExtensions.ReadVector3(reader);
+				decay = reader.ReadLESingle();
+				duration = reader.ReadLESingle();
+				deltaV = reader.ReadLESingle();
+				start = reader.ReadLESingle();
+				decayType = (DecayType)reader.ReadLEUInt32();
+				position = reader.ReadLEVector3();
+				direction = reader.ReadLEVector3();
 			}
 		}
 		public class NiParticleColorModifier : NiParticleModifier
 		{
 			public Ref<NiColorData> colorData;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1608,12 +1608,12 @@ namespace TESUnity
 			public float grow;
 			public float fade;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				grow = reader.ReadSingle();
-				fade = reader.ReadSingle();
+				grow = reader.ReadLESingle();
+				fade = reader.ReadLESingle();
 			}
 		}
 		public class NiParticleMeshModifier : NiParticleModifier
@@ -1621,11 +1621,11 @@ namespace TESUnity
 			public uint numParticleMeshes;
 			public Ref<NiAVObject>[] particleMeshes;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numParticleMeshes = reader.ReadUInt32();
+				numParticleMeshes = reader.ReadLEUInt32();
 
 				particleMeshes = new Ref<NiAVObject>[numParticleMeshes];
 				for(int i = 0; i < particleMeshes.Length; i++)
@@ -1640,13 +1640,13 @@ namespace TESUnity
 			public Vector3 initialAxis;
 			public float rotationSpeed;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				randomInitialAxis = reader.ReadByte();
-				initialAxis = BinaryReaderExtensions.ReadVector3(reader);
-				rotationSpeed = reader.ReadSingle();
+				initialAxis = reader.ReadLEVector3();
+				rotationSpeed = reader.ReadLESingle();
 			}
 		}
 
@@ -1661,16 +1661,16 @@ namespace TESUnity
 			public float stopTime;
 			public Ptr<NiObjectNET> target;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				nextController = NiReaderUtils.ReadRef<NiTimeController>(reader);
-				flags = reader.ReadUInt16();
-				frequency = reader.ReadSingle();
-				phase = reader.ReadSingle();
-				startTime = reader.ReadSingle();
-				stopTime = reader.ReadSingle();
+				flags = reader.ReadLEUInt16();
+				frequency = reader.ReadLESingle();
+				phase = reader.ReadLESingle();
+				startTime = reader.ReadLESingle();
+				stopTime = reader.ReadLESingle();
 				target = NiReaderUtils.ReadPtr<NiObjectNET>(reader);
 			}
 		}
@@ -1679,11 +1679,11 @@ namespace TESUnity
 			public ushort unknownShort;
 			public Ref<NiUVData> data;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				unknownShort = reader.ReadUInt16();
+				unknownShort = reader.ReadLEUInt16();
 				data = NiReaderUtils.ReadRef<NiUVData>(reader);
 			}
 		}
@@ -1693,7 +1693,7 @@ namespace TESUnity
 		{
 			public Ref<NiKeyframeData> data;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1705,7 +1705,7 @@ namespace TESUnity
 			public Ref<NiMorphData> data;
 			public byte alwaysUpdate;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1718,7 +1718,7 @@ namespace TESUnity
 		{
 			public Ref<NiVisData> data;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1730,7 +1730,7 @@ namespace TESUnity
 		{
 			public Ref<NiFloatData> data;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1746,13 +1746,13 @@ namespace TESUnity
 			public uint numBones;
 			public Ptr<NiNode>[] bones;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				data = NiReaderUtils.ReadRef<NiSkinData>(reader);
 				skeletonRoot = NiReaderUtils.ReadPtr<NiNode>(reader);
-				numBones = reader.ReadUInt32();
+				numBones = reader.ReadLEUInt32();
 
 				bones = new Ptr<NiNode>[numBones];
 				for(int i = 0; i < bones.Length; i++)
@@ -1768,14 +1768,14 @@ namespace TESUnity
 			public Ref<NiSkinPartition> skinPartition;
 			public SkinData[] boneList;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				skinTransform = new SkinTransform();
 				skinTransform.Deserialize(reader);
 
-				numBones = reader.ReadUInt32();
+				numBones = reader.ReadLEUInt32();
 
 				skinPartition = NiReaderUtils.ReadRef<NiSkinPartition>(reader);
 
@@ -1792,7 +1792,7 @@ namespace TESUnity
 		// Miscellaneous
 		public abstract class NiTexture : NiObjectNET
 		{
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 			}
@@ -1806,15 +1806,15 @@ namespace TESUnity
 			public AlphaFormat alphaFormat;
 			public byte isStatic;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				useExternal = reader.ReadByte();
-				fileName = BinaryReaderExtensions.ReadLength32PrefixedASCIIString(reader);
-				pixelLayout = (PixelLayout)reader.ReadUInt32();
-				useMipMaps = (MipMapFormat)reader.ReadUInt32();
-				alphaFormat = (AlphaFormat)reader.ReadUInt32();
+				fileName = reader.ReadLELength32PrefixedASCIIString();
+				pixelLayout = (PixelLayout)reader.ReadLEUInt32();
+				useMipMaps = (MipMapFormat)reader.ReadLEUInt32();
+				alphaFormat = (AlphaFormat)reader.ReadLEUInt32();
 				isStatic = reader.ReadByte();
 			}
 		}
@@ -1829,7 +1829,7 @@ namespace TESUnity
 			public float glossiness;
 			public float alpha;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
@@ -1847,8 +1847,8 @@ namespace TESUnity
 				emissiveColor = new Color3();
 				emissiveColor.Deserialize(reader);
 
-				glossiness = reader.ReadSingle();
-				alpha = reader.ReadSingle();
+				glossiness = reader.ReadLESingle();
+				alpha = reader.ReadLESingle();
 			}
 		}
 
@@ -1857,16 +1857,16 @@ namespace TESUnity
 			uint numAffectedNodeListPointers;
 			uint[] affectedNodeListPointers;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
-				numAffectedNodeListPointers = reader.ReadUInt32();
+				numAffectedNodeListPointers = reader.ReadLEUInt32();
 
 				affectedNodeListPointers = new uint[numAffectedNodeListPointers];
 				for(int i = 0; i < affectedNodeListPointers.Length; i++)
 				{
-					affectedNodeListPointers[i] = reader.ReadUInt32();
+					affectedNodeListPointers[i] = reader.ReadLEUInt32();
 				}
 			}
 		}
@@ -1886,23 +1886,23 @@ namespace TESUnity
 			public short PS2K;
 			public ushort unknownShort;
 
-			public override void Deserialize(BinaryReader reader)
+			public override void Deserialize(UnityBinaryReader reader)
 			{
 				base.Deserialize(reader);
 
 				modelProjectionMatrix = NiReaderUtils.Read3x3RotationMatrix(reader);
-				modelProjectionTransform = BinaryReaderExtensions.ReadVector3(reader);
-				textureFiltering = (TexFilterMode)reader.ReadUInt32();
-				textureClamping = (TexClampMode)reader.ReadUInt32();
-				textureType = (EffectType)reader.ReadUInt32();
-				coordinateGenerationType = (CoordGenType)reader.ReadUInt32();
+				modelProjectionTransform = reader.ReadLEVector3();
+				textureFiltering = (TexFilterMode)reader.ReadLEUInt32();
+				textureClamping = (TexClampMode)reader.ReadLEUInt32();
+				textureType = (EffectType)reader.ReadLEUInt32();
+				coordinateGenerationType = (CoordGenType)reader.ReadLEUInt32();
 				sourceTexture = NiReaderUtils.ReadRef<NiSourceTexture>(reader);
 				clippingPlane = reader.ReadByte();
-				unknownVector = BinaryReaderExtensions.ReadVector3(reader);
-				unknownFloat = reader.ReadSingle();
-				PS2L = reader.ReadInt16();
-				PS2K = reader.ReadInt16();
-				unknownShort = reader.ReadUInt16();
+				unknownVector = reader.ReadLEVector3();
+				unknownFloat = reader.ReadLESingle();
+				PS2L = reader.ReadLEInt16();
+				PS2K = reader.ReadLEInt16();
+				unknownShort = reader.ReadLEUInt16();
 			}
 		}
 	}

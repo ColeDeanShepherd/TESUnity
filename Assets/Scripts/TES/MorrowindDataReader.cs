@@ -68,7 +68,7 @@ namespace TESUnity
 			var fileData = MorrowindBSAFile.LoadFileData(filePath);
 
 			var file = new NIF.NiFile(Path.GetFileNameWithoutExtension(filePath));
-			file.Deserialize(new BinaryReader(new MemoryStream(fileData)));
+			file.Deserialize(new UnityBinaryReader(new MemoryStream(fileData)));
 
 			return file;
 		}

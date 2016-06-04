@@ -89,12 +89,12 @@ namespace TESUnity
 			public uint unknown0;
 			public uint flags;
 
-			public virtual void Deserialize(BinaryReader reader)
+			public virtual void Deserialize(UnityBinaryReader reader)
 			{
-				name = BinaryReaderExtensions.ReadASCIIString(reader, 4);
-				dataSize = reader.ReadUInt32();
-				unknown0 = reader.ReadUInt32();
-				flags = reader.ReadUInt32();
+				name = reader.ReadASCIIString(4);
+				dataSize = reader.ReadLEUInt32();
+				unknown0 = reader.ReadLEUInt32();
+				flags = reader.ReadLEUInt32();
 			}
 		}
 		public class SubRecordHeader
@@ -102,10 +102,10 @@ namespace TESUnity
 			public string name; // 4 bytes
 			public uint dataSize;
 
-			public virtual void Deserialize(BinaryReader reader)
+			public virtual void Deserialize(UnityBinaryReader reader)
 			{
-				name = BinaryReaderExtensions.ReadASCIIString(reader, 4);
-				dataSize = reader.ReadUInt32();
+				name = reader.ReadASCIIString(4);
+				dataSize = reader.ReadLEUInt32();
 			}
 		}
 
@@ -119,7 +119,7 @@ namespace TESUnity
 			/// <returns>Return an uninitialized subrecord to deserialize, or null to skip.</returns>
 			public abstract SubRecord CreateUninitializedSubRecord(string subRecordName);
 
-			public void DeserializeData(BinaryReader reader)
+			public void DeserializeData(UnityBinaryReader reader)
 			{
 				var dataEndPos = reader.BaseStream.Position + header.dataSize;
 
@@ -147,7 +147,7 @@ namespace TESUnity
 		{
 			public SubRecordHeader header;
 
-			public abstract void DeserializeData(BinaryReader reader);
+			public abstract void DeserializeData(UnityBinaryReader reader);
 		}
 
 		// Add new record types to ESMFile.CreateUninitializedRecord.
@@ -163,24 +163,24 @@ namespace TESUnity
 				public string fileDescription; // 256 bytes
 				public uint numRecords;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					version = reader.ReadSingle();
-					fileType = reader.ReadUInt32();
-					companyName = BinaryReaderExtensions.ReadASCIIString(reader, 32);
-					fileDescription = BinaryReaderExtensions.ReadASCIIString(reader, 256);
-					numRecords = reader.ReadUInt32();
+					version = reader.ReadLESingle();
+					fileType = reader.ReadLEUInt32();
+					companyName = reader.ReadASCIIString(32);
+					fileDescription = reader.ReadASCIIString(256);
+					numRecords = reader.ReadLEUInt32();
 				}
 			}
 
 			/*public class MASTSubRecord : SubRecord
 			{
-				public override void DeserializeData(BinaryReader reader) { }
+				public override void DeserializeData(UnityBinaryReader reader) { }
 			}
 
 			public class DATASubRecord : SubRecord
 			{
-				public override void DeserializeData(BinaryReader reader) { }
+				public override void DeserializeData(UnityBinaryReader reader) { }
 			}*/
 
 			public HEDRSubRecord HEDR;
@@ -263,7 +263,7 @@ namespace TESUnity
 				public byte minRange;
 				public byte maxRange;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					volume = reader.ReadByte();
 					minRange = reader.ReadByte();
@@ -307,7 +307,7 @@ namespace TESUnity
 				public byte ash;
 				public byte blight;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					clear = reader.ReadByte();
 					cloudy = reader.ReadByte();
@@ -326,7 +326,7 @@ namespace TESUnity
 				byte blue;
 				byte nullByte;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					red = reader.ReadByte();
 					green = reader.ReadByte();
@@ -339,7 +339,7 @@ namespace TESUnity
 				byte[] soundName;
 				byte chance;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					soundName = reader.ReadBytes(32);
 					chance = reader.ReadByte();
@@ -477,11 +477,11 @@ namespace TESUnity
 				public uint value;
 				public uint unknown;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadUInt32();
-					unknown = reader.ReadUInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEUInt32();
+					unknown = reader.ReadLEUInt32();
 				}
 			}
 
@@ -543,22 +543,22 @@ namespace TESUnity
 				public byte thrustMax;
 				public int flags;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					type = reader.ReadInt16();
-					health = reader.ReadInt16();
-					speed = reader.ReadSingle();
-					reach = reader.ReadSingle();
-					enchantPts = reader.ReadInt16();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					type = reader.ReadLEInt16();
+					health = reader.ReadLEInt16();
+					speed = reader.ReadLESingle();
+					reach = reader.ReadLESingle();
+					enchantPts = reader.ReadLEInt16();
 					chopMin = reader.ReadByte();
 					chopMax = reader.ReadByte();
 					slashMin = reader.ReadByte();
 					slashMax = reader.ReadByte();
 					thrustMin = reader.ReadByte();
 					thrustMax = reader.ReadByte();
-					flags = reader.ReadInt32();
+					flags = reader.ReadLEInt32();
 				}
 			}
 
@@ -610,10 +610,10 @@ namespace TESUnity
 				public uint itemCount;
 				public string itemName;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					itemCount = reader.ReadUInt32();
-					itemName = BinaryReaderExtensions.ReadPossiblyNullTerminatedASCIIString(reader, 32);
+					itemCount = reader.ReadLEUInt32();
+					itemName = reader.ReadPossiblyNullTerminatedASCIIString(32);
 				}
 			}
 
@@ -669,17 +669,17 @@ namespace TESUnity
 				public byte nullByte;
 				public int flags;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					time = reader.ReadInt32();
-					radius = reader.ReadInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					time = reader.ReadLEInt32();
+					radius = reader.ReadLEInt32();
 					red = reader.ReadByte();
 					green = reader.ReadByte();
 					blue = reader.ReadByte();
 					nullByte = reader.ReadByte();
-					flags = reader.ReadInt32();
+					flags = reader.ReadLEInt32();
 			}
 			}
 
@@ -733,14 +733,14 @@ namespace TESUnity
 				public int enchantPts;
 				public int armour;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					type = reader.ReadInt32();
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					health = reader.ReadInt32();
-					enchantPts = reader.ReadInt32();
-					armour = reader.ReadInt32();
+					type = reader.ReadLEInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					health = reader.ReadLEInt32();
+					enchantPts = reader.ReadLEInt32();
+					armour = reader.ReadLEInt32();
 				}
 			}
 
@@ -816,12 +816,12 @@ namespace TESUnity
 				public short value;
 				public short enchantPts;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					type = reader.ReadInt32();
-					weight = reader.ReadSingle();
-					value = reader.ReadInt16();
-					enchantPts = reader.ReadInt16();
+					type = reader.ReadLEInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt16();
+					enchantPts = reader.ReadLEInt16();
 				}
 			}
 
@@ -897,12 +897,12 @@ namespace TESUnity
 				public int uses;
 				public float quality;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					uses = reader.ReadInt32();
-					quality = reader.ReadSingle();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					uses = reader.ReadLEInt32();
+					quality = reader.ReadLESingle();
 				}
 			}
 
@@ -979,12 +979,12 @@ namespace TESUnity
 				public float weight;
 				public int value;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					type = reader.ReadInt32();
-					quality = reader.ReadSingle();
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
+					type = reader.ReadLEInt32();
+					quality = reader.ReadLESingle();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
 				}
 			}
 
@@ -1032,12 +1032,12 @@ namespace TESUnity
 				public float quality;
 				public int uses;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					quality = reader.ReadSingle();
-					uses = reader.ReadInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					quality = reader.ReadLESingle();
+					uses = reader.ReadLEInt32();
 				}
 			}
 
@@ -1085,12 +1085,12 @@ namespace TESUnity
 				public float quality;
 				public int uses;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					quality = reader.ReadSingle();
-					uses = reader.ReadInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					quality = reader.ReadLESingle();
+					uses = reader.ReadLEInt32();
 				}
 			}
 
@@ -1139,27 +1139,27 @@ namespace TESUnity
 				public int[] skillID;
 				public int[] attributeID;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
 
 					effectID = new int[4];
 					for(int i = 0; i < effectID.Length; i++)
 					{
-						effectID[i] = reader.ReadInt32();
+						effectID[i] = reader.ReadLEInt32();
 					}
 
 					skillID = new int[4];
 					for(int i = 0; i < skillID.Length; i++)
 					{
-						skillID[i] = reader.ReadInt32();
+						skillID[i] = reader.ReadLEInt32();
 					}
 
 					attributeID = new int[4];
 					for(int i = 0; i < attributeID.Length; i++)
 					{
-						attributeID[i] = reader.ReadInt32();
+						attributeID[i] = reader.ReadLEInt32();
 					}
 				}
 			}
@@ -1209,13 +1209,13 @@ namespace TESUnity
 				public int skillID;
 				public int enchantPts;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					scroll = reader.ReadInt32();
-					skillID = reader.ReadInt32();
-					enchantPts = reader.ReadInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					scroll = reader.ReadLEInt32();
+					skillID = reader.ReadLEInt32();
+					enchantPts = reader.ReadLEInt32();
 				}
 			}
 
@@ -1266,11 +1266,11 @@ namespace TESUnity
 				public int value;
 				public int autoCalc;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					weight = reader.ReadSingle();
-					value = reader.ReadInt32();
-					autoCalc = reader.ReadInt32();
+					weight = reader.ReadLESingle();
+					value = reader.ReadLEInt32();
+					autoCalc = reader.ReadLEInt32();
 				}
 			}
 			public class ENAMSubRecord : SubRecord
@@ -1284,16 +1284,16 @@ namespace TESUnity
 				public int magnitude;
 				public int unknown4;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					effectID = reader.ReadInt16();
+					effectID = reader.ReadLEInt16();
 					skillID = reader.ReadByte();
 					attributeID = reader.ReadByte();
-					unknown1 = reader.ReadInt32();
-					unknown2 = reader.ReadInt32();
-					duration = reader.ReadInt32();
-					magnitude = reader.ReadInt32();
-					unknown4 = reader.ReadInt32();
+					unknown1 = reader.ReadLEInt32();
+					unknown2 = reader.ReadLEInt32();
+					duration = reader.ReadLEInt32();
+					magnitude = reader.ReadLEInt32();
+					unknown4 = reader.ReadLEInt32();
 				}
 			}
 
@@ -1345,11 +1345,11 @@ namespace TESUnity
 				public int gridX;
 				public int gridY;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					flags = reader.ReadUInt32();
-					gridX = reader.ReadInt32();
-					gridY = reader.ReadInt32();
+					flags = reader.ReadLEUInt32();
+					gridX = reader.ReadLEInt32();
+					gridY = reader.ReadLEInt32();
 				}
 			}
 			public class RGNNSubRecord : NAMESubRecord { }
@@ -1363,12 +1363,12 @@ namespace TESUnity
 				public uint fogColor;
 				public float fogDensity;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					ambientColor = reader.ReadUInt32();
-					sunlightColor = reader.ReadUInt32();
-					fogColor = reader.ReadUInt32();
-					fogDensity = reader.ReadSingle();
+					ambientColor = reader.ReadLEUInt32();
+					sunlightColor = reader.ReadLEUInt32();
+					fogColor = reader.ReadLEUInt32();
+					fogDensity = reader.ReadLESingle();
 				}
 			}
 			public class RefObjDataGroup
@@ -1380,10 +1380,10 @@ namespace TESUnity
 					public Vector3 position;
 					public Vector3 eulerAngles;
 
-					public override void DeserializeData(BinaryReader reader)
+					public override void DeserializeData(UnityBinaryReader reader)
 					{
-						position = BinaryReaderExtensions.ReadVector3(reader);
-						eulerAngles = BinaryReaderExtensions.ReadVector3(reader);
+						position = reader.ReadLEVector3();
+						eulerAngles = reader.ReadLEVector3();
 					}
 				}
 				public class DNAMSubRecord : NAMESubRecord { }
@@ -1399,10 +1399,10 @@ namespace TESUnity
 					public Vector3 position;
 					public Vector3 eulerAngles;
 
-					public override void DeserializeData(BinaryReader reader)
+					public override void DeserializeData(UnityBinaryReader reader)
 					{
-						position = BinaryReaderExtensions.ReadVector3(reader);
-						eulerAngles = BinaryReaderExtensions.ReadVector3(reader);
+						position = reader.ReadLEVector3();
+						eulerAngles = reader.ReadLEVector3();
 					}
 				}
 
@@ -1555,14 +1555,14 @@ namespace TESUnity
 		{
 			/*public class DATASubRecord : SubRecord
 			{
-				public override void DeserializeData(BinaryReader reader) {}
+				public override void DeserializeData(UnityBinaryReader reader) {}
 			}*/
 
 			public class VNMLSubRecord : SubRecord
 			{
 				// XYZ 8 bit floats
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					var vertexCount = header.dataSize / 3;
 
@@ -1579,9 +1579,9 @@ namespace TESUnity
 				public float referenceHeight;
 				public sbyte[] heightOffsets;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
-					referenceHeight = reader.ReadSingle();
+					referenceHeight = reader.ReadLESingle();
 
 					var heightOffsetCount = header.dataSize - 4 - 2 - 1;
 					heightOffsets = new sbyte[heightOffsetCount];
@@ -1592,7 +1592,7 @@ namespace TESUnity
 					}
 
 					// unknown
-					reader.ReadInt16();
+					reader.ReadLEInt16();
 
 					// unknown
 					reader.ReadSByte();
@@ -1602,7 +1602,7 @@ namespace TESUnity
 			{
 				// Low-LOD heightmap (signed chars)
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					var heightCount = header.dataSize;
 
@@ -1616,7 +1616,7 @@ namespace TESUnity
 			{
 				// 24 bit RGB
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					var vertexCount = header.dataSize / 3;
 
@@ -1632,14 +1632,14 @@ namespace TESUnity
 			{
 				public ushort[] textureIndices;
 
-				public override void DeserializeData(BinaryReader reader)
+				public override void DeserializeData(UnityBinaryReader reader)
 				{
 					var textureIndexCount = header.dataSize / 2;
 					textureIndices = new ushort[textureIndexCount];
 
 					for(int i = 0; i < textureIndexCount; i++)
 					{
-						textureIndices[i] = reader.ReadUInt16();
+						textureIndices[i] = reader.ReadLEUInt16();
 					}
 				}
 			}
@@ -1696,9 +1696,9 @@ namespace TESUnity
 		{
 			public string value;
 
-			public override void DeserializeData(BinaryReader reader)
+			public override void DeserializeData(UnityBinaryReader reader)
 			{
-				value = BinaryReaderExtensions.ReadPossiblyNullTerminatedASCIIString(reader, (int)header.dataSize);
+				value = reader.ReadPossiblyNullTerminatedASCIIString((int)header.dataSize);
 			}
 		}
 
@@ -1707,7 +1707,7 @@ namespace TESUnity
 		{
 			public long value;
 
-			public override void DeserializeData(BinaryReader reader)
+			public override void DeserializeData(UnityBinaryReader reader)
 			{
 				switch(header.dataSize)
 				{
@@ -1715,13 +1715,13 @@ namespace TESUnity
 						value = reader.ReadByte();
 						break;
 					case 2:
-						value = reader.ReadInt16();
+						value = reader.ReadLEInt16();
 						break;
 					case 4:
-						value = reader.ReadInt32();
+						value = reader.ReadLEInt32();
 						break;
 					case 8:
-						value = reader.ReadInt64();
+						value = reader.ReadLEInt64();
 						break;
 					default:
 						throw new NotImplementedException("Tried to read an INTV subrecord with an unsupported size (" + header.dataSize.ToString() + ").");
@@ -1732,12 +1732,12 @@ namespace TESUnity
 		{
 			public int value0, value1;
 
-			public override void DeserializeData(BinaryReader reader)
+			public override void DeserializeData(UnityBinaryReader reader)
 			{
 				Debug.Assert(header.dataSize == 8);
 
-				value0 = reader.ReadInt32();
-				value1 = reader.ReadInt32();
+				value0 = reader.ReadLEInt32();
+				value1 = reader.ReadLEInt32();
 			}
 		}
 		public class INDXSubRecord : INTVSubRecord { }
@@ -1746,9 +1746,9 @@ namespace TESUnity
 		{
 			public float value;
 
-			public override void DeserializeData(BinaryReader reader)
+			public override void DeserializeData(UnityBinaryReader reader)
 			{
-				value = reader.ReadSingle();
+				value = reader.ReadLESingle();
 			}
 		}
 
@@ -1756,7 +1756,7 @@ namespace TESUnity
 		{
 			public byte value;
 
-			public override void DeserializeData(BinaryReader reader)
+			public override void DeserializeData(UnityBinaryReader reader)
 			{
 				value = reader.ReadByte();
 			}
@@ -1765,18 +1765,18 @@ namespace TESUnity
 		{
 			public int value;
 
-			public override void DeserializeData(BinaryReader reader)
+			public override void DeserializeData(UnityBinaryReader reader)
 			{
-				value = reader.ReadInt32();
+				value = reader.ReadLEInt32();
 			}
 		}
 		public class UInt32SubRecord : SubRecord
 		{
 			public uint value;
 
-			public override void DeserializeData(BinaryReader reader)
+			public override void DeserializeData(UnityBinaryReader reader)
 			{
-				value = reader.ReadUInt32();
+				value = reader.ReadLEUInt32();
 			}
 		}
 
@@ -1897,7 +1897,7 @@ namespace TESUnity
 			}
 			private void ReadRecords(string filePath)
 			{
-				var reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
+				var reader = new UnityBinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
 				var recordList = new List<Record>();
 
 				while(reader.BaseStream.Position < reader.BaseStream.Length)

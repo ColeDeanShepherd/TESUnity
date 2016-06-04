@@ -46,7 +46,7 @@ namespace TESUnity
 
 		public BSAFile(string filePath)
 		{
-			reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
+			reader = new UnityBinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
 
 			ReadMetadata();
 		}
@@ -111,7 +111,7 @@ namespace TESUnity
 
 		/* Private */
 		private object readerLock = new object();
-		private BinaryReader reader;
+		private UnityBinaryReader reader;
 
 		private long hashTablePosition;
 		private long fileDataSectionPostion;
@@ -123,8 +123,8 @@ namespace TESUnity
 		{
 			// Read the header.
 			version = reader.ReadBytes(4);
-			uint hashTableOffsetFromEndOfHeader = reader.ReadUInt32(); // minus header size (12 bytes)
-			uint fileCount = reader.ReadUInt32();
+			uint hashTableOffsetFromEndOfHeader = reader.ReadLEUInt32(); // minus header size (12 bytes)
+			uint fileCount = reader.ReadLEUInt32();
 
 			// Calculate some useful values.
 			var headerSize = reader.BaseStream.Position;
@@ -142,8 +142,8 @@ namespace TESUnity
 			// Read file sizes/offsets.
 			for(int i = 0; i < fileCount; i++)
 			{
-				fileMetadatas[i].size = reader.ReadUInt32();
-				fileMetadatas[i].offsetInDataSection = reader.ReadUInt32();
+				fileMetadatas[i].size = reader.ReadLEUInt32();
+				fileMetadatas[i].offsetInDataSection = reader.ReadLEUInt32();
 			}
 
 			// Read filename offsets.
@@ -151,7 +151,7 @@ namespace TESUnity
 
 			for(int i = 0; i < fileCount; i++)
 			{
-				filenameOffsets[i] = reader.ReadUInt32();
+				filenameOffsets[i] = reader.ReadLEUInt32();
 			}
 
 			// Read filenames.
@@ -178,8 +178,8 @@ namespace TESUnity
 
 			for(int i = 0; i < fileCount; i++)
 			{
-				fileMetadatas[i].pathHash.value1 = reader.ReadUInt32();
-				fileMetadatas[i].pathHash.value2 = reader.ReadUInt32();
+				fileMetadatas[i].pathHash.value1 = reader.ReadLEUInt32();
+				fileMetadatas[i].pathHash.value2 = reader.ReadLEUInt32();
 			}
 
 			// Create the file metadata hash table.

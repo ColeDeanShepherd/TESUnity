@@ -10,7 +10,7 @@ public static class DDSReader
 	}
 	public static Texture2DInfo LoadDDSTexture(Stream inputStream, bool flipVertically = false)
 	{
-		using(BinaryReader reader = new BinaryReader(inputStream))
+		using(var reader = new UnityBinaryReader(inputStream))
 		{
 			var magicString = reader.ReadBytes(4); // "DDS "
 			if(!StringUtils.Equals(magicString, "DDS "))
@@ -67,7 +67,7 @@ public static class DDSReader
 						textureData = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)header.dwWidth, (int)header.dwHeight, bytesPerPixel)];
 					}
 					
-					BinaryReaderExtensions.ReadRestOfBytes(reader, textureData, 0);
+					reader.ReadRestOfBytes(textureData, 0);
 				}
 			}
 			else if(StringUtils.Equals(header.pixelFormat.fourCC, "DXT1"))
@@ -78,7 +78,7 @@ public static class DDSReader
 				textureFormat = TextureFormat.ARGB32;
 				bytesPerPixel = 4;
 
-				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
+				var compressedTextureData = reader.ReadRestOfBytes();
 				textureData = DecodeDXT1ToARGB(compressedTextureData, header.dwWidth, header.dwHeight, header.pixelFormat, DDSMipMapCount);
 			}
 			else if(StringUtils.Equals(header.pixelFormat.fourCC, "DXT3"))
@@ -86,7 +86,7 @@ public static class DDSReader
 				textureFormat = TextureFormat.ARGB32;
 				bytesPerPixel = 4;
 
-				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
+				var compressedTextureData = reader.ReadRestOfBytes();
 				textureData = DecodeDXT3ToARGB(compressedTextureData, header.dwWidth, header.dwHeight, DDSMipMapCount);
 			}
 			else if(StringUtils.Equals(header.pixelFormat.fourCC, "DXT5"))
@@ -97,7 +97,7 @@ public static class DDSReader
 				textureFormat = TextureFormat.ARGB32;
 				bytesPerPixel = 4;
 
-				var compressedTextureData = BinaryReaderExtensions.ReadRestOfBytes(reader);
+				var compressedTextureData = reader.ReadRestOfBytes();
 				textureData = DecodeDXT5ToARGB(compressedTextureData, header.dwWidth, header.dwHeight, DDSMipMapCount);
 			}
 			else
@@ -199,46 +199,46 @@ public static class DDSReader
 		public uint dwCaps4;
 		public uint dwReserved2;
 
-		public void Deserialize(BinaryReader reader)
+		public void Deserialize(UnityBinaryReader reader)
 		{
-			dwSize = reader.ReadUInt32();
+			dwSize = reader.ReadLEUInt32();
 			if(dwSize != 124)
 			{
 				throw new FileFormatException("Invalid DDS file header size: " + dwSize.ToString() + '.');
 			}
 
-			dwFlags = reader.ReadUInt32();
+			dwFlags = reader.ReadLEUInt32();
 			if(!Utils.ContainsBitFlags(dwFlags, (uint)DDSFlags.HEIGHT, (uint)DDSFlags.WIDTH))
 			{
 				throw new FileFormatException("Invalid DDS file flags: " + dwFlags.ToString() + '.');
 			}
 
-			dwHeight = reader.ReadUInt32();
-			dwWidth = reader.ReadUInt32();
-			dwPitchOrLinearSize = reader.ReadUInt32();
-			dwDepth = reader.ReadUInt32();
-			dwMipMapCount = reader.ReadUInt32();
+			dwHeight = reader.ReadLEUInt32();
+			dwWidth = reader.ReadLEUInt32();
+			dwPitchOrLinearSize = reader.ReadLEUInt32();
+			dwDepth = reader.ReadLEUInt32();
+			dwMipMapCount = reader.ReadLEUInt32();
 
 			dwReserved1 = new uint[11];
 
 			for(int i = 0; i < dwReserved1.Length; i++)
 			{
-				dwReserved1[i] = reader.ReadUInt32();
+				dwReserved1[i] = reader.ReadLEUInt32();
 			}
 
 			pixelFormat = new DDSPixelFormat();
 			pixelFormat.Deserialize(reader);
 
-			dwCaps = reader.ReadUInt32();
+			dwCaps = reader.ReadLEUInt32();
 			if(!Utils.ContainsBitFlags(dwCaps, (uint)DDSCaps.TEXTURE))
 			{
 				throw new FileFormatException("Invalid DDS file caps: " + dwCaps.ToString() + '.');
 			}
 
-			dwCaps2 = reader.ReadUInt32();
-			dwCaps3 = reader.ReadUInt32();
-			dwCaps4 = reader.ReadUInt32();
-			dwReserved2 = reader.ReadUInt32();
+			dwCaps2 = reader.ReadLEUInt32();
+			dwCaps3 = reader.ReadLEUInt32();
+			dwCaps4 = reader.ReadLEUInt32();
+			dwReserved2 = reader.ReadLEUInt32();
 		}
 	}
 	private struct DDSPixelFormat
@@ -252,26 +252,26 @@ public static class DDSReader
 		public uint BBitMask;
 		public uint ABitMask;
 
-		public void Deserialize(BinaryReader reader)
+		public void Deserialize(UnityBinaryReader reader)
 		{
-			size = reader.ReadUInt32();
+			size = reader.ReadLEUInt32();
 			if(size != 32)
 			{
 				throw new FileFormatException("Invalid DDS file pixel format size: " + size.ToString() + '.');
 			}
 
-			flags = reader.ReadUInt32();
+			flags = reader.ReadLEUInt32();
 			fourCC = reader.ReadBytes(4);
-			RGBBitCount = reader.ReadUInt32();
-			RBitMask = reader.ReadUInt32();
-			GBitMask = reader.ReadUInt32();
-			BBitMask = reader.ReadUInt32();
-			ABitMask = reader.ReadUInt32();
+			RGBBitCount = reader.ReadLEUInt32();
+			RBitMask = reader.ReadLEUInt32();
+			GBitMask = reader.ReadLEUInt32();
+			BBitMask = reader.ReadLEUInt32();
+			ABitMask = reader.ReadLEUInt32();
 		}
 	}
 
 	// Assumes the color table has already been built.
-	private static Color32[] DecodeDXT1TexelBlock(BinaryReader reader, Color[] colorTable)
+	private static Color32[] DecodeDXT1TexelBlock(UnityBinaryReader reader, Color[] colorTable)
 	{
 		Debug.Assert(colorTable.Length == 4);
 
@@ -304,12 +304,12 @@ public static class DDSReader
 		return colors;
 	}
 	
-	private static Color32[] DecodeDXT1TexelBlock(BinaryReader reader, bool containsAlpha)
+	private static Color32[] DecodeDXT1TexelBlock(UnityBinaryReader reader, bool containsAlpha)
 	{
 		// Create the color table.
 		var colorTable = new Color[4];
-		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
-		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadLEUInt16());
+		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadLEUInt16());
 
 		if(!containsAlpha)
 		{
@@ -326,14 +326,14 @@ public static class DDSReader
 		return DecodeDXT1TexelBlock(reader, colorTable);
 	}
 	
-	private static Color32[] DecodeDXT3TexelBlock(BinaryReader reader)
+	private static Color32[] DecodeDXT3TexelBlock(UnityBinaryReader reader)
 	{
 		// Read compressed pixel alphas.
 		var compressedAlphas = new byte[16];
 
 		for(int i = 0; i < 4; i++) // row
 		{
-			var compressedAlphaRow = reader.ReadUInt16();
+			var compressedAlphaRow = reader.ReadLEUInt16();
 
 			for(int j = 0; j < 4; j++) // column
 			{
@@ -352,8 +352,8 @@ public static class DDSReader
 
 		// Create the color table.
 		var colorTable = new Color[4];
-		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
-		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadLEUInt16());
+		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadLEUInt16());
 		colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
 		colorTable[3] = Color.Lerp(colorTable[0], colorTable[1], 2.0f / 3);
 
@@ -368,7 +368,7 @@ public static class DDSReader
 		return colors;
 	}
 	
-	private static Color32[] DecodeDXT5TexelBlock(BinaryReader reader)
+	private static Color32[] DecodeDXT5TexelBlock(UnityBinaryReader reader)
 	{
 		// Create the alpha table.
 		var alphaTable = new float[8];
@@ -423,8 +423,8 @@ public static class DDSReader
 
 		// Create the color table.
 		var colorTable = new Color[4];
-		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
-		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadUInt16());
+		colorTable[0] = ColorUtils.R5G6B5ToColor(reader.ReadLEUInt16());
+		colorTable[1] = ColorUtils.R5G6B5ToColor(reader.ReadLEUInt16());
 		colorTable[2] = Color.Lerp(colorTable[0], colorTable[1], 1.0f / 3);
 		colorTable[3] = Color.Lerp(colorTable[0], colorTable[1], 2.0f / 3);
 
@@ -470,7 +470,7 @@ public static class DDSReader
 		bool alphaFlag = Utils.ContainsBitFlags(pixelFormat.flags, (uint)DDSPixelFormatFlags.ALPHAPIXELS);
 		bool containsAlpha = alphaFlag || ((pixelFormat.RGBBitCount == 32) && (pixelFormat.ABitMask != 0));
 
-		var reader = new BinaryReader(new MemoryStream(compressedData));
+		var reader = new UnityBinaryReader(new MemoryStream(compressedData));
 		var argb = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)width, (int)height, 4)];
 
 		int mipMapWidth = (int)width;
@@ -498,7 +498,7 @@ public static class DDSReader
 	}
 	private static byte[] DecodeDXT3ToARGB(byte[] compressedData, uint width, uint height, uint mipmapCount)
 	{
-		var reader = new BinaryReader(new MemoryStream(compressedData));
+		var reader = new UnityBinaryReader(new MemoryStream(compressedData));
 		var argb = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)width, (int)height, 4)];
 
 		int mipMapWidth = (int)width;
@@ -526,7 +526,7 @@ public static class DDSReader
 	}
 	private static byte[] DecodeDXT5ToARGB(byte[] compressedData, uint width, uint height, uint mipmapCount)
 	{
-		var reader = new BinaryReader(new MemoryStream(compressedData));
+		var reader = new UnityBinaryReader(new MemoryStream(compressedData));
 		var argb = new byte[TextureUtils.CalculateMipMappedTextureDataSize((int)width, (int)height, 4)];
 
 		int mipMapWidth = (int)width;

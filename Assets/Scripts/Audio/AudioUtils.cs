@@ -76,7 +76,7 @@ public static class AudioUtils
 	// TODO: Endianness?
 	public static PCMAudioBuffer ReadWAV(string filePath)
 	{
-		using(BinaryReader reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read)))
+		using(var reader = new UnityBinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read)))
 		{
 			var chunkID = reader.ReadBytes(4);
 			if(!StringUtils.Equals(chunkID, "RIFF"))
@@ -84,7 +84,7 @@ public static class AudioUtils
 				throw new FileFormatException("Invalid chunk ID.");
 			}
 
-			var chunkSize = reader.ReadUInt32(); // Size of the rest of the chunk after this number.
+			var chunkSize = reader.ReadLEUInt32(); // Size of the rest of the chunk after this number.
 
 			var format = reader.ReadBytes(4);
 			if(!StringUtils.Equals(format, "WAVE"))
@@ -98,24 +98,24 @@ public static class AudioUtils
 				throw new FileFormatException("Invalid subchunk ID.");
 			}
 
-			var subchunk1Size = reader.ReadUInt32(); // Size of rest of subchunk.
+			var subchunk1Size = reader.ReadLEUInt32(); // Size of rest of subchunk.
 
-			var audioFormat = reader.ReadUInt16();
+			var audioFormat = reader.ReadLEUInt16();
 			if(audioFormat != 1) // 1 = PCM
 			{
 				throw new NotImplementedException("Unsupported audio format.");
 			}
 
-			var numChannels = reader.ReadUInt16();
-			var samplingRate = reader.ReadUInt32(); // # of samples per second (not including all channels).
-			var byteRate = reader.ReadUInt32(); // # of bytes per second (including all channels).
-			var blockAlign = reader.ReadUInt16(); // # of bytes for one sample (including all channels).
-			var bitsPerSample = reader.ReadUInt16(); // # of bits per sample (not including all channels).
+			var numChannels = reader.ReadLEUInt16();
+			var samplingRate = reader.ReadLEUInt32(); // # of samples per second (not including all channels).
+			var byteRate = reader.ReadLEUInt32(); // # of bytes per second (including all channels).
+			var blockAlign = reader.ReadLEUInt16(); // # of bytes for one sample (including all channels).
+			var bitsPerSample = reader.ReadLEUInt16(); // # of bits per sample (not including all channels).
 
 			if(subchunk1Size == 18)
 			{
 				// Read any extra values.
-				var subchunk1ExtraSize = reader.ReadUInt16();
+				var subchunk1ExtraSize = reader.ReadLEUInt16();
 				reader.ReadBytes(subchunk1ExtraSize);
 			}
 
@@ -125,7 +125,7 @@ public static class AudioUtils
 				throw new FileFormatException("Invalid subchunk ID.");
 			}
 
-			var subchunk2Size = reader.ReadUInt32(); // Size of rest of subchunk.
+			var subchunk2Size = reader.ReadLEUInt32(); // Size of rest of subchunk.
 			byte[] audioData = reader.ReadBytes((int)subchunk2Size);
 
 			return new PCMAudioBuffer((int)numChannels, (int)bitsPerSample, (int)samplingRate, audioData);
