@@ -290,41 +290,47 @@ namespace TESUnity
 			Ray ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
 
 			int raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
-
-			for(int i = 0; i < raycastHitCount; i++)
+			if ( raycastHitCount < 1 )
 			{
-				RaycastHit hitInfo = interactRaycastHitBuffer[i];
-
-				// Find the door associated with the hit collider.
-				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
-
-				if(doorObj != null)
+				if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false ); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
+			}
+			else
+			{
+				for ( int i = 0 ; i < raycastHitCount ; i++ )
 				{
-					DoorComponent doorComponent = doorObj.GetComponent<DoorComponent>();
+					RaycastHit hitInfo = interactRaycastHitBuffer[ i ];
 
-					if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
+					// Find the door associated with the hit collider.
+					GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Door" );
 
-					if(doorComponent.leadsToAnotherCell)
+					if ( doorObj != null )
 					{
-						if ( interactText.text != doorComponent.doorExitName )
-							interactText.text = doorComponent.doorExitName;
+						DoorComponent doorComponent = doorObj.GetComponent<DoorComponent>();
+
+						if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
+
+						if ( doorComponent.leadsToAnotherCell )
+						{
+							if ( interactText.text != doorComponent.doorExitName )
+								interactText.text = doorComponent.doorExitName;
+						}
+						else
+						{
+							if ( interactText.text != doorComponent.doorName )
+								interactText.text = doorComponent.doorName;
+						}
+
+						if ( Input.GetKeyDown( KeyCode.E ) )
+						{
+							OpenDoor( doorComponent );
+						}
+
+						break;
 					}
 					else
 					{
-						if ( interactText.text != doorComponent.doorName )
-							interactText.text = doorComponent.doorName;
+						if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false ); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 					}
-
-					if(Input.GetKeyDown(KeyCode.E))
-					{
-						OpenDoor(doorComponent);
-					}
-
-					break;
-				}
-				else
-				{
-					if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false ); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 				}
 			}
 		}
@@ -666,11 +672,13 @@ namespace TESUnity
 
 				if(cellDistance <= detailRadius)
 				{
-					cellInfo.objectsContainerGameObject.SetActive(true);
+					if ( !cellInfo.objectsContainerGameObject.activeSelf )
+						cellInfo.objectsContainerGameObject.SetActive(true);
 				}
 				else
 				{
-					cellInfo.objectsContainerGameObject.SetActive(false);
+					if ( cellInfo.objectsContainerGameObject.activeSelf )
+						cellInfo.objectsContainerGameObject.SetActive(false);
 				}
 			}
 		}
@@ -762,16 +770,7 @@ namespace TESUnity
 		{
 			if(!doorComponent.leadsToAnotherCell)
 			{
-				if(!doorComponent.isOpen)
-				{
-					doorComponent.gameObject.transform.Rotate(new Vector3(0, 90, 0));
-					doorComponent.isOpen = true;
-				}
-				else
-				{
-					doorComponent.gameObject.transform.Rotate(new Vector3(0, -90, 0));
-					doorComponent.isOpen = false;
-				}
+				doorComponent.UseDoor();
 			}
 			else
 			{
