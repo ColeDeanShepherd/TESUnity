@@ -51,7 +51,7 @@ namespace TESUnity
 			}
 		}
 
-		public MorrowindEngine(MorrowindDataReader dataReader)
+		public MorrowindEngine(MorrowindDataReader dataReader , bool sunShadows = true)
 		{
 			Debug.Assert(instance == null);
 
@@ -78,7 +78,7 @@ namespace TESUnity
 			RenderSettings.ambientIntensity = 1.5f;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
-			sunObj.GetComponent<Light>().shadows = LightShadows.Hard;
+			sunObj.GetComponent<Light>().shadows = sunShadows ? LightShadows.Hard : LightShadows.None;
 			sunObj.SetActive(false);
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);

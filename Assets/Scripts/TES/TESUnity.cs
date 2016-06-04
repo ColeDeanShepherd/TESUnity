@@ -11,6 +11,7 @@ namespace TESUnity
 
 		#region Inspector-set Members
 		public bool music = false;
+		public bool sunShadows = false;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
@@ -19,10 +20,6 @@ namespace TESUnity
 		public Sprite UIKnobImg;
 		public Sprite UIMaskImg;
 		public Sprite UISpriteImg;
-
-		public Material defaultMaterial;
-		public Material cutoutMaterial;
-		public Material fadeMaterial;
 
 		public GameObject waterPrefab;
 		#endregion
@@ -43,7 +40,7 @@ namespace TESUnity
 		private void Start()
 		{
 			MWDataReader = new MorrowindDataReader(MWDataPath);
-			MWEngine = new MorrowindEngine(MWDataReader);
+			MWEngine = new MorrowindEngine(MWDataReader , sunShadows );
 
 			if ( music )
 			{// Start the music.
