@@ -42,7 +42,9 @@ namespace TESUnity
 
 		public void TryFindSettings()
 		{
-			settingsFile = Resources.LoadAll<LocalSettingsObject>("")[ 0 ]; // search for and load the first found Settings file from a Resources folder
+			LocalSettingsObject[] foundSettings = Resources.LoadAll<LocalSettingsObject>("");
+			if ( foundSettings.Length > 0 )
+				settingsFile = foundSettings[ 0 ]; // search for and load the first found Settings file from a Resources folder
 		}
 
 		private void Start()
