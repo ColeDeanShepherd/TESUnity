@@ -13,7 +13,7 @@ namespace TESUnity
 
 		void Start ()
 		{
-			Debug.Log("Animated Light Created: " + mode);
+			//Debug.Log("Animated Light Created: " + mode);
 			light = GetComponent<Light>();
 			baseIntensity = light.intensity;
 		}

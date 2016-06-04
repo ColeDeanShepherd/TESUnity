@@ -12,6 +12,7 @@ namespace TESUnity
 		#region Inspector-set Members
 		public bool music = false;
 		public bool sunShadows = false;
+		public RenderingPath renderPath = RenderingPath.Forward;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
@@ -53,6 +54,7 @@ namespace TESUnity
 			{
 				MWDataPath = settingsFile.dataFilesPath;
 				music = settingsFile.enableMusic;
+				renderPath = settingsFile.preferredRenderMode;
 			}
 
 			MWDataReader = new MorrowindDataReader(MWDataPath);

@@ -302,20 +302,23 @@ namespace TESUnity
 					GenericObjectComponent component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
 					if ( component != null )
 					{
-						switch ( component.gameObject.tag )
+						if ( !string.IsNullOrEmpty( component.objData.name ) )
 						{
-							case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
-							case "Container": SetInteractText("Open " + component.objData.name); break;
-							case "Activator": if ( component.objData.name != "" ) SetInteractText("" + component.objData.name); break;
-							case "Light": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
-							case "Clothing":
-							case "Armor":
-							case "Weapon":
-							case "Ingredient":
-							case "MiscObj": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
-							case "Book": SetInteractText("" + component.objData.name); TryRemoveObject(component.gameObject); if ( Input.GetKeyDown(KeyCode.F) ) component.Interact(); break;
+							switch ( component.gameObject.tag )
+							{
+								case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
+								case "Container": SetInteractText("Open " + component.objData.name); break;
+								case "Activator": SetInteractText("" + component.objData.name); break;
+								case "Light": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+								case "Clothing":
+								case "Armor":
+								case "Weapon":
+								case "Ingredient":
+								case "MiscObj": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+								case "Book": SetInteractText("" + component.objData.name); TryRemoveObject(component.gameObject); if ( Input.GetKeyDown(KeyCode.F) ) component.Interact(); break;
+							}
+							break;
 						}
-						break;
 					}
 					else
 					{
@@ -861,7 +864,7 @@ namespace TESUnity
 		{
 			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-			Camera.main.renderingPath = RenderingPath.DeferredShading;
+			camera.GetComponent<Camera>().renderingPath = TESUnity.instance.renderPath;
 			return camera;
 		}
 		private GameObject CreateFlyingCamera(Vector3 position)
