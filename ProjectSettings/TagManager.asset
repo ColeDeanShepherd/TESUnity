@@ -6,6 +6,15 @@ TagManager:
   tags:
   - Cell
   - Door
+  - Container
+  - Book
+  - MiscObj
+  - Weapon
+  - Ingredient
+  - Clothing
+  - Armor
+  - Light
+  - Activator
   layers:
   - Default
   - TransparentFX

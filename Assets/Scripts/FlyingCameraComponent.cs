@@ -12,7 +12,7 @@ public class FlyingCameraComponent : MonoBehaviour
 
 	public float arrowKeyRotSpeedMultiplier = 120;
 
-	private Rigidbody rigidbody;
+	private new Rigidbody rigidbody;
 	
 	private void Start()
 	{

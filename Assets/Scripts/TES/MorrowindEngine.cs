@@ -51,7 +51,7 @@ namespace TESUnity
 			}
 		}
 
-		public MorrowindEngine(MorrowindDataReader dataReader)
+		public MorrowindEngine(MorrowindDataReader dataReader , bool sunShadows = true)
 		{
 			Debug.Assert(instance == null);
 
@@ -66,6 +66,7 @@ namespace TESUnity
 
 			interactTextObj = GUIUtils.CreateText("", canvasObj);
 			interactTextObj.GetComponent<Text>().color = Color.white;
+			interactText = interactTextObj.GetComponent<Text>();
 
 			var interactTextCSF = interactTextObj.AddComponent<ContentSizeFitter>();
 			interactTextCSF.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -77,7 +78,7 @@ namespace TESUnity
 			RenderSettings.ambientIntensity = 1.5f;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
-			sunObj.GetComponent<Light>().shadows = LightShadows.Hard;
+			sunObj.GetComponent<Light>().shadows = sunShadows ? LightShadows.Hard : LightShadows.None;
 			sunObj.SetActive(false);
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
@@ -285,43 +286,72 @@ namespace TESUnity
 		}
 		public void CastInteractRay()
 		{
-			interactTextObj.SetActive(false);
-
 			// Cast a ray to see what the camera is looking at.
-			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
+			Ray ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
 
-			var raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
+			int raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance );
 
-			for(int i = 0; i < raycastHitCount; i++)
+			if ( raycastHitCount > 0 )
 			{
-				var hitInfo = interactRaycastHitBuffer[i];
-
-				// Find the door associated with the hit collider.
-				GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy(hitInfo.collider.gameObject, "Door");
-
-				if(doorObj != null)
+				for ( int i = 0 ; i < raycastHitCount ; i++ )
 				{
-					var doorComponent = doorObj.GetComponent<DoorComponent>();
+					RaycastHit hitInfo = interactRaycastHitBuffer[ i ];
+					GameObject hitObj = hitInfo.collider.gameObject;
 
-					interactTextObj.SetActive(true);
-
-					if(doorComponent.leadsToAnotherCell)
+					GenericObjectComponent component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
+					if ( component != null )
 					{
-						interactTextObj.GetComponent<Text>().text = doorComponent.doorExitName;
+						switch ( component.gameObject.tag )
+						{
+							case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
+							case "Container": SetInteractText("Open " + component.objData.name); break;
+							case "Activator": if ( component.objData.name != "" ) SetInteractText("" + component.objData.name); break;
+							case "Light": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+							case "Clothing":
+							case "Armor":
+							case "Weapon":
+							case "Ingredient":
+							case "MiscObj": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+							case "Book": SetInteractText("" + component.objData.name); TryRemoveObject(component.gameObject); if ( Input.GetKeyDown(KeyCode.F) ) component.Interact(); break;
+						}
+						break;
 					}
 					else
 					{
-						interactTextObj.GetComponent<Text>().text = doorComponent.doorName;
+						RemoveInteractText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 					}
-
-					if(Input.GetKeyDown(KeyCode.E))
-					{
-						OpenDoor(doorComponent);
-					}
-
-					break;
 				}
 			}
+			else
+			{
+				RemoveInteractText(); //deactivate text if nothing is raycasted against
+			}
+		}
+
+		private void TryRemoveObject ( GameObject obj ) // temp utility function
+		{
+			if ( Input.GetKeyDown( KeyCode.E ) )
+			{
+				Transform p = obj.transform;
+				while ( p.parent != null && p.GetComponent<LODGroup>() == null ) p = p.parent; //kind of a hacky way to check when youre referencing the entirety of an individual object
+				GameObject.Destroy( p.gameObject );
+			}
+		}
+
+		public void ShowInteractText()
+		{
+			if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
+		}
+
+		public void RemoveInteractText ()
+		{
+			if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false );
+		}
+
+		public void SetInteractText ( string text )
+		{
+			if ( interactText.text != text ) interactText.text = text;
+			ShowInteractText();
 		}
 		#endregion
 
@@ -340,6 +370,7 @@ namespace TESUnity
 		private CELLRecord _currentCell;
 
 		private GameObject interactTextObj;
+		private Text interactText;
 		private GameObject sunObj;
 		private GameObject waterObj;
 		private GameObject playerObj;
@@ -543,54 +574,34 @@ namespace TESUnity
 			gameObject.transform.position += Convert.NifPointToUnityPoint(refObjDataGroup.DATA.position);
 			gameObject.transform.rotation *= Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DATA.eulerAngles);
 
-			// Handle doors.
-			if(refCellObjInfo.referencedRecord is DOORRecord)
+			var tagTarget = gameObject;
+			var coll = gameObject.GetComponentInChildren<Collider>(); // if the collider is on a child object and not on the object with the component, we need to set that object's tag instead.
+			if ( coll != null ) tagTarget = coll.gameObject;
+
+			ProcessObjectType<DOORRecord>( tagTarget , refCellObjInfo , "Door");
+			ProcessObjectType<CONTRecord>( tagTarget , refCellObjInfo , "Container");
+			ProcessObjectType<ACTIRecord>( tagTarget , refCellObjInfo , "Activator");
+			ProcessObjectType<LIGHRecord>( tagTarget , refCellObjInfo , "Light");
+			ProcessObjectType<WEAPRecord>( tagTarget , refCellObjInfo , "Weapon");
+			ProcessObjectType<CLOTRecord>( tagTarget , refCellObjInfo , "Clothing");
+			ProcessObjectType<ARMORecord>( tagTarget , refCellObjInfo , "Armor");
+			ProcessObjectType<INGRRecord>( tagTarget , refCellObjInfo , "Ingredient");
+			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
+			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
+
+		}
+
+		private void ProcessObjectType <RecordType> ( GameObject gameObject , RefCellObjInfo info , string tag ) where RecordType : Record
+		{
+			Record record = info.referencedRecord;
+			if ( record is RecordType )
 			{
-				gameObject.tag = "Door";
+				var p = gameObject.transform;
+				while ( p.parent != null && p.GetComponent<LODGroup>() == null ) p = p.parent;
+				GenericObjectComponent component = p.gameObject.AddComponent<GenericObjectComponent>();
 
-				// Add a door component.
-				var DOOR = (DOORRecord)refCellObjInfo.referencedRecord;
-				var doorComponent = gameObject.AddComponent<DoorComponent>();
-
-				if(DOOR.FNAM != null)
-				{
-					doorComponent.doorName = DOOR.FNAM.value;
-				}
-
-				// If the door leads to another cell (as opposed to just rotating to open).
-				if((refObjDataGroup.DNAM != null) || (refObjDataGroup.DODT != null))
-				{
-					doorComponent.leadsToAnotherCell = true;
-
-					// Does the door lead to an exterior cell or an interior cell?
-					if(refObjDataGroup.DNAM != null)
-					{
-						doorComponent.doorExitName = refObjDataGroup.DNAM.value;
-						doorComponent.leadsToInteriorCell = true;
-					}
-					else
-					{
-						doorComponent.leadsToInteriorCell = false;
-					}
-
-					// Store the door's exit position and orientation.
-					if(refObjDataGroup.DODT != null)
-					{
-						doorComponent.doorExitPos = Convert.NifPointToUnityPoint(refObjDataGroup.DODT.position);
-						doorComponent.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
-
-						// If the door leads to an exterior cell, store the name of the region containing the cell as the door's exit name.
-						if(!doorComponent.leadsToInteriorCell)
-						{
-							var doorExitCell = dataReader.FindExteriorCellRecord(GetExteriorCellIndices(doorComponent.doorExitPos));
-							doorComponent.doorExitName = (doorExitCell != null) ? doorExitCell.RGNN.value : doorComponent.doorName;
-						}
-					}
-				}
-				else
-				{
-					doorComponent.leadsToAnotherCell = false;
-				}
+				if ( record is DOORRecord ) component.refObjDataGroup = info.refObjDataGroup; //only door records need access to the cell object data group so far
+				component.init(( RecordType )record , tag);
 			}
 		}
 
@@ -660,11 +671,13 @@ namespace TESUnity
 
 				if(cellDistance <= detailRadius)
 				{
-					cellInfo.objectsContainerGameObject.SetActive(true);
+					if ( !cellInfo.objectsContainerGameObject.activeSelf )
+						cellInfo.objectsContainerGameObject.SetActive(true);
 				}
 				else
 				{
-					cellInfo.objectsContainerGameObject.SetActive(false);
+					if ( cellInfo.objectsContainerGameObject.activeSelf )
+						cellInfo.objectsContainerGameObject.SetActive(false);
 				}
 			}
 		}
@@ -752,20 +765,11 @@ namespace TESUnity
 			}
 		}
 
-		private void OpenDoor(DoorComponent doorComponent)
+		private void OpenDoor(GenericObjectComponent component)
 		{
-			if(!doorComponent.leadsToAnotherCell)
+			if(!component.doorData.leadsToAnotherCell)
 			{
-				if(!doorComponent.isOpen)
-				{
-					doorComponent.gameObject.transform.Rotate(new Vector3(0, 90, 0));
-					doorComponent.isOpen = true;
-				}
-				else
-				{
-					doorComponent.gameObject.transform.Rotate(new Vector3(0, -90, 0));
-					doorComponent.isOpen = false;
-				}
+				component.Interact();
 			}
 			else
 			{
@@ -773,15 +777,15 @@ namespace TESUnity
 				DestroyAllCells();
 
 				// Move the player.
-				playerObj.transform.position = doorComponent.doorExitPos;
-				playerObj.transform.localEulerAngles = new Vector3(0, doorComponent.doorExitOrientation.eulerAngles.y, 0);
+				playerObj.transform.position = component.doorData.doorExitPos;
+				playerObj.transform.localEulerAngles = new Vector3(0, component.doorData.doorExitOrientation.eulerAngles.y, 0);
 
 				// Load the new cell.
 				CELLRecord newCell;
 
-				if(doorComponent.leadsToInteriorCell)
+				if( component.doorData.leadsToInteriorCell )
 				{
-					newCell = dataReader.FindInteriorCellRecord(doorComponent.doorExitName);
+					newCell = dataReader.FindInteriorCellRecord(component.doorData.doorExitName);
 
 					var cellInfo = InstantiateCell(newCell);
 					temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
@@ -792,7 +796,7 @@ namespace TESUnity
 				}
 				else
 				{
-					var cellIndices = GetExteriorCellIndices(doorComponent.doorExitPos);
+					var cellIndices = GetExteriorCellIndices(component.doorData.doorExitPos);
 					newCell = dataReader.FindExteriorCellRecord(cellIndices);
 
 					UpdateExteriorCells(true, cellRadiusOnLoad);
@@ -854,7 +858,7 @@ namespace TESUnity
 		{
 			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-
+			Camera.main.renderingPath = RenderingPath.DeferredShading;
 			return camera;
 		}
 		private GameObject CreateFlyingCamera(Vector3 position)

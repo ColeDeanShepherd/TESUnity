@@ -50,7 +50,7 @@ public static class AudioUtils
 
 		var audioSource = gameObject.AddComponent<AudioSource>();
 		//audioSource.clip = CreateStreamingAudioClip("tmpAudioClip", audioStream);
-		//audioSource.loop = true;
+		audioSource.loop = true;
 
 		var audioStreamComponent = gameObject.AddComponent<OneShotAudioStreamComponent>();
 		audioStreamComponent.audioStream = audioStream;
