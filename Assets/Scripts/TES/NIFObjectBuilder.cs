@@ -469,38 +469,11 @@ namespace TESUnity
 		private UnityEngine.Rendering.BlendMode FigureBlendMode ( byte b )
 		{
 			return ( UnityEngine.Rendering.BlendMode )Mathf.Min( b , 10 );
-			switch (b)
-			{
-				case  0: return UnityEngine.Rendering.BlendMode.One;
-				case  1: return UnityEngine.Rendering.BlendMode.Zero;
-				case  2: return UnityEngine.Rendering.BlendMode.SrcColor;
-				case  3: return UnityEngine.Rendering.BlendMode.OneMinusSrcColor;
-				case  4: return UnityEngine.Rendering.BlendMode.DstColor;
-				case  5: return UnityEngine.Rendering.BlendMode.OneMinusDstColor;
-				case  6: return UnityEngine.Rendering.BlendMode.SrcAlpha;
-				case  7: return UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
-				case  8: return UnityEngine.Rendering.BlendMode.DstAlpha;
-				case  9: return UnityEngine.Rendering.BlendMode.OneMinusDstAlpha;
-				case 10: return UnityEngine.Rendering.BlendMode.SrcAlphaSaturate;
-			}
-			return UnityEngine.Rendering.BlendMode.Zero;
 		}
 
 		private MatTestMode FigureTestMode ( byte b )
 		{
 			return ( MatTestMode )Mathf.Min( b , 7 );
-			switch ( b )
-			{
-				case 0: return MatTestMode.Always;
-				case 1: return MatTestMode.Less;
-				case 2: return MatTestMode.LEqual;
-				case 3: return MatTestMode.Equal;
-				case 4: return MatTestMode.GEqual;
-				case 5: return MatTestMode.Greater;
-				case 6: return MatTestMode.NotEqual;
-				case 7: return MatTestMode.Never;
-			}
-			return MatTestMode.Always;
 		}
 
 		private void AddColliderFromNiObject(NiObject anNiObject, GameObject gameObject)

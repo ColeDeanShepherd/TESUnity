@@ -303,11 +303,12 @@ namespace TESUnity
 					// Find the door associated with the hit collider.
 					GameObject doorObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Door" );
 					GameObject containerObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Container" );
+					GameObject bookObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "Book" );
+					GameObject miscObj = GameObjectUtils.FindObjectWithTagUpHeirarchy( hitInfo.collider.gameObject , "MiscObj" );
 
 					if ( doorObj != null )
 					{
 						DoorComponent doorComponent = doorObj.GetComponent<DoorComponent>();
-
 						SetInteractText( doorComponent.leadsToAnotherCell ? doorComponent.doorExitName : doorComponent.doorName );
 
 						if ( Input.GetKeyDown( KeyCode.E ) )
@@ -319,7 +320,22 @@ namespace TESUnity
 					}
 					else if ( containerObj != null )
 					{
-						SetInteractText( containerObj.name );
+						ContainerComponent component = containerObj.GetComponentInParent<ContainerComponent>();
+						SetInteractText( component.containerName );
+						break;
+					}
+					else if ( bookObj != null )
+					{
+						BookComponent component = bookObj.GetComponentInParent<BookComponent>();
+						SetInteractText( component.bookTitle );
+						TryRemoveObject( bookObj );
+						break;
+					}
+					else if ( miscObj != null )
+					{
+						MiscComponent component = miscObj.GetComponentInParent<MiscComponent>();
+						SetInteractText( component.itemName );
+						TryRemoveObject( miscObj );
 						break;
 					}
 					else
@@ -327,6 +343,16 @@ namespace TESUnity
 						RemoveInteractText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 					}
 				}
+			}
+		}
+
+		private void TryRemoveObject ( GameObject obj )
+		{
+			if ( Input.GetKeyDown( KeyCode.E ) )
+			{
+				Transform p = obj.transform;
+				while ( p.parent != null && p.GetComponent<LODGroup>() == null ) p = p.parent; //kind of a hacky way to check when youre referencing the entirety of an individual object
+				GameObject.Destroy( p.gameObject );
 			}
 		}
 
@@ -625,7 +651,42 @@ namespace TESUnity
 				var CONT = ( CONTRecord )refCellObjInfo.referencedRecord;
 
 				ContainerComponent component = gameObject.AddComponent<ContainerComponent>();
-				component.name = CONT.FNAM.value;
+				component.containerName = CONT.FNAM.value;
+
+				/*
+				Do More Containery Stuff
+				*/
+			}
+			#endregion
+
+			#region book items
+			if ( refCellObjInfo.referencedRecord is BOOKRecord )
+			{
+				Collider coll = gameObject.GetComponentInChildren<Collider>();
+				if ( coll != null ) coll.gameObject.tag = "Book";
+				gameObject.tag = "Book";
+				var BOOK = ( BOOKRecord )refCellObjInfo.referencedRecord;
+
+				BookComponent component = gameObject.AddComponent<BookComponent>();
+				component.bookTitle = BOOK.FNAM.value;
+
+				/*
+				Do More Containery Stuff
+				*/
+			}
+			#endregion
+
+			#region misc items
+			if ( refCellObjInfo.referencedRecord is MISCRecord )
+			{
+				Collider coll = gameObject.GetComponentInChildren<Collider>();
+				if ( coll != null )
+					coll.gameObject.tag = "MiscObj";
+				gameObject.tag = "MiscObj";
+				var MISC = ( MISCRecord )refCellObjInfo.referencedRecord;
+
+				MiscComponent component = gameObject.AddComponent<MiscComponent>();
+				component.itemName = MISC.FNAM.value;
 
 				/*
 				Do More Containery Stuff
