@@ -40,7 +40,7 @@ namespace TESUnity
 			if(Directory.Exists(MWDataPath))
 			{
 				var TESUnityComponent = GetComponent<TESUnity>();
-				TESUnityComponent.MWDataPath = MWDataPath;
+				TESUnityComponent.dataPath = MWDataPath;
 
 				TESUnityComponent.enabled = true;
 				Destroy(this);

@@ -27,6 +27,9 @@ namespace TESUnity
 		{
 			public RenderingPath preferredRenderMode = RenderingPath.Forward;
 			public bool exteriorCellLights = false;
+			public bool sunShadows = true;
+			public bool lightShadows = false;
+			public bool animatedLights = false;
 		}
 		public Graphics graphics = new Graphics();
 

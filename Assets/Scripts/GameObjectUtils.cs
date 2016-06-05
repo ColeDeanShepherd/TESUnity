@@ -23,7 +23,6 @@ public static class GameObjectUtils
 
 		var lightComponent = light.AddComponent<Light>();
 		lightComponent.type = LightType.Directional;
-		lightComponent.shadows = LightShadows.Soft;
 
 		light.transform.position = position;
 		light.transform.rotation = orientation;

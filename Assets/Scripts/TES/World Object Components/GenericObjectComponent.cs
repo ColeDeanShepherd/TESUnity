@@ -23,6 +23,7 @@ namespace TESUnity
 		}
 		public DoorData doorData = null;
 
+		[System.Serializable]
 		public class LightData
 		{
 			public Light lightComponent;
@@ -94,37 +95,55 @@ namespace TESUnity
 			lightData = new LightData();
 			ESM.LIGHRecord LIGH = record as ESM.LIGHRecord;
 			lightData.lightComponent = gameObject.GetComponentInChildren<Light>(true);
-			if ( LIGH.FNAM != null ) objData.name = LIGH.FNAM.value;
+			if ( LIGH.FNAM != null )
+				objData.name = LIGH.FNAM.value;
 			if ( LIGH.LHDT != null )
 			{
 				lightData.flags = LIGH.LHDT.flags;
-				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.OffDefault) ) lightData.lightComponent.enabled = false;
 				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.CanCarry) )
 				{
 					gameObject.AddComponent<BoxCollider>(); //very weak-- adding a box collider to light objects so we can interact with them
 					//adding kinematic rigidbodies to static colliders prevents the physics collision tree from being rebuilt, which impacts performance
 					gameObject.AddComponent<Rigidbody>().isKinematic = true; 
 				}
+				StartCoroutine(ConfigureLightComponent());
+			}
+		}
 
-				if ( lightData.lightComponent != null )
+		public IEnumerator ConfigureLightComponent ()
+		{
+			var time = 0f;
+			//wait until we have found the light component. this will typically be the frame /after/ object creation as the light component is added after this component is created
+			while ( lightData.lightComponent == null && time < 5f) 
+			{
+				lightData.lightComponent = gameObject.GetComponentInChildren<Light>(true);
+				yield return new WaitForEndOfFrame();
+				time += Time.deltaTime;
+			}
+			if ( lightData.lightComponent != null ) //if we have found the light component by the end of the loop
+			{
+				lightData.lightComponent.enabled = !Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.OffDefault);
+
+				var flicker = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Flicker);
+				var flickerSlow = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.FlickerSlow);
+				var pulse = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Pulse);
+				var pulseSlow = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.PulseSlow);
+				var fire = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Fire);
+				var animated = flicker || flickerSlow || pulse || pulseSlow || fire;
+
+				if ( animated && TESUnity.instance.EnableAnimatedLights )
 				{
-					bool flicker = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Flicker);
-					bool flickerSlow = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.FlickerSlow);
-					bool pulse = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Pulse);
-					bool pulseSlow = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.PulseSlow);
-					bool fire = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Fire);
-					bool animated = flicker || flickerSlow || pulse || pulseSlow || fire;
-
-					if ( animated )
-					{
-						LightAnim lightAnim = lightData.lightComponent.gameObject.AddComponent<LightAnim>();
-						if ( flicker ) lightAnim.mode = LightAnimMode.Flicker;
-						if ( flickerSlow ) lightAnim.mode = LightAnimMode.FlickerSlow;
-						if ( pulse ) lightAnim.mode = LightAnimMode.Pulse;
-						if ( pulseSlow ) lightAnim.mode = LightAnimMode.PulseSlow;
-						if ( fire ) lightAnim.mode = LightAnimMode.Fire;
-					}
+					var lightAnim = lightData.lightComponent.gameObject.AddComponent<LightAnim>();
+					if ( flicker ) lightAnim.mode = LightAnimMode.Flicker;
+					if ( flickerSlow ) lightAnim.mode = LightAnimMode.FlickerSlow;
+					if ( pulse ) lightAnim.mode = LightAnimMode.Pulse;
+					if ( pulseSlow ) lightAnim.mode = LightAnimMode.PulseSlow;
+					if ( fire ) lightAnim.mode = LightAnimMode.Fire;
 				}
+			}
+			else
+			{
+				Debug.Log("Light Record Object Created Without Light Component. Search Timed Out.");
 			}
 		}
 

@@ -10,10 +10,14 @@ namespace TESUnity
 		public static TESUnity instance;
 
 		#region Inspector-set Members
-		public bool music = false;
-		public bool sunShadows = false;
-		public RenderingPath renderPath = RenderingPath.Forward;
-		public bool exteriorCellLights;
+
+		public string dataPath;
+		[SerializeField]private bool music = false;
+		[SerializeField]private bool sunShadows = false;
+		[SerializeField]private bool lightShadows = false;
+		[SerializeField]private RenderingPath renderPath = RenderingPath.Forward;
+		[SerializeField]private bool exteriorCellLights;
+		[SerializeField]private bool animatedLights = false;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
@@ -26,10 +30,16 @@ namespace TESUnity
 		public GameObject waterPrefab;
 		#endregion
 
-		public string MWDataPath;
-
 		private LocalSettingsObject settingsFile;
 		public bool FoundSettingsFile { get { return settingsFile != null; } }
+		public string MWDataPath { get { return FoundSettingsFile ? settingsFile.engine.dataFilesPath : dataPath; } }
+		public bool EnableMusic { get { return FoundSettingsFile ? settingsFile.audio.enableMusic : music; } }
+		public bool EnableSunShadows { get { return FoundSettingsFile ? settingsFile.graphics.sunShadows : sunShadows; } }
+		public bool EnableLightShadows { get { return FoundSettingsFile ? settingsFile.graphics.lightShadows : lightShadows; } }
+		public RenderingPath RenderPath { get { return FoundSettingsFile ? settingsFile.graphics.preferredRenderMode : renderPath; } }
+		public bool EnableExteriorLights { get { return FoundSettingsFile ? settingsFile.graphics.exteriorCellLights : exteriorCellLights; } }
+		public bool EnableAnimatedLights { get { return FoundSettingsFile ? settingsFile.graphics.animatedLights : animatedLights; } }
+
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
 		private MusicPlayer musicPlayer;
@@ -51,18 +61,10 @@ namespace TESUnity
 
 		private void Start()
 		{
-			if ( settingsFile != null )
-			{
-				MWDataPath = settingsFile.engine.dataFilesPath;
-				music = settingsFile.audio.enableMusic;
-				renderPath = settingsFile.graphics.preferredRenderMode;
-				exteriorCellLights = settingsFile.graphics.exteriorCellLights;
-			}
-
 			MWDataReader = new MorrowindDataReader(MWDataPath);
-			MWEngine = new MorrowindEngine(MWDataReader , sunShadows );
+			MWEngine = new MorrowindEngine(MWDataReader);
 
-			if ( music )
+			if ( EnableMusic )
 			{// Start the music.
 				musicPlayer = new MusicPlayer();
 
@@ -73,7 +75,6 @@ namespace TESUnity
 						musicPlayer.AddSong( songFilePath );
 					}
 				}
-
 				musicPlayer.Play();
 			}
 
@@ -92,7 +93,7 @@ namespace TESUnity
 		private void Update()
 		{
 			MWEngine.Update();
-			if ( music ) musicPlayer.Update();
+			if ( EnableMusic ) musicPlayer.Update();
 
 			if(Input.GetKeyDown(KeyCode.P))
 			{
