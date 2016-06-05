@@ -109,6 +109,7 @@
     <Compile Include="Assets\Scripts\VirtualFileSystem.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\MWCG.cginc" />
     <None Include="Assets\Shaders\MW_Standard.shader" />
     <None Include="Assets\Shaders\MW_Standard_Blended.shader" />
     <None Include="Assets\Shaders\MW_Standard_Tested.shader" />
