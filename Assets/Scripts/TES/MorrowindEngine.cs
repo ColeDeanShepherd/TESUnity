@@ -118,136 +118,6 @@ namespace TESUnity
 			return new InRangeCellInfo(cellObj, cellObjectsContainer, cellCreationCoroutine);
 		}
 
-		/// <summary>
-		/// Creates terrain representing a LAND record.
-		/// </summary>
-		/// <returns>A GameObject, or null if the LAND record does not contain sufficient data.</returns>
-		public GameObject InstantiateLAND(LANDRecord LAND)
-		{
-			Debug.Assert(LAND != null);
-
-			// Don't create anything if the LAND doesn't have height data.
-			if(LAND.VHGT == null)
-			{
-				return null;
-			}
-
-			int LAND_SIDE_LENGTH_IN_SAMPLES = 65;
-			var heights = new float[LAND_SIDE_LENGTH_IN_SAMPLES, LAND_SIDE_LENGTH_IN_SAMPLES];
-
-			// Read in the heights in Morrowind units.
-			const int VHGTIncrementToMWUnits = 8;
-			float rowOffset = LAND.VHGT.referenceHeight;
-
-			for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
-			{
-				rowOffset += LAND.VHGT.heightOffsets[y * LAND_SIDE_LENGTH_IN_SAMPLES];
-				heights[y, 0] = VHGTIncrementToMWUnits * rowOffset;
-
-				float colOffset = rowOffset;
-
-				for(int x = 1; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
-				{
-					colOffset += LAND.VHGT.heightOffsets[(y * LAND_SIDE_LENGTH_IN_SAMPLES) + x];
-					heights[y, x] = VHGTIncrementToMWUnits * colOffset;
-				}
-			}
-
-			// Change the heights to percentages.
-			float minHeight, maxHeight;
-			Utils.GetExtrema(heights, out minHeight, out maxHeight);
-
-			for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
-			{
-				for(int x = 0; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
-				{
-					heights[y, x] = Utils.ChangeRange(heights[y, x], minHeight, maxHeight, 0, 1);
-				}
-			}
-
-			// Texture the terrain.
-			SplatPrototype[] splatPrototypes = null;
-			float[,,] alphaMap = null;
-
-			if(LAND.VTEX != null)
-			{
-				// Create splat prototypes.
-				var splatPrototypeList = new List<SplatPrototype>();
-				var texInd2splatInd = new Dictionary<ushort, int>();
-
-				for(int i = 0; i < LAND.VTEX.textureIndices.Length; i++)
-				{
-					short textureIndex = (short)((short)LAND.VTEX.textureIndices[i] - 1);
-
-					if(textureIndex < 0)
-					{
-						continue;
-					}
-
-					if(!texInd2splatInd.ContainsKey((ushort)textureIndex))
-					{
-						// Load terrain texture.
-						var LTEX = dataReader.FindLTEXRecord(textureIndex);
-						var textureFilePath = LTEX.DATA.value;
-						var texture = textureManager.LoadTexture(textureFilePath);
-
-						// Create the splat prototype.
-						var splat = new SplatPrototype();
-						splat.texture = texture;
-						splat.smoothness = 0;
-						splat.metallic = 0;
-						splat.tileSize = new Vector2(6, 6);
-
-						// Update collections.
-						var splatIndex = splatPrototypeList.Count;
-						splatPrototypeList.Add(splat);
-						texInd2splatInd.Add((ushort)textureIndex, splatIndex);
-					}
-				}
-
-				splatPrototypes = splatPrototypeList.ToArray();
-
-				// Create the alpha map.
-				int VTEX_ROWS = 16;
-				int VTEX_COLUMNS = VTEX_ROWS;
-				alphaMap = new float[VTEX_ROWS, VTEX_COLUMNS, splatPrototypes.Length];
-
-				for(int y = 0; y < VTEX_ROWS; y++)
-				{
-					var yMajor = y / 4;
-					var yMinor = y - (yMajor * 4);
-
-					for(int x = 0; x < VTEX_COLUMNS; x++)
-					{
-						var xMajor = x / 4;
-						var xMinor = x - (xMajor * 4);
-
-						var texIndex = (short)((short)LAND.VTEX.textureIndices[(yMajor * 64) + (xMajor * 16) + (yMinor * 4) + xMinor] - 1);
-
-						if(texIndex >= 0)
-						{
-							var splatIndex = texInd2splatInd[(ushort)texIndex];
-
-							alphaMap[y, x, splatIndex] = 1;
-						}
-						else
-						{
-							alphaMap[y, x, 0] = 1;
-						}
-					}
-				}
-			}
-
-			// Create the terrain.
-			var heightRange = maxHeight - minHeight;
-			var terrainPosition = new Vector3(Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.x, minHeight / Convert.meterInMWUnits, Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.y);
-
-			var heightSampleDistance = Convert.exteriorCellSideLengthInMeters / (LAND_SIDE_LENGTH_IN_SAMPLES - 1);
-			var terrain = GameObjectUtils.CreateTerrain(heights, heightRange / Convert.meterInMWUnits, heightSampleDistance, splatPrototypes, alphaMap, terrainPosition);
-			terrain.GetComponent<Terrain>().materialType = Terrain.MaterialType.BuiltInLegacyDiffuse;
-			return terrain;
-		}
-
 		public void SpawnPlayerOutside(Vector3 position)
 		{
 			var cellIndices = GetExteriorCellIndices(position);
@@ -390,6 +260,9 @@ namespace TESUnity
 
 		private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
 
+		/// <summary>
+		/// A coroutine that instantiates the terrain for, and all objects in, a cell.
+		/// </summary>
 		private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
 		{
 			// Return before doing any work to provide an IEnumerator handle to the coroutine.
@@ -398,13 +271,16 @@ namespace TESUnity
 			// Instantiate terrain.
 			if(LAND != null)
 			{
-				var landObj = InstantiateLAND(LAND);
-
-				if(landObj != null)
+				var instantiateLANDTaskEnumerator = InstantiateLANDCoroutine(LAND, cellObj);
+				
+				// Run the LAND instantiation coroutine.
+				while(instantiateLANDTaskEnumerator.MoveNext())
 				{
-					landObj.transform.parent = cellObj.transform;
+					// Yield every time InstantiateLANDCoroutine does to avoid doing too much work in one frame.
+					yield return null;
 				}
 
+				// Yield after InstantiateLANDCoroutine has finished to avoid doing too much work in one frame.
 				yield return null;
 			}
 
@@ -495,6 +371,10 @@ namespace TESUnity
 				yield return null;
 			}
 		}
+
+		/// <summary>
+		/// Instantiates an object in a cell. Called by InstantiateCellObjectsCoroutine after the object's assets have been pre-loaded.
+		/// </summary>
 		private void InstantiatePreLoadedCellObject(CELLRecord CELL, GameObject parent, RefCellObjInfo refCellObjInfo)
 		{
 			if(refCellObjInfo.referencedRecord != null)
@@ -573,7 +453,10 @@ namespace TESUnity
 
 			return lightObj;
 		}
-		// Called by InstantiateCellObjects.
+
+		/// <summary>
+		/// Finishes initializing an instantiated cell object.
+		/// </summary>
 		private void PostProcessInstantiatedCellObject(GameObject gameObject, RefCellObjInfo refCellObjInfo)
 		{
 			var refObjDataGroup = refCellObjInfo.refObjDataGroup;
@@ -607,6 +490,147 @@ namespace TESUnity
 			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
 			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
 
+		}
+
+		/// <summary>
+		/// Creates terrain representing a LAND record.
+		/// </summary>
+		private IEnumerator InstantiateLANDCoroutine(LANDRecord LAND, GameObject parent)
+		{
+			Debug.Assert(LAND != null);
+
+			// Don't create anything if the LAND doesn't have height data.
+			if(LAND.VHGT == null)
+			{
+				// End execution of the coroutine.
+				yield break;
+			}
+
+			// Return before doing any work to provide an IEnumerator handle to the coroutine.
+			yield return null;
+
+			int LAND_SIDE_LENGTH_IN_SAMPLES = 65;
+			var heights = new float[LAND_SIDE_LENGTH_IN_SAMPLES, LAND_SIDE_LENGTH_IN_SAMPLES];
+
+			// Read in the heights in Morrowind units.
+			const int VHGTIncrementToMWUnits = 8;
+			float rowOffset = LAND.VHGT.referenceHeight;
+
+			for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
+			{
+				rowOffset += LAND.VHGT.heightOffsets[y * LAND_SIDE_LENGTH_IN_SAMPLES];
+				heights[y, 0] = VHGTIncrementToMWUnits * rowOffset;
+
+				float colOffset = rowOffset;
+
+				for(int x = 1; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
+				{
+					colOffset += LAND.VHGT.heightOffsets[(y * LAND_SIDE_LENGTH_IN_SAMPLES) + x];
+					heights[y, x] = VHGTIncrementToMWUnits * colOffset;
+				}
+			}
+
+			// Change the heights to percentages.
+			float minHeight, maxHeight;
+			Utils.GetExtrema(heights, out minHeight, out maxHeight);
+
+			for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
+			{
+				for(int x = 0; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
+				{
+					heights[y, x] = Utils.ChangeRange(heights[y, x], minHeight, maxHeight, 0, 1);
+				}
+			}
+
+			// Texture the terrain.
+			SplatPrototype[] splatPrototypes = null;
+			float[,,] alphaMap = null;
+
+			if(LAND.VTEX != null)
+			{
+				// Create splat prototypes.
+				var splatPrototypeList = new List<SplatPrototype>();
+				var texInd2splatInd = new Dictionary<ushort, int>();
+
+				for(int i = 0; i < LAND.VTEX.textureIndices.Length; i++)
+				{
+					short textureIndex = (short)((short)LAND.VTEX.textureIndices[i] - 1);
+
+					if(textureIndex < 0)
+					{
+						continue;
+					}
+
+					if(!texInd2splatInd.ContainsKey((ushort)textureIndex))
+					{
+						// Load terrain texture.
+						var LTEX = dataReader.FindLTEXRecord(textureIndex);
+						var textureFilePath = LTEX.DATA.value;
+						var texture = textureManager.LoadTexture(textureFilePath);
+
+						// Yield after loading each texture to avoid doing too much work on one frame.
+						yield return null;
+
+						// Create the splat prototype.
+						var splat = new SplatPrototype();
+						splat.texture = texture;
+						splat.smoothness = 0;
+						splat.metallic = 0;
+						splat.tileSize = new Vector2(6, 6);
+
+						// Update collections.
+						var splatIndex = splatPrototypeList.Count;
+						splatPrototypeList.Add(splat);
+						texInd2splatInd.Add((ushort)textureIndex, splatIndex);
+					}
+				}
+
+				splatPrototypes = splatPrototypeList.ToArray();
+
+				// Create the alpha map.
+				int VTEX_ROWS = 16;
+				int VTEX_COLUMNS = VTEX_ROWS;
+				alphaMap = new float[VTEX_ROWS, VTEX_COLUMNS, splatPrototypes.Length];
+
+				for(int y = 0; y < VTEX_ROWS; y++)
+				{
+					var yMajor = y / 4;
+					var yMinor = y - (yMajor * 4);
+
+					for(int x = 0; x < VTEX_COLUMNS; x++)
+					{
+						var xMajor = x / 4;
+						var xMinor = x - (xMajor * 4);
+
+						var texIndex = (short)((short)LAND.VTEX.textureIndices[(yMajor * 64) + (xMajor * 16) + (yMinor * 4) + xMinor] - 1);
+
+						if(texIndex >= 0)
+						{
+							var splatIndex = texInd2splatInd[(ushort)texIndex];
+
+							alphaMap[y, x, splatIndex] = 1;
+						}
+						else
+						{
+							alphaMap[y, x, 0] = 1;
+						}
+					}
+				}
+			}
+
+			// Yield before creating the terrain GameObject because it takes a while.
+			yield return null;
+
+			// Create the terrain.
+			var heightRange = maxHeight - minHeight;
+			var terrainPosition = new Vector3(Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.x, minHeight / Convert.meterInMWUnits, Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.y);
+
+			var heightSampleDistance = Convert.exteriorCellSideLengthInMeters / (LAND_SIDE_LENGTH_IN_SAMPLES - 1);
+
+			var terrain = GameObjectUtils.CreateTerrain(heights, heightRange / Convert.meterInMWUnits, heightSampleDistance, splatPrototypes, alphaMap, terrainPosition);
+			terrain.GetComponent<Terrain>().materialType = Terrain.MaterialType.BuiltInLegacyDiffuse;
+
+			terrain.transform.parent = parent.transform;
 		}
 
 		private void ProcessObjectType <RecordType> ( GameObject gameObject , RefCellObjInfo info , string tag ) where RecordType : Record
