@@ -38,13 +38,13 @@ namespace TESUnity
 					value = Mathf.Sin(Time.time * 0.5f) * 0.5f + 0.5f;
 					break;
 				case LightAnimMode.Fire:
-					value = Mathf.PerlinNoise(Time.time * 0.6f , transform.position.x+transform.position.z * 7.9253618f);
+					value = Mathf.PerlinNoise(Time.time * 0.8f , transform.position.x+transform.position.z * 7.9253618f);
 					value = 1f - value;
 					value = value * value * value;
 					value = 1f - value;
 					break;
 			}
-			light.intensity = baseIntensity * value;
+			light.intensity = Mathf.Lerp(0.2f * baseIntensity , baseIntensity , value);
 		}
 	}
 }

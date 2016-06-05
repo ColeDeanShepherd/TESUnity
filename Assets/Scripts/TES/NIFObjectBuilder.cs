@@ -231,7 +231,8 @@ namespace TESUnity
 			if(collidable)
 			{
 				obj.AddComponent<MeshCollider>().sharedMesh = mesh;
-				obj.AddComponent<Rigidbody>().isKinematic = true;
+				if ( TESUnity.instance.UseKinematicRigidbodies )
+					obj.AddComponent<Rigidbody>().isKinematic = true;
 			}
 
 			ApplyNiAVObject(triShape, obj);

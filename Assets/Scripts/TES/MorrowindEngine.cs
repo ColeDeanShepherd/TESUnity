@@ -75,7 +75,7 @@ namespace TESUnity
 			interactTextObj.SetActive(false);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-			RenderSettings.ambientIntensity = 1.5f;
+			RenderSettings.ambientIntensity = TESUnity.instance.AmbientIntensity;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
 			sunObj.GetComponent<Light>().shadows = TESUnity.instance.EnableSunShadows ? LightShadows.Hard : LightShadows.None;
@@ -523,7 +523,8 @@ namespace TESUnity
 
 						if(attachLightObj == null)
 						{
-							attachLightObj = GameObjectUtils.FindChildWithNameSubstringRecursively(modelObj, "Emitter");
+							//attachLightObj = GameObjectUtils.FindChildWithNameSubstringRecursively(modelObj, "Emitter");
+							attachLightObj = modelObj;
 						}
 
 						if(attachLightObj != null)
@@ -858,12 +859,13 @@ namespace TESUnity
 			var lantern = new GameObject("Lantern");
 
 			var lightComponent = lantern.AddComponent<Light>();
-			lightComponent.range = 20;
-			lightComponent.intensity = 3;
+			lightComponent.range = 20f;
+			lightComponent.intensity = 1.5f;
 			lightComponent.color = new Color32(245, 140, 40, 255);
 			lightComponent.enabled = false;
+			lightComponent.shadows = TESUnity.instance.EnableLightShadows ? LightShadows.Hard : LightShadows.None;
 
-			lantern.transform.localPosition = cameraPoint.transform.localPosition;
+			lantern.transform.localPosition = cameraPoint.transform.localPosition - Vector3.up * 0.5f;
 			lantern.transform.SetParent(playerComponent.transform, false);
 
 			playerComponent.camera = playerCamera;

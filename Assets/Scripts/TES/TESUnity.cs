@@ -12,7 +12,9 @@ namespace TESUnity
 		#region Inspector-set Members
 
 		public string dataPath;
+		[SerializeField]private bool useKinematicRigidbodies = true;
 		[SerializeField]private bool music = false;
+		[SerializeField]private float ambientIntensity = 1.5f;
 		[SerializeField]private bool sunShadows = false;
 		[SerializeField]private bool lightShadows = false;
 		[SerializeField]private RenderingPath renderPath = RenderingPath.Forward;
@@ -33,7 +35,9 @@ namespace TESUnity
 		private LocalSettingsObject settingsFile;
 		public bool FoundSettingsFile { get { return settingsFile != null; } }
 		public string MWDataPath { get { return FoundSettingsFile ? settingsFile.engine.dataFilesPath : dataPath; } }
+		public bool UseKinematicRigidbodies { get { return FoundSettingsFile ? settingsFile.engine.useKinematicRigidbodies : useKinematicRigidbodies; } }
 		public bool EnableMusic { get { return FoundSettingsFile ? settingsFile.audio.enableMusic : music; } }
+		public float AmbientIntensity { get { return FoundSettingsFile ? settingsFile.graphics.ambientIntensity : ambientIntensity; } }
 		public bool EnableSunShadows { get { return FoundSettingsFile ? settingsFile.graphics.sunShadows : sunShadows; } }
 		public bool EnableLightShadows { get { return FoundSettingsFile ? settingsFile.graphics.lightShadows : lightShadows; } }
 		public RenderingPath RenderPath { get { return FoundSettingsFile ? settingsFile.graphics.preferredRenderMode : renderPath; } }

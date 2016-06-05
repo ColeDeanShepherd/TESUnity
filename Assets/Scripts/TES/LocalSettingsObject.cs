@@ -19,6 +19,7 @@ namespace TESUnity
 		public class Engine
 		{
 			public string dataFilesPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
+			public bool useKinematicRigidbodies = true;
 		}
 		public Engine engine = new Engine();
 
@@ -27,6 +28,7 @@ namespace TESUnity
 		{
 			public RenderingPath preferredRenderMode = RenderingPath.Forward;
 			public bool exteriorCellLights = false;
+			public float ambientIntensity = 1.5f;
 			public bool sunShadows = true;
 			public bool lightShadows = false;
 			public bool animatedLights = false;

@@ -102,9 +102,10 @@ namespace TESUnity
 				lightData.flags = LIGH.LHDT.flags;
 				if ( Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.CanCarry) )
 				{
-					gameObject.AddComponent<BoxCollider>(); //very weak-- adding a box collider to light objects so we can interact with them
+					gameObject.AddComponent<BoxCollider>().size *= 0.5f; //very weak-- adding a box collider to light objects so we can interact with them
 					//adding kinematic rigidbodies to static colliders prevents the physics collision tree from being rebuilt, which impacts performance
-					gameObject.AddComponent<Rigidbody>().isKinematic = true; 
+					if ( TESUnity.instance.UseKinematicRigidbodies )
+						gameObject.AddComponent<Rigidbody>().isKinematic = true; 
 				}
 				StartCoroutine(ConfigureLightComponent());
 			}
@@ -158,7 +159,7 @@ namespace TESUnity
 			if ( record is ESM.BOOKRecord )
 			{
 				ESM.BOOKRecord BOOK = record as ESM.BOOKRecord;
-				if (Input.GetKeyDown(KeyCode.F) && BOOK.TEXT  != null)
+				if (BOOK.TEXT  != null)
 				{
 					Debug.Log(BOOK.TEXT.value);
 				}
