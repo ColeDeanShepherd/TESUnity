@@ -86,6 +86,7 @@
     <Compile Include="Assets\Scripts\TES\BSAFile.cs" />
     <Compile Include="Assets\Scripts\TES\Convert.cs" />
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
+    <Compile Include="Assets\Scripts\TES\LocalSettingsObject.cs" />
     <Compile Include="Assets\Scripts\TES\MaterialManager.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindEngine.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="Assets\Scripts\TES\TESUnity.cs" />
     <Compile Include="Assets\Scripts\TES\TextureManager.cs" />
     <Compile Include="Assets\Scripts\TES\World Object Components\GenericObjectComponent.cs" />
+    <Compile Include="Assets\Scripts\TES\World Object Components\LightAnim.cs" />
     <Compile Include="Assets\Scripts\TemporalLoadBalancer.cs" />
     <Compile Include="Assets\Scripts\Texture2DInfo.cs" />
     <Compile Include="Assets\Scripts\TextureUtils.cs" />
@@ -107,6 +109,7 @@
     <Compile Include="Assets\Scripts\VirtualFileSystem.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\MWCG.cginc" />
     <None Include="Assets\Shaders\MW_Standard.shader" />
     <None Include="Assets\Shaders\MW_Standard_Blended.shader" />
     <None Include="Assets\Shaders\MW_Standard_Tested.shader" />

@@ -18,7 +18,7 @@ namespace TESUnity
 		[SerializeField]private bool sunShadows = false;
 		[SerializeField]private bool lightShadows = false;
 		[SerializeField]private RenderingPath renderPath = RenderingPath.Forward;
-		[SerializeField]private bool exteriorCellLights;
+		[SerializeField]private bool exteriorCellLights = false;
 		[SerializeField]private bool animatedLights = false;
 
 		public Sprite UIBackgroundImg;

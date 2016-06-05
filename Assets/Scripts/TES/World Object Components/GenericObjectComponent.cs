@@ -123,7 +123,11 @@ namespace TESUnity
 			}
 			if ( lightData.lightComponent != null ) //if we have found the light component by the end of the loop
 			{
-				lightData.lightComponent.enabled = !Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.OffDefault);
+				// Only disable the light based on flags if the light component hasn't already been disabled due to settings.
+				if(lightData.lightComponent.enabled)
+				{
+					lightData.lightComponent.enabled = !Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.OffDefault);
+				}
 
 				var flicker = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.Flicker);
 				var flickerSlow = Utils.ContainsBitFlags(( uint )lightData.flags , ( uint )LightData.LightFlags.FlickerSlow);
