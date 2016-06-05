@@ -1,13 +1,16 @@
-﻿Shader "TES Unity/Standard Tested"
+﻿Shader "TES Unity/Alpha Tested"
 {
 	Properties
 	{
-		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
+		_Color("Color", Color) = (1,1,1,1)
+		_MainTex("Main Texture", 2D) = "white" {}
+		_DetailTex("Detail Texture", 2D) = "white" {}
+		_DarkTex("Occlusion Texture", 2D) = "white" {}
+		_GlossTex("Gloss Texture", 2D) = "black" {}
+		_GlowTex("Glow Texture", 2D) = "black" {}
+		_Metallic("Metallic", Range(0,1)) = 0.0
 
-		_Cutoff("Alpha Cutoff" , Float) = 0.5
+		[HideInInspector]_Cutoff("cutoff", Float) = 0.5
 	}
 	SubShader
 	{
@@ -16,33 +19,26 @@
 		ZWrite On
 
 		CGPROGRAM
-		#pragma surface surf Standard fullforwardshadows
+		#pragma surface surf Standard fullforwardshadows alpha
 		#pragma target 3.0
+		#include "MWCG.cginc"
 
-		sampler2D _MainTex;
-
-		struct Input
-		{
-			float2 uv_MainTex;
-		};
-		
 		fixed _Cutoff;
-		half _Glossiness;
-		half _Metallic;
-		half4 _Color;
 
-		void surf (Input IN, inout SurfaceOutputStandard o)
+		void surf (Input i, inout SurfaceOutputStandard o)
 		{
-			half4 c = tex2D (_MainTex, IN.uv_MainTex) ;
+			half4 diff = ReadDiffuse(i);
 
-			if (c.a < _Cutoff) discard;
+			if (diff.a < _Cutoff) discard;
 
-			o.Albedo = c.rgb * _Color.rgb;
+			o.Albedo = diff.rgb;
+			o.Emission = ReadGlow(i).rgb;
+			o.Occlusion = ReadDark(i);
+			o.Smoothness = ReadGloss(i);
 			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
-			o.Alpha = c.a * _Color.a;
+			o.Alpha = diff.a;
 		}
 		ENDCG
 	}
-	FallBack "Diffuse"
+	FallBack "Transparent/Cutout/Diffuse"
 }

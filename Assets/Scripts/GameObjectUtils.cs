@@ -23,7 +23,6 @@ public static class GameObjectUtils
 
 		var lightComponent = light.AddComponent<Light>();
 		lightComponent.type = LightType.Directional;
-		lightComponent.shadows = LightShadows.Soft;
 
 		light.transform.position = position;
 		light.transform.rotation = orientation;
@@ -121,6 +120,19 @@ public static class GameObjectUtils
 		}
 	}
 
+	public static GameObject FindTopLevelObject( GameObject baseObject )
+	{
+		if ( baseObject.transform.parent == null ) return baseObject;
+		var p = baseObject.transform;
+		while ( p.parent != null )
+		{
+			if ( p.parent.gameObject.name == "objects" )
+				break;
+			p = p.parent;
+		}
+		return p.gameObject;
+	}
+
 	public static GameObject FindChildRecursively(GameObject parent, string name)
 	{
 		var resultTransform = parent.transform.Find(name);
@@ -196,7 +208,15 @@ public static class GameObjectUtils
 
 			if((meshFilter != null) && (meshFilter.mesh != null))
 			{
-				gameObject.AddComponent<MeshCollider>();
+				gameObject.AddComponent<MeshCollider>();//.convex = true;
+				var p = gameObject.transform;
+				while ( p.parent != null )
+				{
+					if ( p.parent.gameObject.name == "objects" )
+						break;
+					p = p.parent;
+				}
+				if ( p.GetComponent<Rigidbody>() == null && TESUnity.TESUnity.instance.UseKinematicRigidbodies ) p.gameObject.AddComponent<Rigidbody>().isKinematic = true;
 			}
 		}
 

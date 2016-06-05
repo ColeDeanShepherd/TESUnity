@@ -77,7 +77,7 @@ namespace TESUnity
 
 		private Material BuildMaterialBlended ( ur.BlendMode sourceBlendMode , ur.BlendMode destinationBlendMode )
 		{
-			Material m = new Material( Shader.Find( "TES Unity/Standard Blended" ) );
+			Material m = new Material( Shader.Find( "TES Unity/Alpha Blended" ) );
 			m.SetInt( "_SrcBlend" , ( int )sourceBlendMode );
 			m.SetInt( "_DstBlend" , ( int )destinationBlendMode );
 			return m;
@@ -85,7 +85,7 @@ namespace TESUnity
 
 		private Material BuildMaterialTested ( float cutoff = 0.5f )
 		{
-			Material m = new Material( Shader.Find( "TES Unity/Standard Blended" ) );
+			Material m = new Material( Shader.Find( "TES Unity/Alpha Tested" ) );
 			m.SetFloat( "_Cutoff" , cutoff );
 			return m;
 		}

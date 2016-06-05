@@ -18,48 +18,7 @@
 		CGPROGRAM
 		#pragma surface surf Standard fullforwardshadows
 		#pragma target 3.0
-
-		sampler2D _MainTex;
-		sampler2D _DetailTex;
-		sampler2D _DarkTex;
-		sampler2D _GlossTex;
-		sampler2D _GlowTex;
-		half _Metallic;
-		half4 _Color;
-
-		struct Input
-		{
-			float2 uv_MainTex;
-			float2 uv_DetailTex;
-			float2 uv_DarkTex;
-			float2 uv_GlowTex;
-			float2 uv_GlossTex;
-		};
-
-		half4 ReadDiffuse( Input i )
-		{
-			half4 res = 1.0;
-			res *= tex2D(_MainTex, i.uv_MainTex);
-			res *= tex2D(_DetailTex, i.uv_DetailTex);
-			//res *= tex2D(_DarkTex, i.uv_DarkTex);
-			res *= _Color;
-			return res;
-		}
-
-		half4 ReadDark(Input i)
-		{
-			return tex2D(_DarkTex, i.uv_DarkTex);
-		}
-
-		half ReadGloss(Input i)
-		{
-			return Luminance(tex2D(_GlossTex, i.uv_GlossTex).rgb);
-		}
-
-		half4 ReadGlow(Input i)
-		{
-			return tex2D(_GlowTex, i.uv_GlowTex);
-		}
+		#include "MWCG.cginc"
 
 		void surf (Input i, inout SurfaceOutputStandard o)
 		{

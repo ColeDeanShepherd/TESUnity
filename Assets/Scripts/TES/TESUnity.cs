@@ -10,8 +10,16 @@ namespace TESUnity
 		public static TESUnity instance;
 
 		#region Inspector-set Members
-		public bool music = false;
-		public bool sunShadows = false;
+
+		public string dataPath;
+		[SerializeField]private bool useKinematicRigidbodies = true;
+		[SerializeField]private bool music = false;
+		[SerializeField]private float ambientIntensity = 1.5f;
+		[SerializeField]private bool sunShadows = false;
+		[SerializeField]private bool lightShadows = false;
+		[SerializeField]private RenderingPath renderPath = RenderingPath.Forward;
+		[SerializeField]private bool exteriorCellLights = false;
+		[SerializeField]private bool animatedLights = false;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
@@ -24,7 +32,17 @@ namespace TESUnity
 		public GameObject waterPrefab;
 		#endregion
 
-		public string MWDataPath;
+		private LocalSettingsObject settingsFile;
+		public bool FoundSettingsFile { get { return settingsFile != null; } }
+		public string MWDataPath { get { return FoundSettingsFile ? settingsFile.engine.dataFilesPath : dataPath; } }
+		public bool UseKinematicRigidbodies { get { return FoundSettingsFile ? settingsFile.engine.useKinematicRigidbodies : useKinematicRigidbodies; } }
+		public bool EnableMusic { get { return FoundSettingsFile ? settingsFile.audio.enableMusic : music; } }
+		public float AmbientIntensity { get { return FoundSettingsFile ? settingsFile.graphics.ambientIntensity : ambientIntensity; } }
+		public bool EnableSunShadows { get { return FoundSettingsFile ? settingsFile.graphics.sunShadows : sunShadows; } }
+		public bool EnableLightShadows { get { return FoundSettingsFile ? settingsFile.graphics.lightShadows : lightShadows; } }
+		public RenderingPath RenderPath { get { return FoundSettingsFile ? settingsFile.graphics.preferredRenderMode : renderPath; } }
+		public bool EnableExteriorLights { get { return FoundSettingsFile ? settingsFile.graphics.exteriorCellLights : exteriorCellLights; } }
+		public bool EnableAnimatedLights { get { return FoundSettingsFile ? settingsFile.graphics.animatedLights : animatedLights; } }
 
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
@@ -37,12 +55,20 @@ namespace TESUnity
 		{
 			instance = this;
 		}
+
+		public void TryFindSettings()
+		{
+			var foundSettings = Resources.LoadAll<LocalSettingsObject>("");
+			if ( foundSettings.Length > 0 )
+				settingsFile = foundSettings[ 0 ]; // search for and load the first found Settings file from a Resources folder
+		}
+
 		private void Start()
 		{
 			MWDataReader = new MorrowindDataReader(MWDataPath);
-			MWEngine = new MorrowindEngine(MWDataReader , sunShadows );
+			MWEngine = new MorrowindEngine(MWDataReader);
 
-			if ( music )
+			if ( EnableMusic )
 			{// Start the music.
 				musicPlayer = new MusicPlayer();
 
@@ -53,7 +79,6 @@ namespace TESUnity
 						musicPlayer.AddSong( songFilePath );
 					}
 				}
-
 				musicPlayer.Play();
 			}
 
@@ -72,7 +97,7 @@ namespace TESUnity
 		private void Update()
 		{
 			MWEngine.Update();
-			if ( music ) musicPlayer.Update();
+			if ( EnableMusic ) musicPlayer.Update();
 
 			if(Input.GetKeyDown(KeyCode.P))
 			{

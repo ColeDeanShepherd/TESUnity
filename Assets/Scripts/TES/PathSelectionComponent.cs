@@ -10,6 +10,13 @@ namespace TESUnity
 
 		private void Start()
 		{
+			TESUnity.instance.TryFindSettings();
+			if ( TESUnity.instance.FoundSettingsFile )
+			{
+				TESUnity.instance.enabled = true;
+				Destroy(this);
+			}
+
 			camera = GameObjectUtils.CreateMainCamera(Vector3.zero, Quaternion.identity);
 			eventSystem = GUIUtils.CreateEventSystem();
 			canvas = GUIUtils.CreateCanvas();
@@ -33,7 +40,7 @@ namespace TESUnity
 			if(Directory.Exists(MWDataPath))
 			{
 				var TESUnityComponent = GetComponent<TESUnity>();
-				TESUnityComponent.MWDataPath = MWDataPath;
+				TESUnityComponent.dataPath = MWDataPath;
 
 				TESUnityComponent.enabled = true;
 				Destroy(this);
