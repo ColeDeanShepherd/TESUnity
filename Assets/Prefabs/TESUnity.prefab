@@ -40,8 +40,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f45c2eae24c43174a92eeaa8e8613dd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dataPath: 
+  useKinematicRigidbodies: 1
   music: 1
+  ambientIntensity: 1.5
   sunShadows: 1
+  lightShadows: 0
+  renderPath: 1
+  exteriorCellLights: 0
+  animatedLights: 0
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   UIDropdownArrowImg: {fileID: 10915, guid: 0000000000000000f000000000000000, type: 0}
@@ -51,7 +58,6 @@ MonoBehaviour:
   UIMaskImg: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
   UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   waterPrefab: {fileID: 121708, guid: e8e3a26facab0b742b401e1c0da419dc, type: 2}
-  MWDataPath: 
 --- !u!114 &11482094
 MonoBehaviour:
   m_ObjectHideFlags: 1
