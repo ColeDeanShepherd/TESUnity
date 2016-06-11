@@ -3,27 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// A reference to a range of elements in an array.
+/// A reference to a range of elements in a non-null array.
 /// </summary>
 public struct ArrayRange<T> : IEnumerable<T>
 {
+	/// <summary>
+	/// An enumerator for the elements in an array range.
+	/// </summary>
 	public struct Enumerator : IEnumerator<T>
 	{
-		public T Current
-		{
-			get
-			{
-				return arrayRange.array[currentIndex];
-			}
-		}
-		object IEnumerator.Current
-		{
-			get
-			{
-				return Current;
-			}
-		}
-
 		public Enumerator(ArrayRange<T> arrayRange)
 		{
 			this.arrayRange = arrayRange;
@@ -34,6 +22,9 @@ public struct ArrayRange<T> : IEnumerable<T>
 			arrayRange = new ArrayRange<T>();
 			currentIndex = -1;
 		}
+
+		public T Current { get { return arrayRange.array[currentIndex]; } }
+		object IEnumerator.Current { get { return Current; } }
 
 		public bool MoveNext()
 		{
@@ -50,42 +41,39 @@ public struct ArrayRange<T> : IEnumerable<T>
 		private int currentIndex;
 	}
 
-	public T[] array
-	{
-		get
-		{
-			return _array;
-		}
-	}
-	public int offset
-	{
-		get
-		{
-			return _offset;
-		}
-	}
-	public int length
-	{
-		get
-		{
-			return _length;
-		}
-	}
-
+	/// <summary>
+	/// Constructs an ArrayRange referring to an entire array.
+	/// </summary>
+	/// <param name="array">A non-null array.</param>
 	public ArrayRange(T[] array)
 	{
+		Debug.Assert(array != null);
+
 		_array = array;
 		_offset = 0;
 		_length = array.Length;
 	}
+
+	/// <summary>
+	/// Constructs an ArrayRange referring to a portion of an array.
+	/// </summary>
+	/// <param name="array">A non-null array.</param>
+	/// <param name="offset">A nonnegative offset.</param>
+	/// <param name="length">A nonnegative length.</param>
 	public ArrayRange(T[] array, int offset, int length)
 	{
+		Debug.Assert(array != null);
 		Debug.Assert((offset >= 0) && (length >= 0) && ((offset + length) <= array.Length));
 
 		_array = array;
 		_offset = offset;
 		_length = length;
 	}
+
+	public T[] array { get { return _array; } }
+	public int offset { get { return _offset; } }
+	public int length { get { return _length; } }
+
 	public IEnumerator<T> GetEnumerator()
 	{
 		return new Enumerator(this);
