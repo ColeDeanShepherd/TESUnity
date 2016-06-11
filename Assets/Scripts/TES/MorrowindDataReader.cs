@@ -56,7 +56,7 @@ namespace TESUnity
 			if(filePath != null)
 			{
 				var fileData = MorrowindBSAFile.LoadFileData(filePath);
-				return DDSReader.LoadDDSTexture(new MemoryStream(fileData));
+				return DDS.DDSReader.LoadDDSTexture(new MemoryStream(fileData));
 			}
 			else
 			{
