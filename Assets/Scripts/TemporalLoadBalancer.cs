@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 /// <summary>
-/// Distributes work across frames.
+/// Distributes work (the execution of coroutines) over several frames to avoid freezes by soft-limiting execution time.
 /// </summary>
 public class TemporalLoadBalancer
 {
+	/// <summary>
+	/// Adds a task coroutine and returns it.
+	/// </summary>
 	public IEnumerator AddTask(IEnumerator taskCoroutine)
 	{
 		tasks.Add(taskCoroutine);
@@ -17,6 +20,7 @@ public class TemporalLoadBalancer
 	{
 		tasks.Remove(taskCoroutine);
 	}
+
 	public void RunTasks(float desiredWorkTime)
 	{
 		Debug.Assert(desiredWorkTime >= 0);
@@ -29,9 +33,10 @@ public class TemporalLoadBalancer
 		stopwatch.Reset();
 		stopwatch.Start();
 
-		// Run at least one iteration of a task.
+		// Run the tasks.
 		do
 		{
+			// Try to execute an iteration of a task. Remove the task if it's execution has completed.
 			if(!tasks[0].MoveNext())
 			{
 				tasks.RemoveAt(0);
@@ -40,6 +45,7 @@ public class TemporalLoadBalancer
 
 		stopwatch.Stop();
 	}
+
 	public void WaitForTask(IEnumerator taskCoroutine)
 	{
 		Debug.Assert(tasks.Contains(taskCoroutine));
@@ -50,10 +56,12 @@ public class TemporalLoadBalancer
 	}
 	public void WaitForAllTasks()
 	{
-		while(tasks.Count > 0)
+		foreach(var task in tasks)
 		{
-			RunTasks(float.MaxValue);
+			while(task.MoveNext()) { }
 		}
+
+		tasks.Clear();
 	}
 
 	private List<IEnumerator> tasks = new List<IEnumerator>();
