@@ -2,21 +2,25 @@
 
 public static class GameObjectUtils
 {
+	/// <summary>
+	/// Creates a camera identical to the one added to new scenes by default.
+	/// </summary>
 	public static GameObject CreateMainCamera(Vector3 position, Quaternion orientation)
 	{
 		GameObject cameraObject = new GameObject("Main Camera");
+		cameraObject.tag = "MainCamera";
+
 		cameraObject.AddComponent<Camera>();
 		cameraObject.AddComponent<GUILayer>();
 		cameraObject.AddComponent<FlareLayer>();
 		cameraObject.AddComponent<AudioListener>();
-
-		cameraObject.tag = "MainCamera";
 
 		cameraObject.transform.position = position;
 		cameraObject.transform.rotation = orientation;
 
 		return cameraObject;
 	}
+
 	public static GameObject CreateDirectionalLight(Vector3 position, Quaternion orientation)
 	{
 		var light = new GameObject("Directional Light");
@@ -38,8 +42,7 @@ public static class GameObjectUtils
 	/// <param name="heightSampleDistance">The horizontal/vertical distance between height samples.</param>
 	/// <param name="splatPrototypes">The textures used by the terrain.</param>
 	/// <param name="alphaMap">Texture blending information.</param>
-	/// <param name="position">The position of the terrain.</param>
-	/// <returns>A terrain GameObject.</returns>
+	/// <returns>A TerrainData instance.</returns>
 	public static TerrainData CreateTerrainData(float[,] heightPercents, float maxHeight, float heightSampleDistance, SplatPrototype[] splatPrototypes, float[,,] alphaMap)
 	{
 		Debug.Assert((heightPercents.GetLength(0) == heightPercents.GetLength(1)) && (maxHeight >= 0) && (heightSampleDistance >= 0));
@@ -75,6 +78,16 @@ public static class GameObjectUtils
 		return terrainData;
 	}
 
+	/// <summary>
+	/// Creates a terrain from heights.
+	/// </summary>
+	/// <param name="heightPercents">Terrain height percentages ranging from 0 to 1.</param>
+	/// <param name="maxHeight">The maximum height of the terrain, corresponding to a height percentage of 1.</param>
+	/// <param name="heightSampleDistance">The horizontal/vertical distance between height samples.</param>
+	/// <param name="splatPrototypes">The textures used by the terrain.</param>
+	/// <param name="alphaMap">Texture blending information.</param>
+	/// <param name="position">The position of the terrain.</param>
+	/// <returns>A terrain GameObject.</returns>
 	public static GameObject CreateTerrain(float[,] heightPercents, float maxHeight, float heightSampleDistance, SplatPrototype[] splatPrototypes, float[,,] alphaMap, Vector3 position)
 	{
 		var terrainData = CreateTerrainData(heightPercents, maxHeight, heightSampleDistance, splatPrototypes, alphaMap);
@@ -97,16 +110,22 @@ public static class GameObjectUtils
 		return terrainObject;
 	}
 
-	public static Bounds GetVisualBoundsRecursive(GameObject gameObject)
+	/// <summary>
+	/// Calculate the AABB of an object and it's descendants.
+	/// </summary>
+	public static Bounds CalcVisualBoundsRecursive(GameObject gameObject)
 	{
 		Debug.Assert(gameObject != null);
 
+		// Gets all the renderers in the object and it's descendants.
 		var renderers = gameObject.transform.GetComponentsInChildren<Renderer>();
 
 		if(renderers.Length > 0)
 		{
+			// Encapsulate the first renderer.
 			var visualBounds = renderers[0].bounds;
 
+			// Encapsulate the rest of the renderers.
 			for(int i = 1; i < renderers.Length; i++)
 			{
 				visualBounds.Encapsulate(renderers[i].bounds);
@@ -114,34 +133,27 @@ public static class GameObjectUtils
 
 			return visualBounds;
 		}
+		// If there are no renderers in the object or any of it's children, simply return a degenerate AABB where the object is.
 		else
 		{
 			return new Bounds(gameObject.transform.position, Vector3.zero);
 		}
 	}
 
-	public static GameObject FindTopLevelObject( GameObject baseObject )
-	{
-		if ( baseObject.transform.parent == null ) return baseObject;
-		var p = baseObject.transform;
-		while ( p.parent != null )
-		{
-			if ( p.parent.gameObject.name == "objects" )
-				break;
-			p = p.parent;
-		}
-		return p.gameObject;
-	}
-
+	/// <summary>
+	/// Finds a descendant game object by name.
+	/// </summary>
 	public static GameObject FindChildRecursively(GameObject parent, string name)
 	{
 		var resultTransform = parent.transform.Find(name);
 
+		// Search through each of parent's children.
 		if(resultTransform != null)
 		{
 			return resultTransform.gameObject;
 		}
 
+		// Perform the search recursively for each child of parent.
 		foreach(Transform childTransform in parent.transform)
 		{
 			var result = FindChildRecursively(childTransform.gameObject, name);
@@ -154,8 +166,13 @@ public static class GameObjectUtils
 
 		return null;
 	}
+
+	/// <summary>
+	/// Finds a descendant game object with a name containing nameSubstring.
+	/// </summary>
 	public static GameObject FindChildWithNameSubstringRecursively(GameObject parent, string nameSubstring)
 	{
+		// Search through each of parent's children.
 		foreach(Transform childTransform in parent.transform)
 		{
 			if(childTransform.name.Contains(nameSubstring))
@@ -164,6 +181,7 @@ public static class GameObjectUtils
 			}
 		}
 
+		// Perform the search recursively for each child of parent.
 		foreach(Transform childTransform in parent.transform)
 		{
 			var result = FindChildWithNameSubstringRecursively(childTransform.gameObject, nameSubstring);
@@ -176,6 +194,10 @@ public static class GameObjectUtils
 
 		return null;
 	}
+
+	/// <summary>
+	/// Find an ancestor object, or the object itself, with a tag.
+	/// </summary>
 	public static GameObject FindObjectWithTagUpHeirarchy(GameObject gameObject, string tag)
 	{
 		while(gameObject != null)
@@ -185,12 +207,17 @@ public static class GameObjectUtils
 				return gameObject;
 			}
 
+			// Go up one level in the object hierarchy.
 			var parentTransform = gameObject.transform.parent;
 			gameObject = (parentTransform != null) ? parentTransform.gameObject : null;
 		}
 
 		return null;
 	}
+
+	/// <summary>
+	/// Set the layer of an object and all of it's descendants.
+	/// </summary>
 	public static void SetLayerRecursively(GameObject gameObject, int layer)
 	{
 		gameObject.layer = layer;
@@ -200,26 +227,24 @@ public static class GameObjectUtils
 			SetLayerRecursively(childTransform.gameObject, layer);
 		}
 	}
+
+	/// <summary>
+	/// Adds mesh colliders to every descandant object with a mesh filter but no mesh collider, including the object itself.
+	/// </summary>
 	public static void AddMissingMeshCollidersRecursively(GameObject gameObject)
 	{
+		// If gameObject has a MeshFilter but no Collider, add a MeshCollider.
 		if(gameObject.GetComponent<Collider>() == null)
 		{
 			var meshFilter = gameObject.GetComponent<MeshFilter>();
 
 			if((meshFilter != null) && (meshFilter.mesh != null))
 			{
-				gameObject.AddComponent<MeshCollider>();//.convex = true;
-				var p = gameObject.transform;
-				while ( p.parent != null )
-				{
-					if ( p.parent.gameObject.name == "objects" )
-						break;
-					p = p.parent;
-				}
-				if ( p.GetComponent<Rigidbody>() == null && TESUnity.TESUnity.instance.UseKinematicRigidbodies ) p.gameObject.AddComponent<Rigidbody>().isKinematic = true;
+				gameObject.AddComponent<MeshCollider>();
 			}
 		}
 
+		// Perform the above procedure on gameObject's children recursively.
 		foreach(Transform childTransform in gameObject.transform)
 		{
 			AddMissingMeshCollidersRecursively(childTransform.gameObject);
