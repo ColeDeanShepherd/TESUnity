@@ -8,13 +8,7 @@ using UnityEngine;
 /// <remarks>Not thread safe.</remarks>
 public class UnityBinaryReader : IDisposable
 {
-	public Stream BaseStream
-	{
-		get
-		{
-			return reader.BaseStream;
-		}
-	}
+	public Stream BaseStream { get { return reader.BaseStream; } }
 
 	public UnityBinaryReader(Stream input)
 	{
@@ -64,13 +58,15 @@ public class UnityBinaryReader : IDisposable
 	{
 		var remainingByteCount = reader.BaseStream.Length - reader.BaseStream.Position;
 
+		Debug.Assert(remainingByteCount <= int.MaxValue);
+
 		return reader.ReadBytes((int)remainingByteCount);
 	}
 	public void ReadRestOfBytes(byte[] buffer, int startIndex)
 	{
 		var remainingByteCount = reader.BaseStream.Length - reader.BaseStream.Position;
 
-		Debug.Assert((startIndex >= 0) && ((startIndex + remainingByteCount) <= buffer.Length));
+		Debug.Assert((startIndex >= 0) && (remainingByteCount <= int.MaxValue) && ((startIndex + remainingByteCount) <= buffer.Length));
 
 		reader.Read(buffer, startIndex, (int)remainingByteCount);
 	}
@@ -153,6 +149,15 @@ public class UnityBinaryReader : IDisposable
 		unsafe
 		{
 			return *((float*)(&singleAsUInt));
+		}
+	}
+	public double ReadLEDouble()
+	{
+		var doubleAsUInt = ReadLEUInt64();
+
+		unsafe
+		{
+			return *((double*)(&doubleAsUInt));
 		}
 	}
 
