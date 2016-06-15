@@ -17,6 +17,9 @@ namespace System.IO
 
 public static class StringUtils
 {
+	/// <summary>
+	/// Quickly checks if an ASCII encoded string is equal to a C# string.
+	/// </summary>
 	public static bool Equals(byte[] ASCIIBytes, string str)
 	{
 		if(ASCIIBytes.Length != str.Length)
@@ -58,8 +61,12 @@ public static class Utils
 		b = tmp;
 	}
 
+	/// <summary>
+	/// Checks if a bit string (an unsigned integer) contains a collection of bit flags.
+	/// </summary>
 	public static bool ContainsBitFlags(uint bitString, params uint[] bitFlags)
 	{
+		// Construct a bit string containing all the bit flags.
 		uint allBitFlags = 0;
 
 		foreach(var bitFlag in bitFlags)
@@ -67,6 +74,7 @@ public static class Utils
 			allBitFlags |= bitFlag;
 		}
 
+		// Check if the bit string contains all the bit flags.
 		return (bitString & allBitFlags) == allBitFlags;
 	}
 
@@ -88,15 +96,18 @@ public static class Utils
 
 		while(remainingBitCount > 0)
 		{
+			// Read bits from the byte array.
 			var numBitsLeftInByte = 8 - bitIndex;
 			var numBitsReadNow = Math.Min(remainingBitCount, numBitsLeftInByte);
 			var unmaskedBits = (uint)bytes[byteIndex] >> (int)(8 - (bitIndex + numBitsReadNow));
 			var bitMask = 0xFFu >> (int)(8 - numBitsReadNow);
 			uint bitsReadNow = unmaskedBits & bitMask;
 
+			// Store the bits we read.
 			bits <<= (int)numBitsReadNow;
 			bits |= bitsReadNow;
 
+			// Prepare for the next iteration.
 			bitIndex += numBitsReadNow;
 
 			if(bitIndex == 8)
@@ -126,6 +137,9 @@ public static class Utils
 		return min1 + (xPct * range1);
 	}
 
+	/// <summary>
+	/// Calculates the minimum and maximum values of an array.
+	/// </summary>
 	public static void GetExtrema(float[] array, out float min, out float max)
 	{
 		min = float.MaxValue;
@@ -137,6 +151,10 @@ public static class Utils
 			max = Math.Max(max, element);
 		}
 	}
+
+	/// <summary>
+	/// Calculates the minimum and maximum values of a 2D array.
+	/// </summary>
 	public static void GetExtrema(float[,] array, out float min, out float max)
 	{
 		min = float.MaxValue;
@@ -148,6 +166,10 @@ public static class Utils
 			max = Math.Max(max, element);
 		}
 	}
+
+	/// <summary>
+	/// Calculates the minimum and maximum values of a 3D array.
+	/// </summary>
 	public static void GetExtrema(float[,,] array, out float min, out float max)
 	{
 		min = float.MaxValue;
@@ -164,6 +186,14 @@ public static class Utils
 	{
 		Flip2DSubArrayVertically(arr, 0, rowCount, columnCount);
 	}
+
+	/// <summary>
+	/// Flips a portion of a 2D array vertically.
+	/// </summary>
+	/// <param name="arr">A 2D array represented as a 1D row-major array.</param>
+	/// <param name="startIndex">The 1D index of the top left element in the portion of the 2D array we want to flip.</param>
+	/// <param name="rowCount">The number of rows in the sub-array.</param>
+	/// <param name="columnCount">The number of columns in the sub-array.</param>
 	public static void Flip2DSubArrayVertically<T>(T[] arr, int startIndex, int rowCount, int columnCount)
 	{
 		Debug.Assert((startIndex >= 0) && (rowCount >= 0) && (columnCount >= 0) && ((startIndex + (rowCount * columnCount)) <= arr.Length));
