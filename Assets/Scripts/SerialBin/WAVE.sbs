@@ -1,0 +1,25 @@
+﻿chunkID: [4, u8]
+chunkSize: u32LE
+format: [4, u8]
+
+subchunk1ID: [4, u8]
+subchunk1Size: u32LE
+
+audioFormat: u16LE
+
+numChannels: u16LE
+samplingRate: u32LE
+byteRate: u32LE
+blockAlign: u16LE
+bitsPerSample: u16LE
+
+/*if(subchunk1Size == 18)
+{
+	subchunk1ExtraSize: u16LE
+	subchunk1ExtraBytes: [subchunk1ExtraSize, u8]
+}*/
+
+subchunk2ID: [4, u8]
+
+subchunk2Size: u32LE
+audioData: [subchunk2Size, u8]

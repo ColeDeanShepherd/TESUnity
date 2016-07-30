@@ -17,7 +17,8 @@
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.3.5f1</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -58,12 +59,6 @@
     <Reference Include="UnityEngine.Networking">
       <HintPath>Library\UnityAssemblies\UnityEngine.Networking.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.Networking">
-      <HintPath>Library\UnityAssemblies\UnityEngine.Networking.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>Library\UnityAssemblies\UnityEngine.UI.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
     </Reference>
@@ -88,11 +83,13 @@
     <Compile Include="Assets\Scripts\FlyingCameraComponent.cs" />
     <Compile Include="Assets\Scripts\GUIUtils.cs" />
     <Compile Include="Assets\Scripts\GameObjectUtils.cs" />
+    <Compile Include="Assets\Scripts\SerialBin\CodeGenerator.cs" />
+    <Compile Include="Assets\Scripts\SerialBin\Lexer.cs" />
+    <Compile Include="Assets\Scripts\SerialBin\Parser.cs" />
     <Compile Include="Assets\Scripts\TES\AutoNIFReader.cs" />
     <Compile Include="Assets\Scripts\TES\BSAFile.cs" />
     <Compile Include="Assets\Scripts\TES\Convert.cs" />
     <Compile Include="Assets\Scripts\TES\ESMFile.cs" />
-    <Compile Include="Assets\Scripts\TES\LocalSettingsObject.cs" />
     <Compile Include="Assets\Scripts\TES\MaterialManager.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindDataReader.cs" />
     <Compile Include="Assets\Scripts\TES\MorrowindEngine.cs" />
