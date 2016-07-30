@@ -32,17 +32,15 @@ namespace TESUnity
 		public GameObject waterPrefab;
 		#endregion
 
-		private LocalSettingsObject settingsFile;
-		public bool FoundSettingsFile { get { return settingsFile != null; } }
-		public string MWDataPath { get { return FoundSettingsFile ? settingsFile.engine.dataFilesPath : dataPath; } }
-		public bool UseKinematicRigidbodies { get { return FoundSettingsFile ? settingsFile.engine.useKinematicRigidbodies : useKinematicRigidbodies; } }
-		public bool EnableMusic { get { return FoundSettingsFile ? settingsFile.audio.enableMusic : music; } }
-		public float AmbientIntensity { get { return FoundSettingsFile ? settingsFile.graphics.ambientIntensity : ambientIntensity; } }
-		public bool EnableSunShadows { get { return FoundSettingsFile ? settingsFile.graphics.sunShadows : sunShadows; } }
-		public bool EnableLightShadows { get { return FoundSettingsFile ? settingsFile.graphics.lightShadows : lightShadows; } }
-		public RenderingPath RenderPath { get { return FoundSettingsFile ? settingsFile.graphics.preferredRenderMode : renderPath; } }
-		public bool EnableExteriorLights { get { return FoundSettingsFile ? settingsFile.graphics.exteriorCellLights : exteriorCellLights; } }
-		public bool EnableAnimatedLights { get { return FoundSettingsFile ? settingsFile.graphics.animatedLights : animatedLights; } }
+		public string MWDataPath { get { return  dataPath; } }
+		public bool UseKinematicRigidbodies { get { return  useKinematicRigidbodies; } }
+		public bool EnableMusic { get { return  music; } }
+		public float AmbientIntensity { get { return ambientIntensity; } }
+		public bool EnableSunShadows { get { return sunShadows; } }
+		public bool EnableLightShadows { get { return lightShadows; } }
+		public RenderingPath RenderPath { get { return renderPath; } }
+		public bool EnableExteriorLights { get { return exteriorCellLights; } }
+		public bool EnableAnimatedLights { get { return animatedLights; } }
 
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
@@ -56,25 +54,19 @@ namespace TESUnity
 			instance = this;
 		}
 
-		public void TryFindSettings()
-		{
-			var foundSettings = Resources.LoadAll<LocalSettingsObject>("");
-			if ( foundSettings.Length > 0 )
-				settingsFile = foundSettings[ 0 ]; // search for and load the first found Settings file from a Resources folder
-		}
-
 		private void Start()
 		{
 			MWDataReader = new MorrowindDataReader(MWDataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
-			if ( EnableMusic )
-			{// Start the music.
+			if(EnableMusic)
+			{
+				// Start the music.
 				musicPlayer = new MusicPlayer();
 
-				foreach ( var songFilePath in Directory.GetFiles( MWDataPath + "/Music/Explore" ) )
+				foreach(var songFilePath in Directory.GetFiles(MWDataPath + "/Music/Explore"))
 				{
-					if ( !songFilePath.Contains( "Morrowind Title" ) )
+					if(!songFilePath.Contains( "Morrowind Title"))
 					{
 						musicPlayer.AddSong( songFilePath );
 					}
@@ -97,7 +89,10 @@ namespace TESUnity
 		private void Update()
 		{
 			MWEngine.Update();
-			if ( EnableMusic ) musicPlayer.Update();
+			if(EnableMusic)
+			{
+				musicPlayer.Update();
+			}
 
 			if(Input.GetKeyDown(KeyCode.P))
 			{
