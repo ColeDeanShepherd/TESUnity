@@ -12,14 +12,14 @@ namespace TESUnity
 		#region Inspector-set Members
 
 		public string dataPath;
-		[SerializeField]private bool useKinematicRigidbodies = true;
-		[SerializeField]private bool music = false;
-		[SerializeField]private float ambientIntensity = 1.5f;
-		[SerializeField]private bool sunShadows = false;
-		[SerializeField]private bool lightShadows = false;
-		[SerializeField]private RenderingPath renderPath = RenderingPath.Forward;
-		[SerializeField]private bool exteriorCellLights = false;
-		[SerializeField]private bool animatedLights = false;
+		private bool useKinematicRigidbodies = true;
+		private bool music = false;
+		private float ambientIntensity = 1.5f;
+		private bool sunShadows = false;
+		private bool lightShadows = false;
+		private RenderingPath renderPath = RenderingPath.Forward;
+		private bool exteriorCellLights = false;
+		private bool animatedLights = false;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
