@@ -115,7 +115,7 @@ namespace SerialBin
 				}
 				else
 				{
-					throw new LexerException("Encountered an unexpected character '" + nextCharacter + "'.", position);
+					throw new LexerException("Encountered an unexpected character: '" + nextCharacter + "'.", position);
 				}
 			}
 

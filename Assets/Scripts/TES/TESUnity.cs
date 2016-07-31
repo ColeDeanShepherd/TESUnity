@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -66,9 +65,9 @@ namespace TESUnity
 
 				foreach(var songFilePath in Directory.GetFiles(MWDataPath + "/Music/Explore"))
 				{
-					if(!songFilePath.Contains( "Morrowind Title"))
+					if(!songFilePath.Contains("Morrowind Title"))
 					{
-						musicPlayer.AddSong( songFilePath );
+						musicPlayer.AddSong(songFilePath);
 					}
 				}
 				musicPlayer.Play();
