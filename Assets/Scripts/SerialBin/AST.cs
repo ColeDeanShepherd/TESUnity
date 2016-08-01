@@ -31,17 +31,35 @@ namespace SerialBin.AST
 				throw new SemanticAnalysisException("Symbol \"" + name + "\" does not exist.");
 			}
 		}
+		public Type ResolveType(RecordTypeName typeName)
+		{
+			if(typeName is SimpleTypeName)
+			{
+				return FindSymbol(((SimpleTypeName)typeName).name);
+			}
+			else if(typeName is ArrayTypeName)
+			{
+				var arrayTypeName = (ArrayTypeName)typeName;
+				return new ArrayType(arrayTypeName.elementCount, ResolveType(arrayTypeName.elementTypeName));
+			}
+			else
+			{
+				throw new SemanticAnalysisException("Unsupported type name: " + typeName.GetType().Name);
+			}
+		}
 
 		private Dictionary<string, Type> symbolTable = new Dictionary<string, Type>();
 	}
 
 	public class FormatSpecification
 	{
+		public string formatName;
 		public List<Record> records;
 		public SymbolTable symbolTable;
 
-		public FormatSpecification()
+		public FormatSpecification(string formatName)
 		{
+			this.formatName = formatName;
 			records = new List<Record>();
 			symbolTable = new SymbolTable();
 		}
@@ -79,6 +97,34 @@ namespace SerialBin.AST
 		{
 			this.elementCount = elementCount;
 			this.elementTypeName = elementTypeName;
+		}
+	}
+
+	public interface Type { }
+
+	public class IntegerType : Type
+	{
+		public uint byteCount;
+		public bool isSigned;
+		public bool isBigEndian;
+
+		public IntegerType(uint byteCount, bool isSigned, bool isBigEndian)
+		{
+			this.byteCount = byteCount;
+			this.isSigned = isSigned;
+			this.isBigEndian = isBigEndian;
+		}
+	}
+
+	public class ArrayType : Type
+	{
+		public Expression elementCount;
+		public Type elementType;
+
+		public ArrayType(Expression elementCount, Type elementType)
+		{
+			this.elementCount = elementCount;
+			this.elementType = elementType;
 		}
 	}
 

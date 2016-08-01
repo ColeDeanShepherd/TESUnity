@@ -14,12 +14,12 @@ namespace SerialBin
 
 	public class Parser
 	{
-		public FormatSpecification Parse(List<Token> tokens)
+		public FormatSpecification Parse(string formatName, List<Token> tokens)
 		{
 			this.tokens = tokens;
 			nextTokenIndex = 0;
 
-			var formatSpecification = new FormatSpecification();
+			var formatSpecification = new FormatSpecification(formatName);
 
 			Token nextToken;
 			while(TryPeekToken(out nextToken))

@@ -3,34 +3,6 @@ namespace SerialBin
 {
 	using AST;
 
-	public interface Type { }
-
-	public class IntegerType : Type
-	{
-		public uint byteCount;
-		public bool isSigned;
-		public bool isBigEndian;
-
-		public IntegerType(uint byteCount, bool isSigned, bool isBigEndian)
-		{
-			this.byteCount = byteCount;
-			this.isSigned = isSigned;
-			this.isBigEndian = isBigEndian;
-		}
-	}
-
-	public class ArrayType : Type
-	{
-		public Expression elementCount;
-		public Type elementType;
-
-		public ArrayType(Expression elementCount, Type elementType)
-		{
-			this.elementCount = elementCount;
-			this.elementType = elementType;
-		}
-	}
-
 	public class SemanticAnalysisException : Exception
 	{
 		public SemanticAnalysisException() { }
@@ -47,7 +19,7 @@ namespace SerialBin
 
 			foreach(var record in formatSpecification.records)
 			{
-				symbolTable.AddSymbol(record.name, ResolveType(record.typeName));
+				symbolTable.AddSymbol(record.name, symbolTable.ResolveType(record.typeName));
 			}
 		}
 
@@ -78,22 +50,6 @@ namespace SerialBin
 
 			symbolTable.AddSymbol("i64LE", new IntegerType(8, true, false));
 			symbolTable.AddSymbol("i64BE", new IntegerType(8, true, true));
-		}
-		private Type ResolveType(RecordTypeName typeName)
-		{
-			if(typeName is SimpleTypeName)
-			{
-				return symbolTable.FindSymbol(((SimpleTypeName)typeName).name);
-			}
-			else if(typeName is ArrayTypeName)
-			{
-				var arrayTypeName = (ArrayTypeName)typeName;
-				return new ArrayType(arrayTypeName.elementCount, ResolveType(arrayTypeName.elementTypeName));
-			}
-			else
-			{
-				throw new SemanticAnalysisException("Unsupported type name: " + typeName.GetType().Name);
-			}
 		}
 	}
 }
