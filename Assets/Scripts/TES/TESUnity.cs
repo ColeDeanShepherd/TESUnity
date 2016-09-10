@@ -11,14 +11,14 @@ namespace TESUnity
 		#region Inspector-set Members
 
 		public string dataPath;
-		private bool useKinematicRigidbodies = true;
-		private bool music = true;
-		private float ambientIntensity = 1.5f;
-		private bool sunShadows = false;
-		private bool lightShadows = false;
-		private RenderingPath renderPath = RenderingPath.Forward;
-		private bool exteriorCellLights = false;
-		private bool animatedLights = false;
+		public bool useKinematicRigidbodies = true;
+		public bool music = true;
+		public float ambientIntensity = 1.5f;
+		public bool sunShadows = false;
+		public bool lightShadows = false;
+		public RenderingPath renderPath = RenderingPath.Forward;
+		public bool exteriorCellLights = false;
+		public bool animatedLights = false;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
@@ -30,16 +30,6 @@ namespace TESUnity
 
 		public GameObject waterPrefab;
 		#endregion
-
-		public string MWDataPath { get { return  dataPath; } }
-		public bool UseKinematicRigidbodies { get { return  useKinematicRigidbodies; } }
-		public bool EnableMusic { get { return  music; } }
-		public float AmbientIntensity { get { return ambientIntensity; } }
-		public bool EnableSunShadows { get { return sunShadows; } }
-		public bool EnableLightShadows { get { return lightShadows; } }
-		public RenderingPath RenderPath { get { return renderPath; } }
-		public bool EnableExteriorLights { get { return exteriorCellLights; } }
-		public bool EnableAnimatedLights { get { return animatedLights; } }
 
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
@@ -55,15 +45,15 @@ namespace TESUnity
 
 		private void Start()
 		{
-			MWDataReader = new MorrowindDataReader(MWDataPath);
+			MWDataReader = new MorrowindDataReader(dataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
-			if(EnableMusic)
+			if(music)
 			{
 				// Start the music.
 				musicPlayer = new MusicPlayer();
 
-				foreach(var songFilePath in Directory.GetFiles(MWDataPath + "/Music/Explore"))
+				foreach(var songFilePath in Directory.GetFiles(dataPath + "/Music/Explore"))
 				{
 					if(!songFilePath.Contains("Morrowind Title"))
 					{
@@ -88,7 +78,7 @@ namespace TESUnity
 		private void Update()
 		{
 			MWEngine.Update();
-			if(EnableMusic)
+			if(music)
 			{
 				musicPlayer.Update();
 			}
