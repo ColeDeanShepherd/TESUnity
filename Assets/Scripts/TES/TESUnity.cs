@@ -12,7 +12,7 @@ namespace TESUnity
 
 		public string dataPath;
 		private bool useKinematicRigidbodies = true;
-		private bool music = false;
+		private bool music = true;
 		private float ambientIntensity = 1.5f;
 		private bool sunShadows = false;
 		private bool lightShadows = false;
