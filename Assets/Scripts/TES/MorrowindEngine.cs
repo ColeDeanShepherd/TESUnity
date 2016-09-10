@@ -75,10 +75,10 @@ namespace TESUnity
 			interactTextObj.SetActive(false);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-			RenderSettings.ambientIntensity = TESUnity.instance.AmbientIntensity;
+			RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
-			sunObj.GetComponent<Light>().shadows = TESUnity.instance.EnableSunShadows ? LightShadows.Hard : LightShadows.None;
+			sunObj.GetComponent<Light>().shadows = TESUnity.instance.sunShadows ? LightShadows.Hard : LightShadows.None;
 			sunObj.SetActive(false);
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
@@ -443,10 +443,9 @@ namespace TESUnity
 			lightComponent.color = new Color32(LIGH.LHDT.red, LIGH.LHDT.green, LIGH.LHDT.blue, 255);
 			lightComponent.intensity = 1.5f;
 			lightComponent.bounceIntensity = 0f;
-			lightComponent.shadows = ( TESUnity.instance.EnableLightShadows ) ? LightShadows.Soft : LightShadows.None;
+			lightComponent.shadows = TESUnity.instance.lightShadows ? LightShadows.Soft : LightShadows.None;
 
-
-			if ( !indoors && !TESUnity.instance.EnableExteriorLights )//disabling exterior cell lights because there is no day/night cycle
+			if(!indoors && !TESUnity.instance.exteriorCellLights) // disabling exterior cell lights because there is no day/night cycle
 			{
 				lightComponent.enabled = false;
 			}
@@ -900,7 +899,7 @@ namespace TESUnity
 			lightComponent.intensity = 1.5f;
 			lightComponent.color = new Color32(245, 140, 40, 255);
 			lightComponent.enabled = false;
-			lightComponent.shadows = TESUnity.instance.EnableLightShadows ? LightShadows.Hard : LightShadows.None;
+			lightComponent.shadows = TESUnity.instance.lightShadows ? LightShadows.Hard : LightShadows.None;
 
 			lantern.transform.localPosition = cameraPoint.transform.localPosition - Vector3.up * 0.5f;
 			lantern.transform.SetParent(playerComponent.transform, false);
@@ -914,7 +913,7 @@ namespace TESUnity
 		{
 			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-			camera.GetComponent<Camera>().renderingPath = TESUnity.instance.RenderPath;
+			camera.GetComponent<Camera>().renderingPath = TESUnity.instance.renderPath;
 			return camera;
 		}
 		private GameObject CreateFlyingCamera(Vector3 position)

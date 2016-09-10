@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,14 +11,14 @@ namespace TESUnity
 		#region Inspector-set Members
 
 		public string dataPath;
-		[SerializeField]private bool useKinematicRigidbodies = true;
-		[SerializeField]private bool music = false;
-		[SerializeField]private float ambientIntensity = 1.5f;
-		[SerializeField]private bool sunShadows = false;
-		[SerializeField]private bool lightShadows = false;
-		[SerializeField]private RenderingPath renderPath = RenderingPath.Forward;
-		[SerializeField]private bool exteriorCellLights = false;
-		[SerializeField]private bool animatedLights = false;
+		public bool useKinematicRigidbodies = true;
+		public bool music = true;
+		public float ambientIntensity = 1.5f;
+		public bool sunShadows = false;
+		public bool lightShadows = false;
+		public RenderingPath renderPath = RenderingPath.Forward;
+		public bool exteriorCellLights = false;
+		public bool animatedLights = false;
 
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
@@ -31,16 +30,6 @@ namespace TESUnity
 
 		public GameObject waterPrefab;
 		#endregion
-
-		public string MWDataPath { get { return  dataPath; } }
-		public bool UseKinematicRigidbodies { get { return  useKinematicRigidbodies; } }
-		public bool EnableMusic { get { return  music; } }
-		public float AmbientIntensity { get { return ambientIntensity; } }
-		public bool EnableSunShadows { get { return sunShadows; } }
-		public bool EnableLightShadows { get { return lightShadows; } }
-		public RenderingPath RenderPath { get { return renderPath; } }
-		public bool EnableExteriorLights { get { return exteriorCellLights; } }
-		public bool EnableAnimatedLights { get { return animatedLights; } }
 
 		private MorrowindDataReader MWDataReader;
 		private MorrowindEngine MWEngine;
@@ -56,19 +45,19 @@ namespace TESUnity
 
 		private void Start()
 		{
-			MWDataReader = new MorrowindDataReader(MWDataPath);
+			MWDataReader = new MorrowindDataReader(dataPath);
 			MWEngine = new MorrowindEngine(MWDataReader);
 
-			if(EnableMusic)
+			if(music)
 			{
 				// Start the music.
 				musicPlayer = new MusicPlayer();
 
-				foreach(var songFilePath in Directory.GetFiles(MWDataPath + "/Music/Explore"))
+				foreach(var songFilePath in Directory.GetFiles(dataPath + "/Music/Explore"))
 				{
-					if(!songFilePath.Contains( "Morrowind Title"))
+					if(!songFilePath.Contains("Morrowind Title"))
 					{
-						musicPlayer.AddSong( songFilePath );
+						musicPlayer.AddSong(songFilePath);
 					}
 				}
 				musicPlayer.Play();
@@ -89,7 +78,7 @@ namespace TESUnity
 		private void Update()
 		{
 			MWEngine.Update();
-			if(EnableMusic)
+			if(music)
 			{
 				musicPlayer.Update();
 			}
