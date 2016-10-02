@@ -197,7 +197,7 @@ namespace TESUnity
 						{
 							switch ( component.gameObject.tag )
 							{
-								case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
+								case "Door": SetInteractText(component.objData.name); if ( Input.GetButtonDown("Fire1") ) OpenDoor(component); break;
 								case "Container": SetInteractText("Open " + component.objData.name); break;
 								case "Activator": SetInteractText("" + component.objData.name); break;
 								case "Lock": SetInteractText("Locked: " + component.objData.name); break;
