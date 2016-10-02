@@ -1,3 +1,6 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
 
 half4 _Color;
 sampler2D _MainTex;
@@ -20,10 +23,10 @@ struct Input
 
 void vertwavy(inout appdata_full v)
 {
-	float3 wpos = mul(_Object2World, float4(v.vertex.xyz, 1.0)).xyz;
-	float3 wnor = mul(_Object2World, float4(v.normal.xyz, 0.0)).xyz;
+	float3 wpos = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0)).xyz;
+	float3 wnor = mul(unity_ObjectToWorld, float4(v.normal.xyz, 0.0)).xyz;
 	wpos.xz += wnor.xz * sin(_Time.y - wpos.y) * 0.1;
-	v.vertex.xyz = mul(_World2Object, float4(wpos.xyz, 1.0)).xyz;
+	v.vertex.xyz = mul(unity_WorldToObject, float4(wpos.xyz, 1.0)).xyz;
 }
 
 

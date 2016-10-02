@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2015
+# Visual Studio vNext
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TESUnity.CSharp.Plugins", "TESUnity.CSharp.Plugins.csproj", "{D5266CA5-D4B7-1584-D1B0-85B36A5D199A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TESUnity.CSharp", "TESUnity.CSharp.csproj", "{D63DB889-6969-60FA-38B1-270DCD655D21}"

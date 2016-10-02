@@ -117,6 +117,20 @@ namespace TESUnity
 			return null;
 		}
 
+        public CELLRecord FindInteriorCellRecord(Vector2i gridCoords)
+        {
+            var records = MorrowindESMFile.GetRecordsOfType<CELLRecord>();
+            foreach (var record in records)
+            {
+                var CELL = (CELLRecord)record;
+
+                if (CELL.gridCoords.x == gridCoords.x && CELL.gridCoords.y == gridCoords.y)
+                    return CELL;
+            }
+
+            return null;
+        }
+
 		/// <summary>
 		/// Finds the actual path of a texture.
 		/// </summary>

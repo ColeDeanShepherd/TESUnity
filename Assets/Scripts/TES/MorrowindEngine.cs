@@ -128,6 +128,7 @@ namespace TESUnity
 			UpdateExteriorCells(true, cellRadiusOnLoad);
 			OnExteriorCell(_currentCell);
 		}
+
 		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
 		{
 			_currentCell = dataReader.FindInteriorCellRecord(interiorCellName);
@@ -136,13 +137,33 @@ namespace TESUnity
 
 			playerObj = CreatePlayer(position, out playerCameraObj);
 
+            if (_currentCell == null)
+            {
+                playerObj.transform.Translate(0, 100, 0);
+                return;
+            }
+
 			var cellInfo = CreateInteriorCell(interiorCellName);
 			temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 
 			OnInteriorCell(_currentCell);
 		}
 
-		public void Update()
+        public void SpawnPlayerInside(Vector2i gridCoords, Vector3 position)
+        {
+            _currentCell = dataReader.FindInteriorCellRecord(gridCoords);
+
+            Debug.Assert(_currentCell != null);
+
+            playerObj = CreatePlayer(position, out playerCameraObj);
+
+            var cellInfo = CreateInteriorCell(gridCoords);
+            temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+
+            OnInteriorCell(_currentCell);
+        }
+
+        public void Update()
 		{
 			// The current cell can be null if the player is outside of the defined game world.
 			if((_currentCell == null) || !_currentCell.isInterior)
@@ -782,7 +803,25 @@ namespace TESUnity
 				return null;
 			}
 		}
-		private void DestroyAllCells()
+
+        private InRangeCellInfo CreateInteriorCell(Vector2i gridCoords)
+        {
+            var CELL = dataReader.FindInteriorCellRecord(gridCoords);
+
+            if (CELL != null)
+            {
+                var cellInfo = InstantiateCell(CELL);
+                cellObjects[Vector2i.zero] = cellInfo;
+
+                return cellInfo;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private void DestroyAllCells()
 		{
 			foreach(var keyValuePair in cellObjects)
 			{
@@ -804,7 +843,8 @@ namespace TESUnity
 		}
 		private void OnInteriorCell(CELLRecord CELL)
 		{
-			RenderSettings.ambientLight = ColorUtils.B8G8R8ToColor32(CELL.AMBI.ambientColor);
+            if (CELL.AMBI != null)
+			    RenderSettings.ambientLight = ColorUtils.B8G8R8ToColor32(CELL.AMBI.ambientColor);
 
 			sunObj.SetActive(false);
 
