@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.VR;
 
 namespace TESUnity
 {
@@ -48,7 +49,25 @@ namespace TESUnity
 		{
 			capsuleCollider = GetComponent<CapsuleCollider>();
 			rigidbody = GetComponent<Rigidbody>();
-		}
+
+            if (VRSettings.enabled)
+            {
+                InputTracking.Recenter();
+
+                // Put the Canvas in WorldSpace and Attach it to the camera.
+                var canvas = FindObjectOfType<Canvas>();
+                if (canvas != null)
+                {
+                    canvas.renderMode = RenderMode.WorldSpace;
+                    var canvasTransform = canvas.GetComponent<Transform>();
+                    canvasTransform.parent = Camera.main.transform.parent;
+                    canvasTransform.localPosition = new Vector3(0.0f, 0.0f, 1.0f);
+                    canvasTransform.localRotation = Quaternion.identity;
+                    canvasTransform.localScale = new Vector3(0.003f, 0.003f, 0.003f);
+                }
+            }
+        }
+
 		private void Update()
 		{
 			Rotate();
