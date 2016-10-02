@@ -75,6 +75,18 @@ public static class GUIUtils
 
 		return canvas;
 	}
+
+    public static void SetupCanvasToVR(Canvas canvas, Transform parent)
+    {
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.worldCamera = Camera.main;
+        var canvasTransform = canvas.GetComponent<Transform>();
+        canvasTransform.parent = parent;
+        canvasTransform.localPosition = new Vector3(0.0f, 0.0f, 1.0f);
+        canvasTransform.localRotation = Quaternion.identity;
+        canvasTransform.localScale = new Vector3(0.003f, 0.003f, 0.003f);
+    }
+
 	public static GameObject CreateEventSystem()
 	{
 		var eventSystem = new GameObject("EventSystem");
@@ -552,7 +564,7 @@ public static class GUIUtils
 		return slider;
 	}
 
-	public static GameObject CreateToggle(GameObject parent)
+	public static GameObject CreateToggle(string labelContent, GameObject parent)
 	{
 		var toggle = CreateUIObject("Toggle", parent);
 		toggle.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 20);
@@ -579,7 +591,7 @@ public static class GUIUtils
 		checkmark.GetComponent<RectTransform>().sizeDelta = new Vector2(20, 20);
 
 		// Create the label.
-		var label = CreateText("Toggle", toggle);
+		var label = CreateText(labelContent, toggle);
 		label.name = "Label";
 
 		var labelTransform = label.GetComponent<RectTransform>();
