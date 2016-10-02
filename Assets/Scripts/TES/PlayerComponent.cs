@@ -77,7 +77,7 @@ namespace TESUnity
 				isFlying = !isFlying;
 			}
 
-			if(isGrounded && !isFlying && Input.GetKeyDown(KeyCode.Space))
+			if(isGrounded && !isFlying && Input.GetButtonDown("Jump"))
 			{
 				var newVelocity = rigidbody.velocity;
 				newVelocity.y = 5;
@@ -170,28 +170,7 @@ namespace TESUnity
 		private Vector3 CalculateLocalMovementDirection()
 		{
 			// Calculate the local movement direction.
-			var direction = Vector3.zero;
-
-			if(Input.GetKey(KeyCode.W))
-			{
-				direction += Vector3.forward;
-			}
-
-			if(Input.GetKey(KeyCode.A))
-			{
-				direction += Vector3.left;
-			}
-
-			if(Input.GetKey(KeyCode.S))
-			{
-				direction += Vector3.back;
-			}
-
-			if(Input.GetKey(KeyCode.D))
-			{
-				direction += Vector3.right;
-			}
-
+			var direction = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
 			return direction.normalized;
 		}
 		private float CalculateSpeed()
