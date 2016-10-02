@@ -55,6 +55,7 @@ namespace TESUnity
                 InputTracking.Recenter();
                 // Put the Canvas in WorldSpace and Attach it to the camera.
                 GUIUtils.SetupCanvasToVR(FindObjectOfType<Canvas>(), Camera.main.transform.parent);
+                Camera.main.nearClipPlane = 0.1f;
             }
         }
 
@@ -80,6 +81,9 @@ namespace TESUnity
                 var light = lantern.GetComponent<Light>();
                 light.enabled = !light.enabled;
             }
+
+            if (Input.GetButtonDown("Recenter"))
+                InputTracking.Recenter();
         }
         private void FixedUpdate()
         {
