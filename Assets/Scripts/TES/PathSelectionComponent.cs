@@ -3,14 +3,12 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.VR;
 
 namespace TESUnity
 {
     public class PathSelectionComponent : MonoBehaviour
     {
         private static readonly string SavePathKey = "TESUnity.PathSelection.Path";
-        private static readonly string SaveAutoKey = "TESUnity.PathSelection.Auto";
         private string defaultMWDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
 
         private new GameObject camera;
@@ -22,13 +20,20 @@ namespace TESUnity
 
         private void Start()
         {
-            var savedPath = PlayerPrefs.GetString(SaveAutoKey, string.Empty);
+            var savedPath = PlayerPrefs.GetString(SavePathKey, string.Empty);
             if (savedPath != string.Empty)
                 defaultMWDataPath = savedPath;
 
             camera = GameObjectUtils.CreateMainCamera(Vector3.zero, Quaternion.identity);
             eventSystem = GUIUtils.CreateEventSystem();
             canvas = GUIUtils.CreateCanvas();
+
+            var path = Path.Combine(System.Environment.CurrentDirectory, "Data Files");
+            if (Directory.Exists(path))
+            {
+                LoadWorld(path);
+                return;
+            }
 
             var inputFieldGO = GUIUtils.CreateInputField(defaultMWDataPath, Vector3.zero, new Vector2(620, 30), canvas);
             inputField = inputFieldGO.GetComponent<InputField>();
@@ -48,7 +53,7 @@ namespace TESUnity
 
             var errorTextGo = GUIUtils.CreateText("", canvas);
             errorText = errorTextGo.GetComponent<Text>();
-            errorText.rectTransform.anchoredPosition = new Vector2(0, 120);
+            errorText.rectTransform.anchoredPosition = new Vector2(0, -120);
             errorText.color = Color.white;
             errorText.fontSize = 26;
             errorText.gameObject.AddComponent<Outline>();
@@ -88,7 +93,7 @@ namespace TESUnity
         {
             errorText.text = message;
             errorText.enabled = true;
-            yield return new WaitForSeconds(2.5f);
+            yield return new WaitForSeconds(5.0f);
             errorText.enabled = false;
         }
     }
