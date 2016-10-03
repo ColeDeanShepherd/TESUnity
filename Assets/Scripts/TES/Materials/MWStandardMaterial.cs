@@ -58,11 +58,7 @@ namespace TESUnity
 
         public override Material BuildMaterialBlended(ur.BlendMode sourceBlendMode, ur.BlendMode destinationBlendMode)
         {
-            Material material = new Material(Shader.Find("Standard"));
-            material.SetInt("_SrcBlend", (int)sourceBlendMode);
-            material.SetInt("_DstBlend", (int)destinationBlendMode);
-            material.SetFloat("_Mode", 1);
-            return material;
+            return BuildMaterialTested();
         }
 
         public override Material BuildMaterialTested(float cutoff = 0.5f)

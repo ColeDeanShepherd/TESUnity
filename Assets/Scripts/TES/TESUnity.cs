@@ -8,6 +8,11 @@ namespace TESUnity
 	{
 		public static TESUnity instance;
 
+        public enum MWMaterialType
+        {
+            Default, Standard, BumpedDiffuse, Unlit
+        }
+
 		#region Inspector-set Members
 
 		public string dataPath;
@@ -16,7 +21,8 @@ namespace TESUnity
 		public float ambientIntensity = 1.5f;
 		public bool renderSunShadows = false;
 		public bool renderLightShadows = false;
-		public RenderingPath renderPath = RenderingPath.Forward;
+        public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
+        public RenderingPath renderPath = RenderingPath.Forward;
 		public bool renderExteriorCellLights = false;
 		public bool animateLights = false;
 

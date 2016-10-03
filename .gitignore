@@ -30,6 +30,9 @@ LightingData.asset.meta
 *.v11
 *.v12
 
+# Misc
+Config.ini
+
 # Folder to exclude
 [Bb]in
 [Dd]ebug*/

@@ -42,7 +42,22 @@ namespace TESUnity
         public MaterialManager(TextureManager textureManager)
         {
             _textureManager = textureManager;
-            _materialInterface = new MWBumpedDiffuseMaterial(textureManager);
+
+            switch(TESUnity.instance.materialType)
+            {
+                case TESUnity.MWMaterialType.Default:
+                    _materialInterface = new MWDefaultMaterial(textureManager);
+                    break;
+                case TESUnity.MWMaterialType.Standard:
+                    _materialInterface = new MWStandardMaterial(textureManager);
+                    break;
+                case TESUnity.MWMaterialType.Unlit:
+                    _materialInterface = new MWUnliteMaterial(textureManager);
+                    break;
+                default:
+                    _materialInterface = new MWBumpedDiffuseMaterial(textureManager);
+                    break;
+            }
         }
 
         public Material BuildMaterialFromProperties(MWMaterialProps mp)

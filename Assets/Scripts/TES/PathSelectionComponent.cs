@@ -20,6 +20,8 @@ namespace TESUnity
 
         private void Start()
         {
+            CheckConfigINI();
+
             var savedPath = PlayerPrefs.GetString(SavePathKey, string.Empty);
             if (savedPath != string.Empty)
                 defaultMWDataPath = savedPath;
@@ -97,6 +99,68 @@ namespace TESUnity
             errorText.enabled = true;
             yield return new WaitForSeconds(5.0f);
             errorText.enabled = false;
+        }
+
+        /// <summary>
+        /// Checks if a file named Config.ini is located left to the main executable.
+        /// Open/Parse it and configure default values.
+        /// </summary>
+        private void CheckConfigINI()
+        {
+            if (!File.Exists("Config.ini"))
+                return;
+
+            using (var savedData = File.OpenText("Config.ini"))
+            {
+                var text = savedData.ReadToEnd();
+
+                if (text != string.Empty)
+                {
+                    using (var stream = new StringReader(text))
+                    {
+                        var line = stream.ReadLine();
+                        var temp = new string[2];
+                        var tes = GetComponent<TESUnity>();
+                        var value = string.Empty;
+
+                        while (line != null)
+                        {
+                            temp = line.Split('=');
+
+                            if (temp.Length == 2)
+                            {
+                                value = temp[1].Trim();
+
+                                switch (temp[0].Trim())
+                                {
+                                    case "SunShadows": tes.renderSunShadows = bool.Parse(value); break;
+                                    case "LightShadows": tes.renderLightShadows = bool.Parse(value); break;
+                                    case "PlayMusic": tes.playMusic = bool.Parse(value); break;
+                                    case "RenderPath": 
+                                        switch (int.Parse(value))
+                                        {
+                                            case 1: tes.renderPath = RenderingPath.Forward; break;
+                                            case 3: tes.renderPath = RenderingPath.DeferredShading; break;
+                                        }
+                                        break;
+                                    case "Shader":
+                                        switch (value)
+                                        {
+                                            case "Default": tes.materialType = TESUnity.MWMaterialType.Default; break;
+                                            case "Standard": tes.materialType = TESUnity.MWMaterialType.Standard; break;
+                                            case "Unlit": tes.materialType = TESUnity.MWMaterialType.Unlit; break;
+                                        }
+                                        break;
+                                }
+                            }
+
+                            line = stream.ReadLine();
+                        }
+                    }
+                }
+
+                savedData.Close();
+            }
         }
     }
 }

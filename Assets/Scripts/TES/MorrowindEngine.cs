@@ -78,7 +78,7 @@ namespace TESUnity
 			RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
-			sunObj.GetComponent<Light>().shadows = TESUnity.instance.renderSunShadows ? LightShadows.Hard : LightShadows.None;
+			sunObj.GetComponent<Light>().shadows = TESUnity.instance.renderSunShadows ? LightShadows.Soft : LightShadows.None;
 			sunObj.SetActive(false);
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
