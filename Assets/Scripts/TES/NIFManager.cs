@@ -134,7 +134,7 @@ namespace TESUnity
 
 					if((anNiSourceTexture.fileName != null) && (anNiSourceTexture.fileName != ""))
 					{
-						materialManager.textureManager.PreLoadTexture(anNiSourceTexture.fileName);
+						materialManager.TextureManager.PreLoadTexture(anNiSourceTexture.fileName);
 					}
 				}
 			}
