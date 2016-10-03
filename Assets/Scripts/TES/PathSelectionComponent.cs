@@ -69,16 +69,18 @@ namespace TESUnity
 
         private void LoadWorld()
         {
-            LoadWorld(inputField.text);
+            var path = inputField.text;
+
+            if (toggle.isOn)
+                PlayerPrefs.SetString(SavePathKey, path);
+
+            LoadWorld(path);
         }
 
         private void LoadWorld(string path)
         {
             if (Directory.Exists(path))
             {
-                if (toggle.isOn)
-                    PlayerPrefs.SetString(SavePathKey, path);
-
                 var TESUnityComponent = GetComponent<TESUnity>();
                 TESUnityComponent.dataPath = path;
                 TESUnityComponent.enabled = true;
