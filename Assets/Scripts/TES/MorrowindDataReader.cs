@@ -95,13 +95,14 @@ namespace TESUnity
 			return LAND;
 		}
 
-		public CELLRecord FindExteriorCellRecord(Vector2i cellIndices)
+        public CELLRecord FindExteriorCellRecord(Vector2i cellIndices)
 		{
 			CELLRecord CELL;
 			MorrowindESMFile.exteriorCELLRecordsByIndices.TryGetValue(cellIndices, out CELL);
 
 			return CELL;
 		}
+
 		public CELLRecord FindInteriorCellRecord(string cellName)
 		{
 			foreach(var record in MorrowindESMFile.GetRecordsOfType<CELLRecord>())

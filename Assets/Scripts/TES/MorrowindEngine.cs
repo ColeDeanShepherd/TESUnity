@@ -163,6 +163,20 @@ namespace TESUnity
             OnInteriorCell(_currentCell);
         }
 
+        public void SpawnPlayerOutside(Vector2i gridCoords, Vector3 position)
+        {
+            _currentCell = dataReader.FindExteriorCellRecord(gridCoords);
+
+            Debug.Assert(_currentCell != null);
+
+            playerObj = CreatePlayer(position, out playerCameraObj);
+
+            var cellInfo = CreateExteriorCell(gridCoords);
+            temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+
+            OnExteriorCell(_currentCell);
+        }
+
         public void Update()
 		{
 			// The current cell can be null if the player is outside of the defined game world.
@@ -841,6 +855,7 @@ namespace TESUnity
 			waterObj.transform.position = Vector3.zero;
 			waterObj.SetActive(true);
 		}
+
 		private void OnInteriorCell(CELLRecord CELL)
 		{
             if (CELL.AMBI != null)
