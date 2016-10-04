@@ -26,7 +26,7 @@
 			o.Albedo = diff.rgb;
 			o.Emission = ReadGlow(i).rgb;
 			o.Occlusion = ReadDark(i);
-			o.Smoothness = ReadGloss(i);
+			//o.Smoothness = ReadGloss(i);
 			o.Metallic = _Metallic;
 			o.Alpha = diff.a;
 		}

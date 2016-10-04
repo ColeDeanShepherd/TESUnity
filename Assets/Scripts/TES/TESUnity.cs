@@ -8,6 +8,11 @@ namespace TESUnity
 	{
 		public static TESUnity instance;
 
+        public enum MWMaterialType
+        {
+            Default, Standard, BumpedDiffuse, Unlit
+        }
+
 		#region Inspector-set Members
 
 		public string dataPath;
@@ -16,7 +21,8 @@ namespace TESUnity
 		public float ambientIntensity = 1.5f;
 		public bool renderSunShadows = false;
 		public bool renderLightShadows = false;
-		public RenderingPath renderPath = RenderingPath.Forward;
+        public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
+        public RenderingPath renderPath = RenderingPath.Forward;
 		public bool renderExteriorCellLights = false;
 		public bool animateLights = false;
 
@@ -64,8 +70,10 @@ namespace TESUnity
 			}
 
 			// Spawn the player.
-			MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
-		}
+			//MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
+            MWEngine.SpawnPlayerOutside(new Vector2i(-2, -9), new Vector3(-137.94f, 2.30f, -1037.6f));
+        }
+
 		private void OnDestroy()
 		{
 			if(MWDataReader != null)

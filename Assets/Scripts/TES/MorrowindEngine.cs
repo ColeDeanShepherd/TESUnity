@@ -78,7 +78,7 @@ namespace TESUnity
 			RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
-			sunObj.GetComponent<Light>().shadows = TESUnity.instance.renderSunShadows ? LightShadows.Hard : LightShadows.None;
+			sunObj.GetComponent<Light>().shadows = TESUnity.instance.renderSunShadows ? LightShadows.Soft : LightShadows.None;
 			sunObj.SetActive(false);
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
@@ -128,6 +128,7 @@ namespace TESUnity
 			UpdateExteriorCells(true, cellRadiusOnLoad);
 			OnExteriorCell(_currentCell);
 		}
+
 		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
 		{
 			_currentCell = dataReader.FindInteriorCellRecord(interiorCellName);
@@ -136,13 +137,47 @@ namespace TESUnity
 
 			playerObj = CreatePlayer(position, out playerCameraObj);
 
+            if (_currentCell == null)
+            {
+                playerObj.transform.Translate(0, 100, 0);
+                return;
+            }
+
 			var cellInfo = CreateInteriorCell(interiorCellName);
 			temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 
 			OnInteriorCell(_currentCell);
 		}
 
-		public void Update()
+        public void SpawnPlayerInside(Vector2i gridCoords, Vector3 position)
+        {
+            _currentCell = dataReader.FindInteriorCellRecord(gridCoords);
+
+            Debug.Assert(_currentCell != null);
+
+            playerObj = CreatePlayer(position, out playerCameraObj);
+
+            var cellInfo = CreateInteriorCell(gridCoords);
+            temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+
+            OnInteriorCell(_currentCell);
+        }
+
+        public void SpawnPlayerOutside(Vector2i gridCoords, Vector3 position)
+        {
+            _currentCell = dataReader.FindExteriorCellRecord(gridCoords);
+
+            Debug.Assert(_currentCell != null);
+
+            playerObj = CreatePlayer(position, out playerCameraObj);
+
+            var cellInfo = CreateExteriorCell(gridCoords);
+            temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+
+            OnExteriorCell(_currentCell);
+        }
+
+        public void Update()
 		{
 			// The current cell can be null if the player is outside of the defined game world.
 			if((_currentCell == null) || !_currentCell.isInterior)
@@ -176,7 +211,7 @@ namespace TESUnity
 						{
 							switch ( component.gameObject.tag )
 							{
-								case "Door": SetInteractText(component.objData.name); if ( Input.GetKeyDown(KeyCode.E) ) OpenDoor(component); break;
+								case "Door": SetInteractText(component.objData.name); if ( Input.GetButtonDown("Fire1") ) OpenDoor(component); break;
 								case "Container": SetInteractText("Open " + component.objData.name); break;
 								case "Activator": SetInteractText("" + component.objData.name); break;
 								case "Lock": SetInteractText("Locked: " + component.objData.name); break;
@@ -782,7 +817,25 @@ namespace TESUnity
 				return null;
 			}
 		}
-		private void DestroyAllCells()
+
+        private InRangeCellInfo CreateInteriorCell(Vector2i gridCoords)
+        {
+            var CELL = dataReader.FindInteriorCellRecord(gridCoords);
+
+            if (CELL != null)
+            {
+                var cellInfo = InstantiateCell(CELL);
+                cellObjects[Vector2i.zero] = cellInfo;
+
+                return cellInfo;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private void DestroyAllCells()
 		{
 			foreach(var keyValuePair in cellObjects)
 			{
@@ -802,9 +855,11 @@ namespace TESUnity
 			waterObj.transform.position = Vector3.zero;
 			waterObj.SetActive(true);
 		}
+
 		private void OnInteriorCell(CELLRecord CELL)
 		{
-			RenderSettings.ambientLight = ColorUtils.B8G8R8ToColor32(CELL.AMBI.ambientColor);
+            if (CELL.AMBI != null)
+			    RenderSettings.ambientLight = ColorUtils.B8G8R8ToColor32(CELL.AMBI.ambientColor);
 
 			sunObj.SetActive(false);
 

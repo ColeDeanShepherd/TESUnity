@@ -95,13 +95,14 @@ namespace TESUnity
 			return LAND;
 		}
 
-		public CELLRecord FindExteriorCellRecord(Vector2i cellIndices)
+        public CELLRecord FindExteriorCellRecord(Vector2i cellIndices)
 		{
 			CELLRecord CELL;
 			MorrowindESMFile.exteriorCELLRecordsByIndices.TryGetValue(cellIndices, out CELL);
 
 			return CELL;
 		}
+
 		public CELLRecord FindInteriorCellRecord(string cellName)
 		{
 			foreach(var record in MorrowindESMFile.GetRecordsOfType<CELLRecord>())
@@ -116,6 +117,20 @@ namespace TESUnity
 
 			return null;
 		}
+
+        public CELLRecord FindInteriorCellRecord(Vector2i gridCoords)
+        {
+            var records = MorrowindESMFile.GetRecordsOfType<CELLRecord>();
+            foreach (var record in records)
+            {
+                var CELL = (CELLRecord)record;
+
+                if (CELL.gridCoords.x == gridCoords.x && CELL.gridCoords.y == gridCoords.y)
+                    return CELL;
+            }
+
+            return null;
+        }
 
 		/// <summary>
 		/// Finds the actual path of a texture.

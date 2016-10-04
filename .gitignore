@@ -1,3 +1,50 @@
-Library/
-Temp/
+# System files
+Thumbs.db
+Thumbs.db.meta
+*.DS_Store
+*.directory
+.vs
+.vscode
+
+# Build files
+*.apk
+*.obb
+
+# Lightmaps
+*.exr
+*.exr.meta
+LightmapSnapshot.asset
+LightmapSnapshot.asset.meta
+LightingData.asset
+LightingData.asset.meta
+
+# Visual Studio files
+*.cachefile
+*.csproj
+*.pidb
+*.sln
+*.suo
+*.unityproj
+*.user
+*.userprefs
+*.v11
+*.v12
+
+# Misc
+Config.ini
+
+# Folder to exclude
+[Bb]in
+[Dd]ebug*/
+[Rr]elease*/
 Builds/
+ipch/
+Library/
+obj/
+Temp/
+UWP/
+WindowsStore/
+WS/
+UnityVS/
+UnityVS.meta
+Data Files/
