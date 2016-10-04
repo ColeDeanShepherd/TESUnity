@@ -30,13 +30,6 @@ namespace TESUnity
             eventSystem = GUIUtils.CreateEventSystem();
             canvas = GUIUtils.CreateCanvas();
 
-            var path = Path.Combine(System.Environment.CurrentDirectory, "Data Files");
-            if (Directory.Exists(path))
-            {
-                LoadWorld(path);
-                return;
-            }
-
             var inputFieldGO = GUIUtils.CreateInputField(defaultMWDataPath, Vector3.zero, new Vector2(620, 30), canvas);
             inputField = inputFieldGO.GetComponent<InputField>();
 
@@ -60,6 +53,13 @@ namespace TESUnity
             errorText.fontSize = 26;
             errorText.gameObject.AddComponent<Outline>();
             errorText.enabled = false;
+
+            var path = Path.Combine(System.Environment.CurrentDirectory, "Data Files");
+            if (Directory.Exists(path))
+            {
+                LoadWorld(path);
+                return;
+            }
         }
 
         private void OnDestroy()

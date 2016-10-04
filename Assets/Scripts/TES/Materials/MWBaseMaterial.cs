@@ -21,6 +21,6 @@ namespace TESUnity
         public abstract Material BuildMaterialFromProperties(MWMaterialProps mp);
         public abstract Material BuildMaterial();
         public abstract Material BuildMaterialBlended(BlendMode sourceBlendMode, BlendMode destinationBlendMode);
-        public abstract Material BuildMaterialTested(float cutoff);
+        public abstract Material BuildMaterialTested(float cutoff = 0.5f);
     }
 }
