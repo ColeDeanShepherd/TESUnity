@@ -3,6 +3,9 @@ using ur = UnityEngine.Rendering;
 
 namespace TESUnity
 {
+    /// <summary>
+    /// A material that uses the Unlit Shader.
+    /// </summary>
     public class MWUnliteMaterial : MWBaseMaterial
     {
         public MWUnliteMaterial(TextureManager textureManager) : base(textureManager) { }
@@ -37,10 +40,9 @@ namespace TESUnity
 
         public override Material BuildMaterialBlended(ur.BlendMode sourceBlendMode, ur.BlendMode destinationBlendMode)
         {
-            Material material = new Material(Shader.Find("Unlit/Transparent Cutout"));
+            var material = BuildMaterialTested();
             material.SetInt("_SrcBlend", (int)sourceBlendMode);
             material.SetInt("_DstBlend", (int)destinationBlendMode);
-            material.SetFloat("_AlphaCutoff", 0.5f);
             return material;
         }
 

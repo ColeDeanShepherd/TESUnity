@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public static class GUIUtils
@@ -89,9 +90,12 @@ public static class GUIUtils
 
 	public static GameObject CreateEventSystem()
 	{
+        if (EventSystem.current != null)
+            return EventSystem.current.gameObject;
+
 		var eventSystem = new GameObject("EventSystem");
-		eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
-		eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+		eventSystem.AddComponent<EventSystem>();
+		eventSystem.AddComponent<StandaloneInputModule>();
 
 		return eventSystem;
 	}

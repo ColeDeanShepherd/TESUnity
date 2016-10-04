@@ -3,9 +3,20 @@ using ur = UnityEngine.Rendering;
 
 namespace TESUnity
 {
+    /// <summary>
+    /// A material that uses the new Standard Shader.
+    /// </summary>
     public class MWStandardMaterial : MWBaseMaterial
     {
-        public MWStandardMaterial(TextureManager textureManager) : base(textureManager) { }
+        private Material _standardMaterial;
+        private Material _standardCutoutMaterial;
+
+        public MWStandardMaterial(TextureManager textureManager)
+            : base(textureManager)
+        {
+            _standardMaterial = Resources.Load<Material>("Materials/Standard");
+            _standardCutoutMaterial = Resources.Load<Material>("Materials/StandardCutout");
+        }
 
         public override Material BuildMaterialFromProperties(MWMaterialProps mp)
         {
@@ -25,26 +36,23 @@ namespace TESUnity
                 if (mp.textures.mainFilePath != null)
                     material.mainTexture = m_textureManager.LoadTexture(mp.textures.mainFilePath);
 
-                if (mp.textures.mainFilePath != null && material.HasProperty("_Albedo"))
-                    material.SetTexture("_Albedo", m_textureManager.LoadTexture(mp.textures.mainFilePath));
+                if (mp.textures.glowFilePath != null)
+                {
+                    material.EnableKeyword("_EMISION");
+                    material.SetTexture("_EMISSION", m_textureManager.LoadTexture(mp.textures.glowFilePath));
+                }
 
-                if (mp.textures.detailFilePath != null && material.HasProperty("_DetailMask"))
-                    material.SetTexture("_DetailMask", m_textureManager.LoadTexture(mp.textures.detailFilePath));
+                if (mp.textures.bumpFilePath != null)
+                {
+                    material.EnableKeyword("_NORMALMAP");
+                    material.SetTexture("_NORMALMAP", m_textureManager.LoadTexture(mp.textures.bumpFilePath));
+                }
 
-                if (mp.textures.darkFilePath != null && material.HasProperty("_Occlusion"))
-                    material.SetTexture("_Occlusion", m_textureManager.LoadTexture(mp.textures.darkFilePath));
-
-                if (mp.textures.glowFilePath != null && material.HasProperty("_Emission"))
-                    material.SetTexture("_Emission", m_textureManager.LoadTexture(mp.textures.glowFilePath));
-
-                if (mp.textures.bumpFilePath != null && material.HasProperty("_NormalMap"))
-                    material.SetTexture("_NormalMap", m_textureManager.LoadTexture(mp.textures.bumpFilePath));
-
-                if (material.HasProperty("_Metallic"))
-                    material.SetFloat("_Metallic", 0f);
-
-                if (material.HasProperty("_Smoothness"))
-                    material.SetFloat("_Smoothness", 0f);
+                if (mp.textures.glossFilePath != null)
+                {
+                    material.EnableKeyword("_METALLICGLOSSMAP");
+                    material.SetTexture("_METALLICGLOSSMAP", m_textureManager.LoadTexture(mp.textures.glossFilePath));
+                }
 
                 m_existingMaterials[mp] = material;
             }
@@ -53,18 +61,23 @@ namespace TESUnity
 
         public override Material BuildMaterial()
         {
-            return new Material(Shader.Find("Standard"));
+            var material = new Material(Shader.Find("Standard"));
+            material.CopyPropertiesFromMaterial(_standardMaterial);
+            return material;
         }
 
         public override Material BuildMaterialBlended(ur.BlendMode sourceBlendMode, ur.BlendMode destinationBlendMode)
         {
-            return BuildMaterialTested();
+            var material = BuildMaterialTested();
+            //material.SetInt("_SrcBlend", (int)sourceBlendMode);
+            //material.SetInt("_DstBlend", (int)destinationBlendMode);
+            return material;
         }
 
         public override Material BuildMaterialTested(float cutoff = 0.5f)
         {
-            Material material = new Material(Shader.Find("Standard"));
-            material.SetFloat("_Mode", 1);
+            var material = new Material(Shader.Find("Standard"));
+            material.CopyPropertiesFromMaterial(_standardCutoutMaterial);
             material.SetFloat("_Cutout", cutoff);
             return material;
         }

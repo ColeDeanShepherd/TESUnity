@@ -8,7 +8,7 @@ namespace TESUnity
 {
     public class PathSelectionComponent : MonoBehaviour
     {
-        private static readonly string SavePathKey = "TESUnity.PathSelection.Path";
+        private static readonly string SavePathKey = "keepMWPath";
         private string defaultMWDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
 
         private new GameObject camera;
@@ -136,12 +136,12 @@ namespace TESUnity
                                     case "SunShadows": tes.renderSunShadows = bool.Parse(value); break;
                                     case "LightShadows": tes.renderLightShadows = bool.Parse(value); break;
                                     case "PlayMusic": tes.playMusic = bool.Parse(value); break;
-                                    case "RenderPath": 
-                                        switch (int.Parse(value))
-                                        {
-                                            case 1: tes.renderPath = RenderingPath.Forward; break;
-                                            case 3: tes.renderPath = RenderingPath.DeferredShading; break;
-                                        }
+                                    case "RenderPath":
+                                        var renderPathID = int.Parse(value);
+
+                                        if (renderPathID == 1 || renderPathID == 3)
+                                            tes.renderPath = (RenderingPath)renderPathID;
+
                                         break;
                                     case "Shader":
                                         switch (value)
@@ -149,6 +149,7 @@ namespace TESUnity
                                             case "Default": tes.materialType = TESUnity.MWMaterialType.Default; break;
                                             case "Standard": tes.materialType = TESUnity.MWMaterialType.Standard; break;
                                             case "Unlit": tes.materialType = TESUnity.MWMaterialType.Unlit; break;
+                                            default: tes.materialType = TESUnity.MWMaterialType.BumpedDiffuse; break;
                                         }
                                         break;
                                 }
@@ -156,6 +157,7 @@ namespace TESUnity
 
                             line = stream.ReadLine();
                         }
+                        stream.Close();
                     }
                 }
 

@@ -4,6 +4,9 @@ using UnityEngine.Rendering;
 
 namespace TESUnity
 {
+    /// <summary>
+    /// An abstract class to describe a material.
+    /// </summary>
     public abstract class MWBaseMaterial
     {
         protected Dictionary<MWMaterialProps, Material> m_existingMaterials;

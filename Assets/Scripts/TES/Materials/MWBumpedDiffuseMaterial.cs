@@ -3,6 +3,9 @@ using ur = UnityEngine.Rendering;
 
 namespace TESUnity
 {
+    /// <summary>
+    /// A material that uses the legacy Bumped Diffuse Shader.
+    /// </summary>
     public class MWBumpedDiffuseMaterial : MWBaseMaterial
     {
         public MWBumpedDiffuseMaterial(TextureManager textureManager) : base(textureManager) { }
@@ -25,7 +28,7 @@ namespace TESUnity
                 if (mp.textures.mainFilePath != null)
                     material.mainTexture = m_textureManager.LoadTexture(mp.textures.mainFilePath);
 
-                if (mp.textures.bumpFilePath != null && material.HasProperty("_BumpMap"))
+                if (mp.textures.bumpFilePath != null)
                     material.SetTexture("_BumpMap", m_textureManager.LoadTexture(mp.textures.bumpFilePath));
 
                 m_existingMaterials[mp] = material;

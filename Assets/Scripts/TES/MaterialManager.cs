@@ -31,7 +31,7 @@ namespace TESUnity
     /// </summary>
     public class MaterialManager
     {
-        private MWBaseMaterial _materialInterface;
+        private MWBaseMaterial _mwMaterial;
         private TextureManager _textureManager;
 
         public TextureManager TextureManager
@@ -46,38 +46,38 @@ namespace TESUnity
             switch(TESUnity.instance.materialType)
             {
                 case TESUnity.MWMaterialType.Default:
-                    _materialInterface = new MWDefaultMaterial(textureManager);
+                    _mwMaterial = new MWDefaultMaterial(textureManager);
                     break;
                 case TESUnity.MWMaterialType.Standard:
-                    _materialInterface = new MWStandardMaterial(textureManager);
+                    _mwMaterial = new MWStandardMaterial(textureManager);
                     break;
                 case TESUnity.MWMaterialType.Unlit:
-                    _materialInterface = new MWUnliteMaterial(textureManager);
+                    _mwMaterial = new MWUnliteMaterial(textureManager);
                     break;
                 default:
-                    _materialInterface = new MWBumpedDiffuseMaterial(textureManager);
+                    _mwMaterial = new MWBumpedDiffuseMaterial(textureManager);
                     break;
             }
         }
 
         public Material BuildMaterialFromProperties(MWMaterialProps mp)
         {
-            return _materialInterface.BuildMaterialFromProperties(mp);
+            return _mwMaterial.BuildMaterialFromProperties(mp);
         }
 
         private Material BuildMaterial()
         {
-            return _materialInterface.BuildMaterial();
+            return _mwMaterial.BuildMaterial();
         }
 
         private Material BuildMaterialBlended(ur.BlendMode sourceBlendMode, ur.BlendMode destinationBlendMode)
         {
-            return _materialInterface.BuildMaterialBlended(sourceBlendMode, destinationBlendMode);
+            return _mwMaterial.BuildMaterialBlended(sourceBlendMode, destinationBlendMode);
         }
 
         private Material BuildMaterialTested(float cutoff = 0.5f)
         {
-            return _materialInterface.BuildMaterialTested(cutoff);
+            return _mwMaterial.BuildMaterialTested(cutoff);
         }
     }
 }

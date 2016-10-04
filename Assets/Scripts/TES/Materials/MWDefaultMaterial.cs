@@ -3,6 +3,9 @@ using ur = UnityEngine.Rendering;
 
 namespace TESUnity
 {
+    /// <summary>
+    /// A material that uses the default shader created for TESUnity.
+    /// </summary>
     public class MWDefaultMaterial : MWBaseMaterial
     {
         public MWDefaultMaterial(TextureManager textureManager) : base(textureManager) { }
