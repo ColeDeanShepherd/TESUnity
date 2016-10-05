@@ -107,10 +107,10 @@ namespace TESUnity
         /// </summary>
         private void CheckConfigINI()
         {
-            if (!File.Exists("Config.ini"))
+            if (!File.Exists("config.ini"))
                 return;
 
-            using (var savedData = File.OpenText("Config.ini"))
+            using (var savedData = File.OpenText("config.ini"))
             {
                 var text = savedData.ReadToEnd();
 
@@ -133,9 +133,12 @@ namespace TESUnity
 
                                 switch (temp[0].Trim())
                                 {
+                                    case "AnimateLights": tes.animateLights = bool.Parse(value); break;
+                                    case "FollowHeadDirection": tes.followHeadDirection = bool.Parse(value); break;
                                     case "SunShadows": tes.renderSunShadows = bool.Parse(value); break;
                                     case "LightShadows": tes.renderLightShadows = bool.Parse(value); break;
                                     case "PlayMusic": tes.playMusic = bool.Parse(value); break;
+                                    case "RenderExteriorCellLights": tes.renderExteriorCellLights = bool.Parse(value); break;
                                     case "RenderPath":
                                         var renderPathID = int.Parse(value);
 

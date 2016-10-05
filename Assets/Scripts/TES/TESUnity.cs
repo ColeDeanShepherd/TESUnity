@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,6 +27,10 @@ namespace TESUnity
 		public bool renderExteriorCellLights = false;
 		public bool animateLights = false;
 
+        [Header("VR")]
+        public bool followHeadDirection = false;
+
+        [Header("UI")]
 		public Sprite UIBackgroundImg;
 		public Sprite UICheckmarkImg;
 		public Sprite UIDropdownArrowImg;
@@ -44,7 +49,7 @@ namespace TESUnity
 		private GameObject testObj;
 		private string testObjPath;
 
-		private void Awake()
+        private void Awake()
 		{
 			instance = this;
 		}
