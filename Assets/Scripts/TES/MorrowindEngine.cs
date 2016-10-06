@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace TESUnity
 {
+    using Effects;
 	using ESM;
     using UnityStandardAssets.CinematicEffects;
 
@@ -291,6 +292,7 @@ namespace TESUnity
 		private GameObject waterObj;
 		private GameObject playerObj;
 		private GameObject playerCameraObj;
+        private UnderwaterEffect underwaterEffect;
 
 		private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
 
@@ -855,7 +857,9 @@ namespace TESUnity
 
 			waterObj.transform.position = Vector3.zero;
 			waterObj.SetActive(true);
-		}
+            underwaterEffect.enabled = true;
+            underwaterEffect.Level = 0.0f;
+        }
 
 		private void OnInteriorCell(CELLRecord CELL)
 		{
@@ -864,11 +868,14 @@ namespace TESUnity
 
 			sunObj.SetActive(false);
 
-			if(CELL.WHGT != null)
+            underwaterEffect.enabled = CELL.WHGT != null;
+
+            if (CELL.WHGT != null)
 			{
 				waterObj.transform.position = new Vector3(0, CELL.WHGT.value / Convert.meterInMWUnits, 0);
 				waterObj.SetActive(true);
-			}
+                underwaterEffect.Level = waterObj.transform.position.y;
+            }
 			else
 			{
 				waterObj.SetActive(false);
@@ -987,7 +994,11 @@ namespace TESUnity
 			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
 			camera.GetComponent<Camera>().renderingPath = TESUnity.instance.renderPath;
-			return camera;
+
+            // Effects
+            underwaterEffect = camera.AddComponent<UnderwaterEffect>();
+
+            return camera;
 		}
 		private GameObject CreateFlyingCamera(Vector3 position)
 		{
@@ -995,7 +1006,10 @@ namespace TESUnity
 			camera.AddComponent<FlyingCameraComponent>();
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
 
-			return camera;
+            // Effects
+            underwaterEffect = camera.AddComponent<UnderwaterEffect>();
+
+            return camera;
 		}
 		#endregion
 	}
