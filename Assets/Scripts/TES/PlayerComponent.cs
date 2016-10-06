@@ -98,7 +98,7 @@ namespace TESUnity
                 ApplyAirborneForce();
             }
 
-            //if (TESUnity.instance.followHeadRotation)
+            if (TESUnity.instance.followHeadDirection)
             {
                 var centerEye = Camera.main.transform;
                 var root = centerEye.parent;
