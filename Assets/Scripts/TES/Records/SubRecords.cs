@@ -28,6 +28,29 @@
 
         public override void DeserializeData(UnityBinaryReader reader)
         {
+            level = reader.ReadLEInt64();
+            strength = reader.ReadLEInt64();
+            intelligence = reader.ReadLEInt64();
+            willpower = reader.ReadLEInt64();
+            agility = reader.ReadLEInt64();
+            speed = reader.ReadLEInt64();
+            endurance = reader.ReadLEInt64();
+            personality = reader.ReadLEInt64();
+            luck = reader.ReadLEInt64();
+            health = reader.ReadLEInt64();
+            spellPts = reader.ReadLEInt64();
+            fatigue = reader.ReadLEInt64();
+            soul = reader.ReadLEInt64();
+            combat = reader.ReadLEInt64();
+            magic = reader.ReadLEInt64();
+            stealth = reader.ReadLEInt64();
+            attackMin1 = reader.ReadLEInt64();
+            attackMax1 = reader.ReadLEInt64();
+            attackMin2 = reader.ReadLEInt64();
+            attackMax2 = reader.ReadLEInt64();
+            attackMin3 = reader.ReadLEInt64();
+            attackMax3 = reader.ReadLEInt64();
+            gold = reader.ReadLEInt64();
         }
     }
 
@@ -62,6 +85,11 @@
 
         public override void DeserializeData(UnityBinaryReader reader)
         {
+            count = reader.ReadLEInt64();
+            var bytes = reader.ReadBytes(32);
+
+            for (int i = 0; i < 32; i++)
+                name[i] = System.Convert.ToChar(bytes[i]);
         }
     }
 
@@ -79,6 +107,10 @@
 
         public override void DeserializeData(UnityBinaryReader reader)
         {
+            distance = reader.ReadLEInt16();
+            duration = reader.ReadByte();
+            timeOfDay = reader.ReadByte();
+            idle = reader.ReadBytes(10);
         }
     }
 

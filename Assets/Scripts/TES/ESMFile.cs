@@ -1895,6 +1895,8 @@ namespace TESUnity
 						return new CELLRecord();
 					case "LAND":
 						return new LANDRecord();
+                    case "CREA":
+                        return new CREARecord();
 					default:
 						return null;
 				}
