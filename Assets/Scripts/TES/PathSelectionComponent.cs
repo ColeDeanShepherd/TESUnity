@@ -133,7 +133,10 @@ namespace TESUnity
 
                                 switch (temp[0].Trim())
                                 {
+                                    case "AntiAliasing": tes.antiAliasing = bool.Parse(value); break;
+                                    case "AmbientOcclusion": tes.ambientOcclusion = bool.Parse(value); break;
                                     case "AnimateLights": tes.animateLights = bool.Parse(value); break;
+                                    case "Bloom": tes.bloom = bool.Parse(value); break;
                                     case "FollowHeadDirection": tes.followHeadDirection = bool.Parse(value); break;
                                     case "SunShadows": tes.renderSunShadows = bool.Parse(value); break;
                                     case "LightShadows": tes.renderLightShadows = bool.Parse(value); break;
