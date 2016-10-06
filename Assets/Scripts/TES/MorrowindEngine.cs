@@ -7,7 +7,8 @@ using UnityEngine.UI;
 namespace TESUnity
 {
     using Effects;
-    using ESM;
+	using ESM;
+    using UnityStandardAssets.CinematicEffects;
 
     public class InRangeCellInfo
 	{
@@ -969,7 +970,24 @@ namespace TESUnity
 			playerComponent.camera = playerCamera;
 			playerComponent.lantern = lantern;
 
-			return player;
+            var tes = TESUnity.instance;
+
+            if (tes.ambientOcclusion)
+                playerCamera.AddComponent<AmbientOcclusion>();
+
+            if (tes.bloom)
+            {
+                var bloom = playerCamera.AddComponent<Bloom>();
+                bloom.settings.threshold = 0.8f;
+            }
+
+            if (tes.antiAliasing)
+            {
+                var antiAliasing = playerCamera.AddComponent<AntiAliasing>();
+                antiAliasing.method = (int)AntiAliasing.Method.Fxaa;
+            }
+
+            return player;
 		}
 		private GameObject CreatePlayerCamera(Vector3 position)
 		{
