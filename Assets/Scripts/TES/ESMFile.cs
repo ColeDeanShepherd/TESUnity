@@ -1896,7 +1896,7 @@ namespace TESUnity
 					case "LAND":
 						return new LANDRecord();
                     case "CREA":
-                        return new CREARecord();
+                        return new REGNRecord();
 					default:
 						return null;
 				}
@@ -2048,9 +2048,9 @@ namespace TESUnity
 					{
 						objectsByIDString.Add(((ALCHRecord)record).NAME.value, record);
 					}
-                    else if (record is CREARecord)
+                    else if (record is REGNRecord)
                     {
-                        objectsByIDString.Add(((CREARecord)record).NAME.value, record);
+                        objectsByIDString.Add(((REGNRecord)record).NAME.value, record);
                     }
 
 					// Add the record to exteriorCELLRecordsByIndices if applicable.

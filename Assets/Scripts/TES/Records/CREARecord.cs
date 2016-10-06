@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TESUnity.ESM
+﻿namespace TESUnity.ESM
 {
     public class CREARecord : Record
     {
