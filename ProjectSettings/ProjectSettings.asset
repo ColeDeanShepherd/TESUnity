@@ -462,7 +462,7 @@ PlayerSettings:
   PSM::VR::enable: 0
   PSP2::VR::enable: 0
   SamsungTV::VR::enable: 0
-  Standalone::VR::enable: 0
+  Standalone::VR::enable: 1
   Tizen::VR::enable: 0
   WebGL::VR::enable: 0
   WebGL::analyzeBuildSize: 0
@@ -529,6 +529,7 @@ PlayerSettings:
   SamsungTV::VR::enabledDevices: []
   Standalone::VR::enabledDevices:
   - Oculus
+  - OpenVR
   Tizen::VR::enabledDevices: []
   WebGL::VR::enabledDevices: []
   WebPlayer::VR::enabledDevices: []

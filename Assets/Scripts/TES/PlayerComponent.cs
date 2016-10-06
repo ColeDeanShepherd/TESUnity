@@ -97,6 +97,19 @@ namespace TESUnity
             {
                 ApplyAirborneForce();
             }
+
+            //if (TESUnity.instance.followHeadRotation)
+            {
+                var centerEye = Camera.main.transform;
+                var root = centerEye.parent;
+                var prevPos = root.position;
+                var prevRot = root.rotation;
+
+                transform.rotation = Quaternion.Euler(0.0f, centerEye.rotation.eulerAngles.y, 0.0f);
+
+                root.position = prevPos;
+                root.rotation = prevRot;
+            }
         }
 
         private void Rotate()
