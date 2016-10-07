@@ -2,80 +2,65 @@
 {
     public class NPDTSubRecord : SubRecord
     {
-        public long level;
-        public long strength;
-        public long intelligence;
-        public long willpower;
-        public long agility;
-        public long speed;
-        public long endurance;
-        public long personality;
-        public long luck;
-        public long health;
-        public long spellPts;
-        public long fatigue;
-        public long soul;
-        public long combat;
-        public long magic;
-        public long stealth;
-        public long attackMin1;
-        public long attackMax1;
-        public long attackMin2;
-        public long attackMax2;
-        public long attackMin3;
-        public long attackMax3;
-        public long gold;
+        public int type;
+        public int level;
+        public int strength;
+        public int intelligence;
+        public int willpower;
+        public int agility;
+        public int speed;
+        public int endurance;
+        public int personality;
+        public int luck;
+        public int health;
+        public int spellPts;
+        public int fatigue;
+        public int soul;
+        public int combat;
+        public int magic;
+        public int stealth;
+        public int attackMin1;
+        public int attackMax1;
+        public int attackMin2;
+        public int attackMax2;
+        public int attackMin3;
+        public int attackMax3;
+        public int gold;
 
         public override void DeserializeData(UnityBinaryReader reader)
         {
-            level = reader.ReadLEInt64();
-            strength = reader.ReadLEInt64();
-            intelligence = reader.ReadLEInt64();
-            willpower = reader.ReadLEInt64();
-            agility = reader.ReadLEInt64();
-            speed = reader.ReadLEInt64();
-            endurance = reader.ReadLEInt64();
-            personality = reader.ReadLEInt64();
-            luck = reader.ReadLEInt64();
-            health = reader.ReadLEInt64();
-            spellPts = reader.ReadLEInt64();
-            fatigue = reader.ReadLEInt64();
-            soul = reader.ReadLEInt64();
-            combat = reader.ReadLEInt64();
-            magic = reader.ReadLEInt64();
-            stealth = reader.ReadLEInt64();
-            attackMin1 = reader.ReadLEInt64();
-            attackMax1 = reader.ReadLEInt64();
-            attackMin2 = reader.ReadLEInt64();
-            attackMax2 = reader.ReadLEInt64();
-            attackMin3 = reader.ReadLEInt64();
-            attackMax3 = reader.ReadLEInt64();
-            gold = reader.ReadLEInt64();
+            type = reader.ReadLEInt32();
+            level = reader.ReadLEInt32();
+            strength = reader.ReadLEInt32();
+            intelligence = reader.ReadLEInt32();
+            willpower = reader.ReadLEInt32();
+            agility = reader.ReadLEInt32();
+            speed = reader.ReadLEInt32();
+            endurance = reader.ReadLEInt32();
+            personality = reader.ReadLEInt32();
+            luck = reader.ReadLEInt32();
+            health = reader.ReadLEInt32();
+            spellPts = reader.ReadLEInt32();
+            fatigue = reader.ReadLEInt32();
+            soul = reader.ReadLEInt32();
+            combat = reader.ReadLEInt32();
+            magic = reader.ReadLEInt32();
+            stealth = reader.ReadLEInt32();
+            attackMin1 = reader.ReadLEInt32();
+            attackMax1 = reader.ReadLEInt32();
+            attackMin2 = reader.ReadLEInt32();
+            attackMax2 = reader.ReadLEInt32();
+            attackMin3 = reader.ReadLEInt32();
+            attackMax3 = reader.ReadLEInt32();
+            gold = reader.ReadLEInt32();
         }
     }
 
-    public class FLAGSubRecord : SubRecord
-    {
-        public int biped = 0x0001;
-        public int respawn = 0x0002;
-        public int weaponAndShield = 0x0004;
-        public int none = 0x0008;
-        public int swims = 0x0010;
-        public int flies = 0x0020;
-        public int walks = 0x0040;
-        public int defaultFlags = 0x0048;
-        public int essential = 0x0080;
-        public int skeletonBlood = 0x0400;
-        public int metalBlood = 0x0800;
-
-        public override void DeserializeData(UnityBinaryReader reader)
-        {
-        }
-    }
+    public class FLAGSubRecord : Int32SubRecord { }
 
     public class NPCOSubRecord : SubRecord
     {
-        public long count;
+        public int count;
         public char[] name;
 
         public NPCOSubRecord()
@@ -85,7 +70,7 @@
 
         public override void DeserializeData(UnityBinaryReader reader)
         {
-            count = reader.ReadLEInt64();
+            count = reader.ReadLEInt32();
             var bytes = reader.ReadBytes(32);
 
             for (int i = 0; i < 32; i++)

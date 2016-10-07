@@ -2,6 +2,21 @@
 {
     public class CREARecord : Record
     {
+        public enum Flags
+        {
+            Biped = 0x0001,
+            Respawn = 0x0002,
+            WeaponAndShield = 0x0004,
+            None = 0x0008,
+            Swims = 0x0010,
+            Flies = 0x0020,
+            Walks = 0x0040,
+            DefaultFlags = 0x0048,
+            Essential = 0x0080,
+            SkeletonBlood = 0x0400,
+            MetalBlood = 0x0800
+        }
+
         public NAMESubRecord NAME;
         public MODLSubRecord MODL;
         public FNAMSubRecord FNAM;
@@ -42,7 +57,7 @@
                 case "NPCO":
                     NPCO = new NPCOSubRecord();
                     return NPCO;
-                case "AIDT":
+                /*case "AIDT":
                     AIDT = new DymmySubRecord();
                     return AIDT;
                 case "AI_W":
@@ -62,7 +77,7 @@
                     return AI_A;
                 case "XSCL":
                     XSCL = new DymmySubRecord();
-                    return XSCL;
+                    return XSCL;*/
                 default:
                     return null;
             }
