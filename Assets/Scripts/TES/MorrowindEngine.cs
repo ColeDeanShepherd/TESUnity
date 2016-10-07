@@ -527,7 +527,7 @@ namespace TESUnity
 			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
 			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
             ProcessObjectType<CREARecord>( tagTarget , refCellObjInfo , "Creatures");
-            ProcessObjectType<NPC_Record>(tagTarget, refCellObjInfo, "NPCs");
+            ProcessObjectType<NPC_Record>( tagTarget , refCellObjInfo , "NPCs");
 		}
 
 		/// <summary>

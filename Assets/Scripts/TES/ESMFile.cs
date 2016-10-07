@@ -79,10 +79,11 @@ namespace TESUnity
                 {
                     return ((CREARecord)record).MODL.value;
                 }
-                /*else if (record is NPC_Record)
+                else if (record is NPC_Record)
                 {
-                    return ((NPC_Record)record).MODL.value;
-                }*/
+                    var npc = (NPC_Record)record;
+                    return npc.MODL != null ? npc.MODL.value : null;
+                }
 				else
 				{
 					return null;
@@ -182,9 +183,9 @@ namespace TESUnity
 					case "LAND":
 						return new LANDRecord();
                     case "CREA":
-                        return new CREARecord();
-                    /*case "NPC_":
-                        return new NPC_Record();*/
+                        return TESUnity.instance.creaturesEnabled ? new CREARecord() : null;
+                    case "NPC_":
+                        return TESUnity.instance.npcsEnabled ? new NPC_Record() : null;
 					default:
 						return null;
 				}

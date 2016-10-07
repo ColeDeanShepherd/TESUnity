@@ -89,11 +89,6 @@
             public byte timeOfDay;
             public byte[] idle;
 
-            public AI_WSubRecord()
-            {
-                idle = new byte[10];
-            }
-
             public override void DeserializeData(UnityBinaryReader reader)
             {
                 distance = reader.ReadLEInt16();

@@ -11,8 +11,40 @@ namespace TESUnity.ESM
 
         public class NPDTSubRecord : SubRecord
         {
+            public short level;
+            public byte strength;
+            public byte intelligence;
+            public byte willpower;
+            public byte agility;
+            public byte speed;
+            public byte endurance;
+            public byte personality;
+            public byte luck;
+            public byte skills;//[27];
+            public byte reputation;
+            public short health;
+            public short spellPts;
+            public short fatigue;
+            public byte disposition;
+            public byte factionID;
+            public byte rank;
+            public byte unknown1;
+            public int gold;
+            public byte version;
+            /*
+             *  12 byte version
+            public short level;
+            public byte disposition;
+            public byte factionID;
+            public byte rank;
+            public byte unknown1;
+            public byte unknown2;
+            public byte unknown3;
+            public long gold;*/
+
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                reader.ReadBytes(52);
             }
         }
 
@@ -25,13 +57,27 @@ namespace TESUnity.ESM
 
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                count = reader.ReadLEInt32();
+
+                var bytes = reader.ReadBytes(32);
+                name = new char[32];
+
+                for (int i = 0; i < 32; i++)
+                    name[i] = System.Convert.ToChar(bytes[i]);
             }
         }
 
         public class NPCSSubRecord : SubRecord
         {
+            public char[] name;
+
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                var bytes = reader.ReadBytes(32);
+                name = new char[32];
+
+                for (int i = 0; i < 32; i++)
+                    name[i] = System.Convert.ToChar(bytes[i]);
             }
         }
 
@@ -71,6 +117,15 @@ namespace TESUnity.ESM
 
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                hello = reader.ReadByte();
+                unknown1 = reader.ReadByte();
+                fight = reader.ReadByte();
+                flee = reader.ReadByte();
+                alarm = reader.ReadByte();
+                unknown2 = reader.ReadByte();
+                unknown3 = reader.ReadByte();
+                unknown4 = reader.ReadByte();
+                flags = reader.ReadLEInt32();
             }
         }
 
@@ -84,6 +139,10 @@ namespace TESUnity.ESM
 
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                distance = reader.ReadLEInt16();
+                duration = reader.ReadByte();
+                timeOfDay = reader.ReadByte();
+                idle = reader.ReadBytes(8);
             }
         }
 
@@ -96,6 +155,10 @@ namespace TESUnity.ESM
 
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                x = reader.ReadLESingle();
+                y = reader.ReadLESingle();
+                z = reader.ReadLESingle();
+                unknown = reader.ReadLESingle();
             }
         }
 
@@ -110,6 +173,18 @@ namespace TESUnity.ESM
 
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                x = reader.ReadLESingle();
+                y = reader.ReadLESingle();
+                z = reader.ReadLESingle();
+                duration = reader.ReadLEInt16();
+
+                var bytes = reader.ReadBytes(32);
+                id = new char[32];
+
+                for (int i = 0; i < 32; i++)
+                    id[i] = System.Convert.ToChar(bytes[i]);
+
+                unknown = reader.ReadLESingle();
             }
         }
 
@@ -124,6 +199,18 @@ namespace TESUnity.ESM
 
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                x = reader.ReadLESingle();
+                y = reader.ReadLESingle();
+                z = reader.ReadLESingle();
+                duration = reader.ReadLEInt16();
+
+                var bytes = reader.ReadBytes(32);
+                id = new char[32];
+
+                for (int i = 0; i < 32; i++)
+                    id[i] = System.Convert.ToChar(bytes[i]);
+
+                unknown = reader.ReadLESingle();
             }
         }
 
@@ -150,6 +237,12 @@ namespace TESUnity.ESM
 
             public override void DeserializeData(UnityBinaryReader reader)
             {
+                xPos = reader.ReadLESingle();
+                yPos = reader.ReadLESingle();
+                zPos = reader.ReadLESingle();
+                xRot = reader.ReadLESingle();
+                yRot = reader.ReadLESingle();
+                zRot = reader.ReadLESingle();
             }
         }
 
@@ -194,7 +287,7 @@ namespace TESUnity.ESM
                 case "MODL":
                     MODL = new MODLSubRecord();
                     return MODL;
-                case "RNAM":
+                /*case "RNAM":
                     RNAM = new RNAMSubRecord();
                     return RNAM;
                 case "ANAM":
@@ -218,7 +311,7 @@ namespace TESUnity.ESM
                 case "NPCO":
                     NPCO = new NPCOSubRecord();
                     return NPCO;
-                case "AIDT":
+               case "AIDT":
                     AIDT = new AIDTSubRecord();
                     return AIDT;
                 case "AI_W":
@@ -238,7 +331,7 @@ namespace TESUnity.ESM
                     return CNDT;
                 case "AI_A":
                     AI_A = new AI_ASubRecord();
-                    return AI_A;
+                    return AI_A;*/
                 case "DODT":
                     DODT = new DODTSubRecord();
                     return DODT;

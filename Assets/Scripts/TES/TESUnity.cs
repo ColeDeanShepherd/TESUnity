@@ -45,6 +45,10 @@ namespace TESUnity
         public Sprite UISpriteImg;
 
         public GameObject waterPrefab;
+
+        [Header("Debug")]
+        public bool creaturesEnabled = false;
+        public bool npcsEnabled = false;
         #endregion
 
         private MorrowindDataReader MWDataReader;
