@@ -51,15 +51,14 @@
 
         public override SubRecord CreateUninitializedSubRecord(string subRecordName)
         {
-
             switch (subRecordName)
             {
                 case "BYDT":
                     BYDT = new BYDTSubRecord();
                     return BYDT;
-                default:
-                    return null;
             }
+
+            return null;
         }
     }
 }

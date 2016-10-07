@@ -526,8 +526,8 @@ namespace TESUnity
 			ProcessObjectType<APPARecord>( tagTarget , refCellObjInfo , "Apparatus");
 			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
 			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
-            ProcessObjectType<REGNRecord>( tagTarget , refCellObjInfo , "Creatures");
-
+            ProcessObjectType<CREARecord>( tagTarget , refCellObjInfo , "Creatures");
+            ProcessObjectType<NPC_Record>(tagTarget, refCellObjInfo, "NPCs");
 		}
 
 		/// <summary>
@@ -686,7 +686,7 @@ namespace TESUnity
 
 		private void ProcessObjectType <RecordType> ( GameObject gameObject , RefCellObjInfo info , string tag ) where RecordType : Record
 		{
-			var record = info.referencedRecord;
+ 			var record = info.referencedRecord;
 			if ( record is RecordType )
 			{
 				var obj = FindTopLevelObject(gameObject);

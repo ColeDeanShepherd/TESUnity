@@ -60,7 +60,19 @@ namespace TESUnity
 			if(record is ESM.APPARecord) objData.name = (record as ESM.APPARecord).FNAM.value;
 			if(record is ESM.BOOKRecord) objData.name = (record as ESM.BOOKRecord).FNAM.value;
 			if(record is ESM.MISCRecord) objData.name = (record as ESM.MISCRecord).FNAM.value;
-		}
+
+            if (record is ESM.CREARecord)
+            {
+                objData.name = (record as ESM.CREARecord).FNAM.value;
+                gameObject.AddComponent<CreatureComponent>();
+            }
+
+            if (record is ESM.NPC_Record)
+            {
+                objData.name = (record as ESM.NPC_Record).FNAM.value;
+                gameObject.AddComponent<NPCComponent>();
+            }
+        }
 
 		public void SetupDoorData(ESM.Record record)
 		{

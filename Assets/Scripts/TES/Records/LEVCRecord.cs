@@ -2,51 +2,12 @@
 
 namespace TESUnity.ESM
 {
-    public class LEVCRecord : SubRecord
+    public class LEVCRecord : Record
     {
-        public class DATASubRecord : SubRecord
-        {
-            public byte v1;
-            public byte v2;
-            public byte v3;
-            public long l1;
-
-            public override void DeserializeData(UnityBinaryReader reader)
-            {
-                v1 = reader.ReadByte();
-                v2 = reader.ReadByte();
-                v3 = reader.ReadByte();
-                l1 = reader.ReadLEInt64();
-            }
-        }
-
-        public class NNAMSubRecord : SubRecord
-        {
-            public override void DeserializeData(UnityBinaryReader reader)
-            {
-            }
-        }
-
-        public class INDXSubRecord : SubRecord
-        {
-            public override void DeserializeData(UnityBinaryReader reader)
-            {
-            }
-        }
-
-        public class CNAMSubRecord : SubRecord
-        {
-            public override void DeserializeData(UnityBinaryReader reader)
-            {
-            }
-        }
-
-        public class INTVSubRecord : SubRecord
-        {
-            public override void DeserializeData(UnityBinaryReader reader)
-            {
-            }
-        }
+        public class DATASubRecord : INTVSubRecord { }
+        public class NNAMSubRecord : ByteSubRecord { }
+        public class INDXSubRecord : INTVSubRecord { }
+        public class CNAMSubRecord : STRVSubRecord { }
 
         public NAMESubRecord NAME;
         public DATASubRecord DATA;
@@ -55,9 +16,31 @@ namespace TESUnity.ESM
         public CNAMSubRecord CNAM;
         public INTVSubRecord INTV;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override SubRecord CreateUninitializedSubRecord(string subRecordName)
         {
-            throw new NotImplementedException();
+            switch (subRecordName)
+            {
+                case "NAME":
+                    NAME = new NAMESubRecord();
+                    return NAME;
+                case "DATA":
+                    DATA = new DATASubRecord();
+                    return DATA;
+                case "NNAM":
+                    NNAM = new NNAMSubRecord();
+                    break;
+                case "INDX":
+                    INDX = new INDXSubRecord();
+                    break;
+                case "CNAM":
+                    CNAM = new CNAMSubRecord();
+                    break;
+                case "INTV":
+                    INTV = new INTVSubRecord();
+                    break;
+            }
+
+            return null;
         }
     }
 }
