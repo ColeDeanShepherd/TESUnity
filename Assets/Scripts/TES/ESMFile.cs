@@ -77,6 +77,7 @@ namespace TESUnity
 				}
                 else if (record is CREARecord)
                 {
+                    return null;
                     return ((CREARecord)record).MODL.value;
                 }
 				else
@@ -2048,9 +2049,9 @@ namespace TESUnity
 					{
 						objectsByIDString.Add(((ALCHRecord)record).NAME.value, record);
 					}
-                    else if (record is REGNRecord)
+                    else if (record is CREARecord)
                     {
-                        objectsByIDString.Add(((REGNRecord)record).NAME.value, record);
+                        //objectsByIDString.Add(((REGNRecord)record).NAME.value, record);
                     }
 
 					// Add the record to exteriorCELLRecordsByIndices if applicable.
