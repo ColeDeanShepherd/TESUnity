@@ -526,6 +526,7 @@ namespace TESUnity
 			ProcessObjectType<APPARecord>( tagTarget , refCellObjInfo , "Apparatus");
 			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
 			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
+            ProcessObjectType<REGNRecord>( tagTarget , refCellObjInfo , "Creatures");
 
 		}
 

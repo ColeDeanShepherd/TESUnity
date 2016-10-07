@@ -75,6 +75,10 @@ namespace TESUnity
 				{
 					return ((ALCHRecord)record).MODL.value;
 				}
+                else if (record is CREARecord)
+                {
+                    return ((CREARecord)record).MODL.value;
+                }
 				else
 				{
 					return null;
@@ -1891,6 +1895,8 @@ namespace TESUnity
 						return new CELLRecord();
 					case "LAND":
 						return new LANDRecord();
+                    case "CREA":
+                        return new REGNRecord();
 					default:
 						return null;
 				}
@@ -2042,6 +2048,10 @@ namespace TESUnity
 					{
 						objectsByIDString.Add(((ALCHRecord)record).NAME.value, record);
 					}
+                    else if (record is REGNRecord)
+                    {
+                        objectsByIDString.Add(((REGNRecord)record).NAME.value, record);
+                    }
 
 					// Add the record to exteriorCELLRecordsByIndices if applicable.
 					if(record is CELLRecord)
