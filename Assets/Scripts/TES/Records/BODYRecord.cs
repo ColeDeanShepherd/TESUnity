@@ -36,7 +36,7 @@
         public byte flags;
         public byte partType;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             part = reader.ReadByte();
             vampire = reader.ReadByte();

@@ -56,7 +56,7 @@ namespace TESUnity.ESM
                 if (subRecord != null)
                 {
                     subRecord.header = subRecordHeader;
-                    subRecord.DeserializeData(reader);
+                    subRecord.DeserializeData(reader, subRecordHeader.dataSize);
                 }
                 else
                 {
@@ -69,7 +69,7 @@ namespace TESUnity.ESM
     {
         public SubRecordHeader header;
 
-        public abstract void DeserializeData(UnityBinaryReader reader);
+        public abstract void DeserializeData(UnityBinaryReader reader, uint dataSize);
     }
 
     // Add new record types to ESMFile.CreateUninitializedRecord.
@@ -85,7 +85,7 @@ namespace TESUnity.ESM
             public string fileDescription; // 256 bytes
             public uint numRecords;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 version = reader.ReadLESingle();
                 fileType = reader.ReadLEUInt32();
@@ -186,7 +186,7 @@ namespace TESUnity.ESM
             public byte minRange;
             public byte maxRange;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 volume = reader.ReadByte();
                 minRange = reader.ReadByte();
@@ -230,7 +230,7 @@ namespace TESUnity.ESM
             public byte ash;
             public byte blight;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 clear = reader.ReadByte();
                 cloudy = reader.ReadByte();
@@ -249,7 +249,7 @@ namespace TESUnity.ESM
             byte blue;
             byte nullByte;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 red = reader.ReadByte();
                 green = reader.ReadByte();
@@ -262,7 +262,7 @@ namespace TESUnity.ESM
             byte[] soundName;
             byte chance;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 soundName = reader.ReadBytes(32);
                 chance = reader.ReadByte();
@@ -400,7 +400,7 @@ namespace TESUnity.ESM
             public uint value;
             public uint unknown;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEUInt32();
@@ -466,7 +466,7 @@ namespace TESUnity.ESM
             public byte thrustMax;
             public int flags;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -533,7 +533,7 @@ namespace TESUnity.ESM
             public uint itemCount;
             public string itemName;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 itemCount = reader.ReadLEUInt32();
                 itemName = reader.ReadPossiblyNullTerminatedASCIIString(32);
@@ -592,7 +592,7 @@ namespace TESUnity.ESM
             public byte nullByte;
             public int flags;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -656,7 +656,7 @@ namespace TESUnity.ESM
             public int enchantPts;
             public int armour;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 type = reader.ReadLEInt32();
                 weight = reader.ReadLESingle();
@@ -739,7 +739,7 @@ namespace TESUnity.ESM
             public short value;
             public short enchantPts;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 type = reader.ReadLEInt32();
                 weight = reader.ReadLESingle();
@@ -820,7 +820,7 @@ namespace TESUnity.ESM
             public int uses;
             public float quality;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -902,7 +902,7 @@ namespace TESUnity.ESM
             public float weight;
             public int value;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 type = reader.ReadLEInt32();
                 quality = reader.ReadLESingle();
@@ -955,7 +955,7 @@ namespace TESUnity.ESM
             public float quality;
             public int uses;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -1008,7 +1008,7 @@ namespace TESUnity.ESM
             public float quality;
             public int uses;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -1062,7 +1062,7 @@ namespace TESUnity.ESM
             public int[] skillID;
             public int[] attributeID;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -1132,7 +1132,7 @@ namespace TESUnity.ESM
             public int skillID;
             public int enchantPts;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -1189,7 +1189,7 @@ namespace TESUnity.ESM
             public int value;
             public int autoCalc;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 weight = reader.ReadLESingle();
                 value = reader.ReadLEInt32();
@@ -1207,7 +1207,7 @@ namespace TESUnity.ESM
             public int magnitude;
             public int unknown4;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 effectID = reader.ReadLEInt16();
                 skillID = reader.ReadByte();
@@ -1268,7 +1268,7 @@ namespace TESUnity.ESM
             public int gridX;
             public int gridY;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 flags = reader.ReadLEUInt32();
                 gridX = reader.ReadLEInt32();
@@ -1286,7 +1286,7 @@ namespace TESUnity.ESM
             public uint fogColor;
             public float fogDensity;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 ambientColor = reader.ReadLEUInt32();
                 sunlightColor = reader.ReadLEUInt32();
@@ -1303,7 +1303,7 @@ namespace TESUnity.ESM
                 public Vector3 position;
                 public Vector3 eulerAngles;
 
-                public override void DeserializeData(UnityBinaryReader reader)
+                public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
                 {
                     position = reader.ReadLEVector3();
                     eulerAngles = reader.ReadLEVector3();
@@ -1322,7 +1322,7 @@ namespace TESUnity.ESM
                 public Vector3 position;
                 public Vector3 eulerAngles;
 
-                public override void DeserializeData(UnityBinaryReader reader)
+                public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
                 {
                     position = reader.ReadLEVector3();
                     eulerAngles = reader.ReadLEVector3();
@@ -1485,7 +1485,7 @@ namespace TESUnity.ESM
         {
             // XYZ 8 bit floats
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 var vertexCount = header.dataSize / 3;
 
@@ -1502,7 +1502,7 @@ namespace TESUnity.ESM
             public float referenceHeight;
             public sbyte[] heightOffsets;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 referenceHeight = reader.ReadLESingle();
 
@@ -1525,7 +1525,7 @@ namespace TESUnity.ESM
         {
             // Low-LOD heightmap (signed chars)
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 var heightCount = header.dataSize;
 
@@ -1539,7 +1539,7 @@ namespace TESUnity.ESM
         {
             // 24 bit RGB
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 var vertexCount = header.dataSize / 3;
 
@@ -1555,7 +1555,7 @@ namespace TESUnity.ESM
         {
             public ushort[] textureIndices;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 var textureIndexCount = header.dataSize / 2;
                 textureIndices = new ushort[textureIndexCount];
@@ -1619,7 +1619,7 @@ namespace TESUnity.ESM
     {
         public string value;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             value = reader.ReadPossiblyNullTerminatedASCIIString((int)header.dataSize);
         }
@@ -1630,7 +1630,7 @@ namespace TESUnity.ESM
     {
         public long value;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             switch (header.dataSize)
             {
@@ -1655,7 +1655,7 @@ namespace TESUnity.ESM
     {
         public int value0, value1;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             Debug.Assert(header.dataSize == 8);
 
@@ -1669,7 +1669,7 @@ namespace TESUnity.ESM
     {
         public float value;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             value = reader.ReadLESingle();
         }
@@ -1679,7 +1679,7 @@ namespace TESUnity.ESM
     {
         public byte value;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             value = reader.ReadByte();
         }
@@ -1688,7 +1688,7 @@ namespace TESUnity.ESM
     {
         public int value;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             value = reader.ReadLEInt32();
         }
@@ -1697,7 +1697,7 @@ namespace TESUnity.ESM
     {
         public uint value;
 
-        public override void DeserializeData(UnityBinaryReader reader)
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
         {
             value = reader.ReadLEUInt32();
         }

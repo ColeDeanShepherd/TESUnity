@@ -346,8 +346,8 @@ namespace TESUnity
                         objectsByIDString.Add(((NPC_Record)record).NAME.value, record);
                     }
 
-					// Add the record to exteriorCELLRecordsByIndices if applicable.
-					if(record is CELLRecord)
+                    // Add the record to exteriorCELLRecordsByIndices if applicable.
+                    if (record is CELLRecord)
 					{
 						var CELL = (CELLRecord)record;
 

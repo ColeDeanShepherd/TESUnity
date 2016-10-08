@@ -31,7 +31,7 @@
             public int attackMax3;
             public int gold;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 type = reader.ReadLEInt32();
                 level = reader.ReadLEInt32();
@@ -72,7 +72,7 @@
                 name = new char[32];
             }
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 count = reader.ReadLEInt32();
                 var bytes = reader.ReadBytes(32);
@@ -89,7 +89,7 @@
             public byte timeOfDay;
             public byte[] idle;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 distance = reader.ReadLEInt16();
                 duration = reader.ReadByte();
@@ -102,7 +102,7 @@
         {
             public byte[] value1;
 
-            public override void DeserializeData(UnityBinaryReader reader)
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
             {
                 value1 = reader.ReadBytes(12);
             }
