@@ -4,7 +4,9 @@ using UnityEngine.UI;
 
 public static class GUIUtils
 {
-	public static Font Arial
+    private static GameObject mainCanvas;
+
+ 	public static Font Arial
 	{
 		get
 		{
@@ -67,14 +69,29 @@ public static class GUIUtils
 		}
 	}
 
-	public static GameObject CreateCanvas()
-	{
-		var canvas = CreateUIObject("Canvas");
-		canvas.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-		canvas.AddComponent<CanvasScaler>();
-		canvas.AddComponent<GraphicRaycaster>();
+    public static GameObject MainCanvas
+    {
+        get
+        {
+            if (mainCanvas == null)
+            {
+                var canvas = MonoBehaviour.FindObjectOfType<Canvas>();
+                if (canvas != null)
+                    mainCanvas = canvas.gameObject;
+            }
+            return mainCanvas;
+        }
+    }
 
-		return canvas;
+    public static GameObject CreateCanvas()
+	{
+		mainCanvas = CreateUIObject("Canvas");
+        var canvas =  mainCanvas.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+		mainCanvas.AddComponent<CanvasScaler>();
+		mainCanvas.AddComponent<GraphicRaycaster>();
+
+		return mainCanvas;
 	}
 
     public static void SetupCanvasToVR(Canvas canvas, Transform parent)
@@ -144,13 +161,21 @@ public static class GUIUtils
 		return button;
 	}
 
-	public static GameObject CreateImage(Sprite sprite, GameObject parent)
+	public static GameObject CreateImage(Sprite sprite, GameObject parent, int width = 0, int height = 0)
 	{
-		var image = CreateUIObject("Image", parent);
-		image.AddComponent<CanvasRenderer>();
-		image.AddComponent<Image>().sprite = sprite;
+		var gameObject = CreateUIObject("Image", parent);
+		gameObject.AddComponent<CanvasRenderer>();
 
-		return image;
+        var image = gameObject.AddComponent<Image>();
+        image.sprite = sprite;
+
+        if (width > 0)
+            image.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+
+        if (height > 0)
+            image.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+
+		return gameObject;
 	}
 	public static GameObject CreateRawImage(Texture texture, GameObject parent)
 	{
@@ -160,6 +185,14 @@ public static class GUIUtils
 
 		return rawImage;
 	}
+
+    public static Sprite CreateSprite(Texture2D texture)
+    {
+        if (texture == null)
+            return null;
+
+        return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector3.zero);
+    }
 
 	public static GameObject CreatePanel(GameObject parent)
 	{

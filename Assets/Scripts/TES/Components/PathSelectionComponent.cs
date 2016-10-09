@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace TESUnity
+namespace TESUnity.Components
 {
     public class PathSelectionComponent : MonoBehaviour
     {

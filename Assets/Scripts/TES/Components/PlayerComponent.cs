@@ -5,6 +5,8 @@ namespace TESUnity
 {
     public class PlayerComponent : MonoBehaviour
     {
+        private bool _paused = false;
+
         public float slowSpeed = 3;
         public float normalSpeed = 5;
         public float fastSpeed = 10;
@@ -44,11 +46,17 @@ namespace TESUnity
 
         private bool isGrounded;
         private bool _isFlying = false;
+        private GameObject _crosshair;
 
         private void Start()
         {
             capsuleCollider = GetComponent<CapsuleCollider>();
             rigidbody = GetComponent<Rigidbody>();
+
+            // Add the crosshair
+            var textureManager = TESUnity.instance.Engine.textureManager;
+            var crosshairTexture = textureManager.LoadTexture("target");
+            _crosshair = GUIUtils.CreateImage(GUIUtils.CreateSprite(crosshairTexture), GUIUtils.MainCanvas, 35, 35);
 
             if (VRSettings.enabled)
             {
@@ -56,11 +64,16 @@ namespace TESUnity
                 // Put the Canvas in WorldSpace and Attach it to the camera.
                 GUIUtils.SetupCanvasToVR(FindObjectOfType<Canvas>(), Camera.main.transform.parent);
                 Camera.main.nearClipPlane = 0.1f;
+
+                _crosshair.GetComponent<UnityEngine.UI.Image>().enabled = false;
             }
         }
 
         private void Update()
         {
+            if (_paused)
+                return;
+
             Rotate();
 
             if (Input.GetKeyDown(KeyCode.Tab))
@@ -146,6 +159,7 @@ namespace TESUnity
             camera.transform.localEulerAngles = new Vector3(eulerAngles.x, 0, 0);
             transform.localEulerAngles = new Vector3(0, eulerAngles.y, 0);
         }
+
         private void SetVelocity()
         {
             Vector3 velocity;
@@ -162,6 +176,7 @@ namespace TESUnity
 
             rigidbody.velocity = velocity;
         }
+
         private void ApplyAirborneForce()
         {
             var forceDirection = transform.TransformVector(CalculateLocalMovementDirection());
@@ -180,6 +195,7 @@ namespace TESUnity
             var direction = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
             return direction.normalized;
         }
+
         private float CalculateSpeed()
         {
             float speed;
@@ -204,6 +220,7 @@ namespace TESUnity
 
             return speed;
         }
+
         private Vector3 CalculateLocalVelocity()
         {
             return CalculateSpeed() * CalculateLocalMovementDirection();
@@ -216,6 +233,16 @@ namespace TESUnity
             var sphereCastDistance = (capsuleCollider.height / 2);
 
             return Physics.SphereCast(new Ray(playerCenter, -transform.up), castedSphereRadius, sphereCastDistance);
+        }
+
+        public void Pause(bool pause)
+        {
+            _paused = pause;
+            _crosshair.SetActive(!_paused);
+
+            Time.timeScale = pause ? 0.0f : 1.0f;
+            Cursor.lockState = pause ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = pause;
         }
     }
 }

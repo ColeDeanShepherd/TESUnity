@@ -85,7 +85,6 @@ public class UnityBinaryReader : IDisposable
 
 		// Ignore the null terminator.
 		var charCount = (Utils.Last(bytes) != 0) ? bytes.Length : (bytes.Length - 1);
-
 		return System.Text.Encoding.ASCII.GetString(bytes, 0, charCount);
 	}
 
