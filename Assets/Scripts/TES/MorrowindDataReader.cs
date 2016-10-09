@@ -49,9 +49,9 @@ namespace TESUnity
 			MorrowindESMFile.Close();
 		}
 
-		public Texture2DInfo LoadTexture(string texturePath)
+		public Texture2DInfo LoadTexture(string texturePath, string textureNameInTexturesDir)
 		{
-			var filePath = FindTexture(texturePath);
+			var filePath = FindTexture(texturePath, textureNameInTexturesDir);
 
 			if(filePath != null)
 			{
@@ -135,10 +135,10 @@ namespace TESUnity
 		/// <summary>
 		/// Finds the actual path of a texture.
 		/// </summary>
-		private string FindTexture(string texturePath)
+		private string FindTexture(string texturePath, string textureNameInTexturesDir)
 		{
 			var textureName = Path.GetFileNameWithoutExtension(texturePath);
-			var textureNameInTexturesDir = "textures/" + textureName;
+			textureNameInTexturesDir += "/" + textureName;
 
 			var filePath = textureNameInTexturesDir + ".dds";
 			if(MorrowindBSAFile.ContainsFile(filePath))

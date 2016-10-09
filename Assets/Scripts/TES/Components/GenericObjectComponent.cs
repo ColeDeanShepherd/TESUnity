@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace TESUnity
 {
-	public class GenericObjectComponent : MonoBehaviour
+	public class GenericObjectComponent2 : MonoBehaviour
 	{
 		public ESM.CELLRecord.RefObjDataGroup refObjDataGroup = null;
 		public class DoorData
@@ -172,6 +172,11 @@ namespace TESUnity
 				if(BOOK.TEXT != null)
 				{
 					Debug.Log(BOOK.TEXT.value);
+                    var tes = FindObjectOfType<TESUnity>();
+                    var texture = tes.Engine.textureManager.LoadTexture(BOOK.ITEX.value);
+                    var ui = GUIUtils.CreateImage(Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero), GUIUtils.MainCanvas);
+                    var text = GUIUtils.CreateText(BOOK.TEXT.value, ui);
+
 				}
 				return;
 			}

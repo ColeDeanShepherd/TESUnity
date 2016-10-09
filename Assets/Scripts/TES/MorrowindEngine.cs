@@ -8,6 +8,7 @@ namespace TESUnity
 {
     using Effects;
 	using ESM;
+    using global::TESUnity.Components;
     using UnityStandardAssets.CinematicEffects;
 
     public class InRangeCellInfo
@@ -206,14 +207,14 @@ namespace TESUnity
 					var hitInfo = interactRaycastHitBuffer[ i ];
 					var hitObj = hitInfo.collider.gameObject;
 
-					var component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
+					var component = hitObj.gameObject.GetComponentInParent<ObjectComponent>();
 					if ( component != null )
 					{
 						if ( !string.IsNullOrEmpty( component.objData.name ) )
 						{
 							switch ( component.gameObject.tag )
 							{
-								case "Door": SetInteractText(component.objData.name); if ( Input.GetButtonDown("Fire1") ) OpenDoor(component); break;
+								case "Door": SetInteractText(component.objData.name); if ( Input.GetButtonDown("Fire1") ) OpenDoor((DoorComponent)component); break;
 								case "Container": SetInteractText("Open " + component.objData.name); break;
 								case "Activator": SetInteractText("" + component.objData.name); break;
 								case "Lock": SetInteractText("Locked: " + component.objData.name); break;
@@ -227,7 +228,13 @@ namespace TESUnity
 								case "Alchemical":
 								case "Apparatus":
 								case "MiscObj": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
-								case "Book": SetInteractText("" + component.objData.name); TryRemoveObject(component.gameObject); if ( Input.GetKeyDown(KeyCode.F) ) component.Interact(); break;
+								case "Book":
+                                    SetInteractText("" + component.objData.name);
+
+                                    //TryRemoveObject(component.gameObject);
+
+                                    if (Input.GetButtonDown("Fire1"))
+                                        component.Interact(); break;
 							}
 							break;
 						}
@@ -246,7 +253,7 @@ namespace TESUnity
 
 		private void TryRemoveObject ( GameObject obj ) // temp utility function representing character adding items to inventory
 		{
-			if ( Input.GetKeyDown( KeyCode.E ) )
+			if (Input.GetButtonDown("Fire1"))
 			{
 				var p = obj.transform;
 				while ( p.parent != null && p.parent.gameObject.name != "objects" ) p = p.parent; //kind of a hacky way to reference the entirety of an individual object
@@ -686,14 +693,17 @@ namespace TESUnity
 		private void ProcessObjectType <RecordType> ( GameObject gameObject , RefCellObjInfo info , string tag ) where RecordType : Record
 		{
 			var record = info.referencedRecord;
-			if ( record is RecordType )
+			if (record is RecordType)
 			{
 				var obj = FindTopLevelObject(gameObject);
-				if ( obj == null ) return;
-				var component = obj.AddComponent< GenericObjectComponent>();
+				if ( obj == null )
+                    return;
 
-				if ( record is DOORRecord ) component.refObjDataGroup = info.refObjDataGroup; //only door records need access to the cell object data group so far
-				component.init(( RecordType )record , tag);
+                var component = ObjectComponent.Create(obj, record, tag);
+
+                //only door records need access to the cell object data group so far
+                if (record is DOORRecord)
+                    ((DoorComponent)component).refObjDataGroup = info.refObjDataGroup; 
 			}
 		}
 
@@ -882,7 +892,7 @@ namespace TESUnity
 			}
 		}
 
-		private void OpenDoor(GenericObjectComponent component)
+		private void OpenDoor(DoorComponent component)
 		{
 			if(!component.doorData.leadsToAnotherCell)
 			{
