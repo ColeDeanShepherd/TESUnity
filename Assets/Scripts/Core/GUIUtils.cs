@@ -188,6 +188,9 @@ public static class GUIUtils
 
     public static Sprite CreateSprite(Texture2D texture)
     {
+        if (texture == null)
+            return null;
+
         return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector3.zero);
     }
 

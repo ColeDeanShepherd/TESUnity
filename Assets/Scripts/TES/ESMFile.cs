@@ -680,7 +680,7 @@ namespace TESUnity
 					blue = reader.ReadByte();
 					nullByte = reader.ReadByte();
 					flags = reader.ReadLEInt32();
-			}
+			    }
 			}
 
 			public NAMESubRecord NAME;

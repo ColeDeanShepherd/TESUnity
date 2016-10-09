@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace TESUnity.Components
 {
-    public class LightComponent : ObjectComponent
+    public class LightComponent : GenericObjectComponent
     {
         [System.Serializable]
         public class LightData

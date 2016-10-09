@@ -1,223 +1,94 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+using TESUnity.ESM;
 
-namespace TESUnity
+namespace TESUnity.Components
 {
-	public class GenericObjectComponent2 : MonoBehaviour
-	{
-		public ESM.CELLRecord.RefObjDataGroup refObjDataGroup = null;
-		public class DoorData
-		{
-			public string doorName;
-			public string doorExitName;
-			public bool leadsToAnotherCell;
-			public bool leadsToInteriorCell;
-			public Vector3 doorExitPos;
-			public Quaternion doorExitOrientation;
+    public class GenericObjectComponent : MonoBehaviour
+    {
+        public class ObjectData
+        {
+            public Texture2D icon;
+            public string name;
+            public string weight;
+            public string value;
+        }
 
-			public bool isOpen;
-			public Quaternion closedRotation;
-			public Quaternion openRotation;
-			public bool moving = false;
-		}
-		public DoorData doorData = null;
+        public CELLRecord.RefObjDataGroup refObjDataGroup = null;
+        public Record record;
+        public ObjectData objData = new ObjectData();
 
-		[System.Serializable]
-		public class LightData
-		{
-			public Light lightComponent;
-			public enum LightFlags { Dynamic = 0x0001, CanCarry = 0x0002, Negative = 0x0004, Flicker = 0x0008, Fire = 0x0010, OffDefault = 0x0020, FlickerSlow = 0x0040, Pulse = 0x0080, PulseSlow = 0x0100 }
-			public int flags;
-		}
-		public LightData lightData = null;
+        public virtual void Interact()
+        {
+        }
 
-		public class ObjectData
-		{
-			public string name;
-		}
-		public ObjectData objData = new ObjectData();
+        public static GenericObjectComponent Create(GameObject gameObject, Record record, string tag)
+        {
+            gameObject.tag = tag;
 
-		public ESM.Record record;
+            var transform = gameObject.GetComponent<Transform>();
 
-		public void init(ESM.Record record, string tag)
-		{
-			gameObject.tag = tag;
-			foreach(Transform c in transform) c.tag = tag;
-			this.record = record;
-			if(record is ESM.DOORRecord) SetupDoorData(record);
-			if(record is ESM.LIGHRecord) SetupLightData(record);
-			if(record is ESM.ACTIRecord) objData.name = (record as ESM.ACTIRecord).FNAM.value;
-			if(record is ESM.CONTRecord) objData.name = (record as ESM.CONTRecord).FNAM.value;
-			if(record is ESM.LOCKRecord) objData.name = (record as ESM.LOCKRecord).FNAM.value;
-			if(record is ESM.PROBRecord) objData.name = (record as ESM.PROBRecord).FNAM.value;
-			if(record is ESM.REPARecord) objData.name = (record as ESM.REPARecord).FNAM.value;
-			if(record is ESM.WEAPRecord) objData.name = (record as ESM.WEAPRecord).FNAM.value;
-			if(record is ESM.CLOTRecord) objData.name = (record as ESM.CLOTRecord).FNAM.value;
-			if(record is ESM.ARMORecord) objData.name = (record as ESM.ARMORecord).FNAM.value;
-			if(record is ESM.INGRRecord) objData.name = (record as ESM.INGRRecord).FNAM.value;
-			if(record is ESM.ALCHRecord) objData.name = (record as ESM.ALCHRecord).FNAM.value;
-			if(record is ESM.APPARecord) objData.name = (record as ESM.APPARecord).FNAM.value;
-			if(record is ESM.BOOKRecord) objData.name = (record as ESM.BOOKRecord).FNAM.value;
-			if(record is ESM.MISCRecord) objData.name = (record as ESM.MISCRecord).FNAM.value;
-		}
+            for (int i = 0, l = transform.childCount; i < l; i++)
+                transform.GetChild(i).tag = tag;
 
-		public void SetupDoorData(ESM.Record record)
-		{
-			doorData = new DoorData();
-			doorData.closedRotation = transform.rotation;
-			doorData.openRotation = doorData.closedRotation * Quaternion.Euler(Vector3.up * 90f);
-			doorData.moving = false;
+            GenericObjectComponent component = null;
 
-			ESM.DOORRecord DOOR = record as ESM.DOORRecord;
-			if(DOOR.FNAM != null) doorData.doorName = DOOR.FNAM.value;
+            // TODO: Create a subclass InteractiveObjectSubRecord which contains NAME, FNAM and MODL
+            // Will help to remove all this code
 
-			doorData.leadsToAnotherCell = (refObjDataGroup.DNAM != null) || (refObjDataGroup.DODT != null);
-			doorData.leadsToInteriorCell = (refObjDataGroup.DNAM != null);
-			if(doorData.leadsToInteriorCell) doorData.doorExitName = refObjDataGroup.DNAM.value;
-			if(doorData.leadsToAnotherCell && !doorData.leadsToInteriorCell)
-			{
-				var doorExitCell = MorrowindEngine.instance.dataReader.FindExteriorCellRecord(MorrowindEngine.instance.GetExteriorCellIndices(doorData.doorExitPos));
-				doorData.doorExitName = (doorExitCell != null) ? doorExitCell.RGNN.value : doorData.doorName;
-			}
+            if (record is DOORRecord)
+                component = gameObject.AddComponent<DoorComponent>();
 
-			if(refObjDataGroup.DODT != null)
-			{
-				doorData.doorExitPos = Convert.NifPointToUnityPoint(refObjDataGroup.DODT.position);
-				doorData.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
-			}
+            else if (record is LIGHRecord)
+                component = gameObject.AddComponent<LightComponent>();
 
-			objData.name = doorData.leadsToAnotherCell ? doorData.doorExitName : "Use " + doorData.doorName;
-		}
+            else if (record is BOOKRecord)
+                component = gameObject.AddComponent<BookComponent>();
+ 
+            else
+            {
+                // TODO: Create a component for each types.
+                component = gameObject.AddComponent<GenericObjectComponent>();
 
-		public void SetupLightData(ESM.Record record)
-		{
-			lightData = new LightData();
-			ESM.LIGHRecord LIGH = record as ESM.LIGHRecord;
-			lightData.lightComponent = gameObject.GetComponentInChildren<Light>(true);
+                if (record is ACTIRecord)
+                    component.objData.name = (record as ACTIRecord).FNAM.value;
 
-			if(LIGH.FNAM != null)
-			{
-				objData.name = LIGH.FNAM.value;
-			}
+                if (record is CONTRecord)
+                    component.objData.name = (record as CONTRecord).FNAM.value;
 
-			if(LIGH.LHDT != null)
-			{
-				lightData.flags = LIGH.LHDT.flags;
-				if(Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.CanCarry))
-				{
-					gameObject.AddComponent<BoxCollider>().size *= 0.5f; //very weak-- adding a box collider to light objects so we can interact with them
-																		 //adding kinematic rigidbodies to static colliders prevents the physics collision tree from being rebuilt, which impacts performance
-					if(TESUnity.instance.useKinematicRigidbodies)
-					{
-						gameObject.AddComponent<Rigidbody>().isKinematic = true;
-					}
-				}
-				StartCoroutine(ConfigureLightComponent());
-			}
-		}
+                if (record is LOCKRecord)
+                    component.objData.name = (record as LOCKRecord).FNAM.value;
 
-		public IEnumerator ConfigureLightComponent()
-		{
-			var time = 0f;
-			//wait until we have found the light component. this will typically be the frame /after/ object creation as the light component is added after this component is created
-			while(lightData.lightComponent == null && time < 5f)
-			{
-				lightData.lightComponent = gameObject.GetComponentInChildren<Light>(true);
-				yield return new WaitForEndOfFrame();
-				time += Time.deltaTime;
-			}
-			if(lightData.lightComponent != null) //if we have found the light component by the end of the loop
-			{
-				// Only disable the light based on flags if the light component hasn't already been disabled due to settings.
-				if(lightData.lightComponent.enabled)
-				{
-					lightData.lightComponent.enabled = !Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.OffDefault);
-				}
+                if (record is PROBRecord)
+                    component.objData.name = (record as PROBRecord).FNAM.value;
 
-				var flicker = Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.Flicker);
-				var flickerSlow = Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.FlickerSlow);
-				var pulse = Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.Pulse);
-				var pulseSlow = Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.PulseSlow);
-				var fire = Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.Fire);
-				var animated = flicker || flickerSlow || pulse || pulseSlow || fire;
+                if (record is REPARecord)
+                    component.objData.name = (record as REPARecord).FNAM.value;
 
-				if(animated && TESUnity.instance.animateLights)
-				{
-					var lightAnim = lightData.lightComponent.gameObject.AddComponent<LightAnim>();
-					if(flicker) lightAnim.mode = LightAnimMode.Flicker;
-					if(flickerSlow) lightAnim.mode = LightAnimMode.FlickerSlow;
-					if(pulse) lightAnim.mode = LightAnimMode.Pulse;
-					if(pulseSlow) lightAnim.mode = LightAnimMode.PulseSlow;
-					if(fire) lightAnim.mode = LightAnimMode.Fire;
-				}
-			}
-			else
-			{
-				Debug.Log("Light Record Object Created Without Light Component. Search Timed Out.");
-			}
-		}
+                if (record is WEAPRecord)
+                    component.objData.name = (record as WEAPRecord).FNAM.value;
 
-		public void Interact()
-		{
-			if(doorData != null)
-			{
-				if(doorData.isOpen) Close(); else Open();
-				return;
-			}
+                if (record is CLOTRecord)
+                    component.objData.name = (record as CLOTRecord).FNAM.value;
 
-			if(record is ESM.BOOKRecord)
-			{
-				ESM.BOOKRecord BOOK = record as ESM.BOOKRecord;
-				if(BOOK.TEXT != null)
-				{
-					Debug.Log(BOOK.TEXT.value);
-                    var tes = FindObjectOfType<TESUnity>();
-                    var texture = tes.Engine.textureManager.LoadTexture(BOOK.ITEX.value);
-                    var ui = GUIUtils.CreateImage(Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero), GUIUtils.MainCanvas);
-                    var text = GUIUtils.CreateText(BOOK.TEXT.value, ui);
+                if (record is ARMORecord)
+                    component.objData.name = (record as ARMORecord).FNAM.value;
 
-				}
-				return;
-			}
-		}
+                if (record is INGRRecord)
+                    component.objData.name = (record as INGRRecord).FNAM.value;
 
+                if (record is ALCHRecord)
+                    component.objData.name = (record as ALCHRecord).FNAM.value;
 
+                if (record is APPARecord)
+                    component.objData.name = (record as APPARecord).FNAM.value;
 
-		#region door functions
-		private void Open()
-		{
-			if(!doorData.moving) StartCoroutine(c_Open());
-		}
+                if (record is MISCRecord)
+                    component.objData.name = (record as MISCRecord).FNAM.value;
+            }
 
-		private void Close()
-		{
-			if(!doorData.moving) StartCoroutine(c_Close());
-		}
+            component.record = record;
 
-		private IEnumerator c_Open()
-		{
-			doorData.moving = true;
-			while(Quaternion.Angle(transform.rotation, doorData.openRotation) > 1f)
-			{
-				transform.rotation = Quaternion.Slerp(transform.rotation, doorData.openRotation, Time.deltaTime * 5f);
-				yield return new WaitForEndOfFrame();
-			}
-			doorData.isOpen = true;
-			doorData.moving = false;
-		}
-
-		private IEnumerator c_Close()
-		{
-			doorData.moving = true;
-			while(Quaternion.Angle(transform.rotation, doorData.closedRotation) > 1f)
-			{
-				transform.rotation = Quaternion.Slerp(transform.rotation, doorData.closedRotation, Time.deltaTime * 5f);
-				yield return new WaitForEndOfFrame();
-			}
-			doorData.isOpen = false;
-			doorData.moving = false;
-		}
-		#endregion
-	}
+            return component;
+        }
+    }
 }

@@ -9,6 +9,7 @@ namespace TESUnity
     using Effects;
 	using ESM;
     using global::TESUnity.Components;
+    using global::TESUnity.UI;
     using UnityStandardAssets.CinematicEffects;
 
     public class InRangeCellInfo
@@ -31,12 +32,10 @@ namespace TESUnity
 		public static MorrowindEngine instance;
 
 		public const float maxInteractDistance = 3;
+
 		public static int markerLayer
 		{
-			get
-			{
-				return LayerMask.NameToLayer("Marker");
-			}
+			get	{ return LayerMask.NameToLayer("Marker");	}
 		}
 
 		public MorrowindDataReader dataReader;
@@ -44,8 +43,8 @@ namespace TESUnity
 		public MaterialManager materialManager;
 		public NIFManager theNIFManager;
 		public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
-
 		public GameObject canvasObj;
+
 		public CELLRecord currentCell
 		{
 			get
@@ -53,8 +52,8 @@ namespace TESUnity
 				return _currentCell;
 			}
 		}
-
-		public MorrowindEngine( MorrowindDataReader dataReader )
+        
+        public MorrowindEngine( MorrowindDataReader dataReader )
 		{
 			Debug.Assert(instance == null);
 
@@ -67,15 +66,11 @@ namespace TESUnity
 			canvasObj = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-			interactTextObj = GUIUtils.CreateText("", canvasObj);
-			interactTextObj.GetComponent<Text>().color = Color.white;
-			interactText = interactTextObj.GetComponent<Text>();
+            /*var interactiveTextAsset = Resources.Load<GameObject>("UI/InteractiveText");
+            var interactiveTextGO = (GameObject)GameObject.Instantiate(interactiveTextAsset, GUIUtils.MainCanvas.transform);
+            _interactiveText = interactiveTextGO.GetComponent<UIInteractiveText>();*/
 
-			var interactTextCSF = interactTextObj.AddComponent<ContentSizeFitter>();
-			interactTextCSF.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-			interactTextCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-			interactTextObj.SetActive(false);
+            _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
 			RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;
@@ -207,17 +202,23 @@ namespace TESUnity
 					var hitInfo = interactRaycastHitBuffer[ i ];
 					var hitObj = hitInfo.collider.gameObject;
 
-					var component = hitObj.gameObject.GetComponentInParent<ObjectComponent>();
+					var component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
 					if ( component != null )
 					{
 						if ( !string.IsNullOrEmpty( component.objData.name ) )
 						{
 							switch ( component.gameObject.tag )
 							{
-								case "Door": SetInteractText(component.objData.name); if ( Input.GetButtonDown("Fire1") ) OpenDoor((DoorComponent)component); break;
-								case "Container": SetInteractText("Open " + component.objData.name); break;
-								case "Activator": SetInteractText("" + component.objData.name); break;
-								case "Lock": SetInteractText("Locked: " + component.objData.name); break;
+								case "Door":
+                                    ShowInteractiveText(component);
+
+                                    if (Input.GetButtonDown("Fire1"))
+                                        OpenDoor((DoorComponent)component);
+
+                                    break;
+								case "Container": ShowInteractiveText(component, "Open "); break;
+								case "Activator": ShowInteractiveText(component); break;
+								case "Lock": ShowInteractiveText(component, "Locked: "); break;
 								case "Light":
 								case "Probe":
 								case "RepairTool":
@@ -227,12 +228,14 @@ namespace TESUnity
 								case "Ingredient":
 								case "Alchemical":
 								case "Apparatus":
-								case "MiscObj": SetInteractText("Take " + component.objData.name); TryRemoveObject(component.gameObject); break;
+								case "MiscObj":
+                                    ShowInteractiveText(component, "Take ");
+                                    TryRemoveObject(component.gameObject);
+                                    break;
+
 								case "Book":
-                                    SetInteractText("" + component.objData.name);
-
+                                    ShowInteractiveText(component);
                                     //TryRemoveObject(component.gameObject);
-
                                     if (Input.GetButtonDown("Fire1"))
                                         component.Interact(); break;
 							}
@@ -241,13 +244,13 @@ namespace TESUnity
 					}
 					else
 					{
-						RemoveInteractText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
+                        CloseInteractiveText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
 					}
 				}
 			}
 			else
 			{
-				RemoveInteractText(); //deactivate text if nothing is raycasted against
+                CloseInteractiveText(); //deactivate text if nothing is raycasted against
 			}
 		}
 
@@ -261,22 +264,16 @@ namespace TESUnity
 			}
 		}
 
-		public void ShowInteractText()
-		{
-			if ( !interactTextObj.activeSelf ) interactTextObj.SetActive( true );
-		}
+        public void ShowInteractiveText(GenericObjectComponent component, string prefixTitle = null)
+        {
+            _interactiveText.Show(GUIUtils.CreateSprite(component.objData.icon), prefixTitle, component.objData.name, component.objData.value, component.objData.weight);
+        }
 
-		public void RemoveInteractText ()
-		{
-			if ( interactTextObj.activeSelf ) interactTextObj.SetActive( false );
-		}
+        public void CloseInteractiveText()
+        {
+            _interactiveText.Close();
+        }
 
-		public void SetInteractText ( string text )
-		{
-			if ( text == "" ) return; // remove this if we change to clearing text rather than activating/deactivating the interactText text object
-			if ( interactText.text != text ) interactText.text = text;
-			ShowInteractText();
-		}
 		#endregion
 
 		#region Private
@@ -293,8 +290,9 @@ namespace TESUnity
 		private int cellRadiusOnLoad = 2;
 		private CELLRecord _currentCell;
 
-		private GameObject interactTextObj;
-		private Text interactText;
+        private UI.UIInteractiveText _interactiveText;
+		//private GameObject interactTextObj;
+		//private Text interactText;
 		private GameObject sunObj;
 		private GameObject waterObj;
 		private GameObject playerObj;
@@ -699,7 +697,7 @@ namespace TESUnity
 				if ( obj == null )
                     return;
 
-                var component = ObjectComponent.Create(obj, record, tag);
+                var component = GenericObjectComponent.Create(obj, record, tag);
 
                 //only door records need access to the cell object data group so far
                 if (record is DOORRecord)

@@ -16,7 +16,7 @@ namespace TESUnity
 		/// <summary>
 		/// Loads a texture and caches it. Thread safe.
 		/// </summary>
-		public void PreLoadTexture(string texturePath, string textureNameInTexturesDir = "textures")
+		public void PreLoadTexture(string texturePath)
 		{
 			// If the texture is already loaded, return.
 			lock(dictionariesLock)
@@ -28,7 +28,7 @@ namespace TESUnity
 			}
 
 			// The texture hasn't been loaded yet, so load it.
-			var textureInfo = dataReader.LoadTexture(texturePath, textureNameInTexturesDir);
+			var textureInfo = dataReader.LoadTexture(texturePath);
 
 			lock(dictionariesLock)
 			{
@@ -39,7 +39,7 @@ namespace TESUnity
 		/// <summary>
 		/// Loads a texture. Can only be called from the main thread.
 		/// </summary>
-		public Texture2D LoadTexture(string texturePath, string textureNameInTexturesDir = "textures")
+		public Texture2D LoadTexture(string texturePath)
 		{
 			// Try to get the cached Texture2D.
 			Texture2D texture;
@@ -53,7 +53,7 @@ namespace TESUnity
 			if(texture == null)
 			{
 				// Load the Texture2DInfo.
-				Texture2DInfo textureInfo = LoadTextureInfoAndRemoveFromCache(texturePath, textureNameInTexturesDir);
+				Texture2DInfo textureInfo = LoadTextureInfoAndRemoveFromCache(texturePath);
 
 				texture = textureInfo.ToTexture2D();
 
@@ -72,7 +72,7 @@ namespace TESUnity
 		private Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();
 		private Dictionary<string, Texture2DInfo> cachedTextureInfos = new Dictionary<string, Texture2DInfo>();
 
-		private Texture2DInfo LoadTextureInfoAndRemoveFromCache(string texturePath, string textureNameInTexturesDir)
+		private Texture2DInfo LoadTextureInfoAndRemoveFromCache(string texturePath)
 		{
 			// Try to get the cached Texture2DInfo.
 			Texture2DInfo textureInfo;
@@ -85,7 +85,7 @@ namespace TESUnity
 			// If there is no cached Texture2DInfo.
 			if(textureInfo == null)
 			{
-				textureInfo = dataReader.LoadTexture(texturePath, textureNameInTexturesDir);
+				textureInfo = dataReader.LoadTexture(texturePath);
 			}
 			else
 			{

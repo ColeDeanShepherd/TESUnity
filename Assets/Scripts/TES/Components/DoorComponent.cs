@@ -4,7 +4,7 @@ using TESUnity.ESM;
 
 namespace TESUnity.Components
 {
-    public class DoorComponent : ObjectComponent
+    public class DoorComponent : GenericObjectComponent
     {
         public class DoorData
         {

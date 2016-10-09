@@ -5,10 +5,15 @@ using UnityEngine.UI;
 
 namespace TESUnity.Components
 {
-    public class BookComponent : ObjectComponent
+    public class BookComponent : GenericObjectComponent
     {
         private static PlayerComponent _player = null;
         private GameObject _container = null;
+
+        public bool IsScroll
+        {
+            get { return ((BOOKRecord)record).BKDT.scroll == 1; }
+        }
 
         public static PlayerComponent Player
         {
@@ -25,6 +30,10 @@ namespace TESUnity.Components
         {
             var BOOK = (BOOKRecord)record;
             objData.name = BOOK.FNAM != null ? BOOK.FNAM.value : BOOK.NAME.value;
+
+            //objData.icon = TESUnity.instance.Engine.textureManager.LoadTexture(BOOK.ITEX.value, "icons");
+            objData.weight = BOOK.BKDT.weight.ToString();
+            objData.value = BOOK.BKDT.value.ToString();
         }
 
         public override void Interact()
@@ -61,6 +70,8 @@ namespace TESUnity.Components
             var text = textGO.GetComponent<Text>();
             text.color = Color.white;
             text.resizeTextForBestFit = true;
+
+            _container.transform.SetAsLastSibling();
 
             Player.Pause(true);
         }
