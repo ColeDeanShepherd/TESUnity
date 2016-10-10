@@ -66,10 +66,6 @@ namespace TESUnity
 			canvasObj = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-            /*var interactiveTextAsset = Resources.Load<GameObject>("UI/InteractiveText");
-            var interactiveTextGO = (GameObject)GameObject.Instantiate(interactiveTextAsset, GUIUtils.MainCanvas.transform);
-            _interactiveText = interactiveTextGO.GetComponent<UIInteractiveText>();*/
-
             _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
