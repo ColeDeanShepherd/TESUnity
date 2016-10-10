@@ -46,12 +46,22 @@ namespace TESUnity.Components
             }
 
             var BOOK = (BOOKRecord)record;
-            var targetText = Regex.Replace(BOOK.TEXT.value, @"<[^>]*>", string.Empty);
 
-            Debug.Log(BOOK.TEXT.value);
-            Debug.Log(BOOK.TEXT.value.Length);
+            if (BOOK.BKDT.scroll == 1)
+                CreateScroll(BOOK);
+            else
+                CreateBook(BOOK);
+
+            _container.transform.SetAsLastSibling();
+
+            Player.Pause(true);
+        }
+
+        private void CreateScroll(BOOKRecord book)
+        {
             var tes = TESUnity.instance;
-            var scrollTexture = tes.Engine.textureManager.LoadTexture("scroll");//tx_menubook
+            var scrollTexture = tes.Engine.textureManager.LoadTexture("scroll");
+            var targetText = Regex.Replace(book.TEXT.value, @"<[^>]*>", string.Empty);
 
             _container = GUIUtils.CreateImage(Sprite.Create(scrollTexture, new Rect(0, 0, scrollTexture.width, scrollTexture.height), Vector2.zero), GUIUtils.MainCanvas);
             var scrollTransform = _container.GetComponent<RectTransform>();
@@ -70,10 +80,17 @@ namespace TESUnity.Components
             var text = textGO.GetComponent<Text>();
             text.color = Color.white;
             text.resizeTextForBestFit = true;
+        }
 
-            _container.transform.SetAsLastSibling();
+        private void CreateBook(BOOKRecord book)
+        {
+            var tes = TESUnity.instance;
+            var bookTexture = tes.Engine.textureManager.LoadTexture("tx_menubook");
+            var targetText = Regex.Replace(book.TEXT.value, @"<[^>]*>", string.Empty);
 
-            Player.Pause(true);
+            _container = GUIUtils.CreateImage(Sprite.Create(bookTexture, new Rect(0, 0, bookTexture.width, bookTexture.height), Vector2.zero), GUIUtils.MainCanvas);
+
+            Debug.Log(book.TEXT.value);
         }
     }
 }
