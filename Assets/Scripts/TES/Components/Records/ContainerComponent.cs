@@ -6,6 +6,7 @@ namespace TESUnity.Components.Records
     {
         void Start()
         {
+            pickable = false;
             objData.name = ((CONTRecord)record).FNAM.value;
             objData.interactionPrefix = "Open ";
         }

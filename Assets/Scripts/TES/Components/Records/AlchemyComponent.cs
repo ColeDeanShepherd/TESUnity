@@ -2,15 +2,15 @@
 
 namespace TESUnity.Components.Records
 {
-    public class ArmorComponent : GenericObjectComponent
+    public class AlchemyComponent : GenericObjectComponent
     {
         void Start()
         {
-            var ARMO = (ARMORecord)record;
+            var ALCH = (ALCHRecord)record;
             //objData.icon = TESUnity.instance.Engine.textureManager.LoadTexture(WPDT.ITEX.value, "icons"); 
-            objData.name = ARMO.FNAM.value;
-            objData.weight = ARMO.AODT.weight.ToString();
-            objData.value = ARMO.AODT.value.ToString();
+            objData.name = ALCH.FNAM.value;
+            objData.weight = ALCH.ALDT.weight.ToString();
+            objData.value = ALCH.ALDT.value.ToString();
             objData.interactionPrefix = "Take ";
         }
     }

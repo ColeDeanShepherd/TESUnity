@@ -14,9 +14,18 @@ namespace TESUnity.Components.Records
             public string value;
         }
 
+        protected Transform m_transform = null;
+   
         public CELLRecord.RefObjDataGroup refObjDataGroup = null;
         public Record record;
         public ObjectData objData = new ObjectData();
+        public bool usable = true;
+        public bool pickable = true;
+
+        protected virtual void Awake()
+        {
+            m_transform = GetComponent<Transform>();
+        }
 
         public virtual void Interact()
         {
@@ -32,9 +41,6 @@ namespace TESUnity.Components.Records
                 transform.GetChild(i).tag = tag;
 
             GenericObjectComponent component = null;
-
-            // TODO: Create a subclass InteractiveObjectSubRecord which contains NAME, FNAM and MODL
-            // Will help to remove all this code
 
             if (record is DOORRecord)
                 component = gameObject.AddComponent<DoorComponent>();
@@ -60,32 +66,29 @@ namespace TESUnity.Components.Records
             else if (record is INGRRecord)
                 component = gameObject.AddComponent<IngredientComponent>();
 
+            else if (record is ACTIRecord)
+                component = gameObject.AddComponent<ActivatorComponent>();
+
+            else if (record is LOCKRecord)
+                component = gameObject.AddComponent<LockComponent>();
+
+            else if (record is PROBRecord)
+                component = gameObject.AddComponent<ProbComponent>();
+
+            else if (record is REPARecord)
+                component = gameObject.AddComponent<RepaireComponent>();
+
+            else if (record is CLOTRecord)
+                component = gameObject.AddComponent<ClothComponent>();
+
+            else if (record is ALCHRecord)
+                component = gameObject.AddComponent<AlchemyComponent>();
+
+            else if (record is APPARecord)
+                component = gameObject.AddComponent<AlchemyApparatusComponent>();
+
             else
-            {
-                // TODO: Create a component for each types.
                 component = gameObject.AddComponent<GenericObjectComponent>();
-
-                if (record is ACTIRecord)
-                    component.objData.name = (record as ACTIRecord).FNAM.value;
-
-                if (record is LOCKRecord)
-                    component.objData.name = (record as LOCKRecord).FNAM.value;
-
-                if (record is PROBRecord)
-                    component.objData.name = (record as PROBRecord).FNAM.value;
-
-                if (record is REPARecord)
-                    component.objData.name = (record as REPARecord).FNAM.value;
-
-                if (record is CLOTRecord)
-                    component.objData.name = (record as CLOTRecord).FNAM.value;
-
-                if (record is ALCHRecord)
-                    component.objData.name = (record as ALCHRecord).FNAM.value;
-
-                if (record is APPARecord)
-                    component.objData.name = (record as APPARecord).FNAM.value;
-            }
 
             component.record = record;
 

@@ -17,7 +17,7 @@ namespace TESUnity.Components
             _disabledObjects = disabledObjectGO.GetComponent<Transform>();
         }
 
-        public void Add(InventoryItemComponent item)
+        public void Add(GenericObjectComponent item)
         {
             Add(item.record);
 
@@ -25,24 +25,22 @@ namespace TESUnity.Components
             var weapon = item.record as WEAPRecord;
             if (weapon != null)
             {
+                //var p = obj.transform;
+                //while (p.parent != null && p.parent.gameObject.name != "objects")
+                    //p = p.parent;
+
                 var renderer = item.GetComponentInChildren<Renderer>();
                 if (renderer != null)
                 {
-                    var colliders = item.GetComponents<MeshCollider>();
-                    foreach (var collider in colliders)
-                        collider.enabled = false;
-
                     var rightHand = GetComponent<PlayerComponent>().rightHand;
+                    if (rightHand.childCount > 0)
+                        rightHand.GetChild(0).parent = _disabledObjects;
 
-                    if (rightHand.transform.childCount > 0)
-                    {
-                        rightHand.transform.GetChild(0).parent = _disabledObjects;
-                    }
-
-                    var target = renderer.transform.parent;
+                    ((WeaponComponent)item).Equip(rightHand.transform);
+                    /*var target = renderer.transform.parent;
                     target.parent = rightHand.transform;
                     target.localPosition = Vector3.zero;
-                    target.localRotation = Quaternion.identity;
+                    target.localRotation = Quaternion.identity;*/
                     return;
                 }
             }

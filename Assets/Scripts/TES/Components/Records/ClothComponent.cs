@@ -2,15 +2,15 @@
 
 namespace TESUnity.Components.Records
 {
-    public class ArmorComponent : GenericObjectComponent
+    public class ClothComponent : GenericObjectComponent
     {
         void Start()
         {
-            var ARMO = (ARMORecord)record;
+            var CLOT = (CLOTRecord)record;
             //objData.icon = TESUnity.instance.Engine.textureManager.LoadTexture(WPDT.ITEX.value, "icons"); 
-            objData.name = ARMO.FNAM.value;
-            objData.weight = ARMO.AODT.weight.ToString();
-            objData.value = ARMO.AODT.value.ToString();
+            objData.name = CLOT.FNAM.value;
+            objData.weight = CLOT.CTDT.weight.ToString();
+            objData.value = CLOT.CTDT.value.ToString();
             objData.interactionPrefix = "Take ";
         }
     }

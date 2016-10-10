@@ -2,7 +2,7 @@
 
 namespace TESUnity.Components.Records
 {
-    public class MiscObjectComponent : InventoryItemComponent
+    public class MiscObjectComponent : GenericObjectComponent
     {
         void Start()
         {

@@ -25,6 +25,8 @@ namespace TESUnity.Components.Records
 
         void Start()
         {
+            pickable = false;
+
             doorData = new DoorData();
             doorData.closedRotation = transform.rotation;
             doorData.openRotation = doorData.closedRotation * Quaternion.Euler(Vector3.up * 90f);

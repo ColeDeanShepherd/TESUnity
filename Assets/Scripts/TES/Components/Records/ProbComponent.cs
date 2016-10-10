@@ -2,15 +2,15 @@
 
 namespace TESUnity.Components.Records
 {
-    public class ArmorComponent : GenericObjectComponent
+    public class ProbComponent : GenericObjectComponent
     {
         void Start()
         {
-            var ARMO = (ARMORecord)record;
+            var PROB = (PROBRecord)record;
             //objData.icon = TESUnity.instance.Engine.textureManager.LoadTexture(WPDT.ITEX.value, "icons"); 
-            objData.name = ARMO.FNAM.value;
-            objData.weight = ARMO.AODT.weight.ToString();
-            objData.value = ARMO.AODT.value.ToString();
+            objData.name = PROB.FNAM.value;
+            objData.weight = PROB.PBDT.weight.ToString();
+            objData.value = PROB.PBDT.value.ToString();
             objData.interactionPrefix = "Take ";
         }
     }

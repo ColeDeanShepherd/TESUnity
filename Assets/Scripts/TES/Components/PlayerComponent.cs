@@ -42,8 +42,8 @@ namespace TESUnity
         public new GameObject camera;
         public GameObject lantern;
         public PlayerInventory inventory;
-        public GameObject leftHand;
-        public GameObject rightHand; 
+        public Transform leftHand;
+        public Transform rightHand; 
 
         private CapsuleCollider capsuleCollider;
         private new Rigidbody rigidbody;
@@ -61,6 +61,10 @@ namespace TESUnity
             var textureManager = TESUnity.instance.Engine.textureManager;
             var crosshairTexture = textureManager.LoadTexture("target");
             _crosshair = GUIUtils.CreateImage(GUIUtils.CreateSprite(crosshairTexture), GUIUtils.MainCanvas, 35, 35);
+
+            // The crosshair needs an X and Y flip
+            //var cursor = textureManager.LoadTexture("tx_cursor");
+            //Cursor.SetCursor(cursor, Vector2.zero, CursorMode.Auto);
 
             leftHand = CreateHand(true);
             rightHand = CreateHand(false);
@@ -253,13 +257,14 @@ namespace TESUnity
             Cursor.visible = pause;
         }
 
-        private GameObject CreateHand(bool left)
+        private Transform CreateHand(bool left)
         {
             var hand = new GameObject((left ? "Left" : "Right") + " Hand");
+            var hTransform = hand.GetComponent<Transform>();
             hand.transform.parent = Camera.main.transform;
             hand.transform.localPosition = new Vector3(left ? -0.3f : 0.3f, -0.3f, 0.45f);
             hand.transform.localRotation = Quaternion.Euler(-50.0f, 0.0f, left ? -90.0f : 90.0f);
-            return hand;
+            return hTransform;
         }
     }
 }
