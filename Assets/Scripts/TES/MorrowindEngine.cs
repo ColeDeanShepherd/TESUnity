@@ -9,6 +9,7 @@ namespace TESUnity
     using Effects;
 	using ESM;
     using global::TESUnity.Components;
+    using global::TESUnity.Components.Records;
     using global::TESUnity.UI;
     using UnityStandardAssets.CinematicEffects;
 
