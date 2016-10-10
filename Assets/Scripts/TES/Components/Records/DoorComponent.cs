@@ -2,7 +2,7 @@
 using System.Collections;
 using TESUnity.ESM;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.Records
 {
     public class DoorComponent : GenericObjectComponent
     {

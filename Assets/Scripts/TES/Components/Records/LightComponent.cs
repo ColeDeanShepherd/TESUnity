@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.Records
 {
     public class LightComponent : GenericObjectComponent
     {

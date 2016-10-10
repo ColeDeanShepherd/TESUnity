@@ -3,7 +3,7 @@ using TESUnity.ESM;
 using System.Text.RegularExpressions;
 using UnityEngine.UI;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.Records
 {
     public class BookComponent : GenericObjectComponent
     {
@@ -29,6 +29,7 @@ namespace TESUnity.Components
         void Start()
         {
             var BOOK = (BOOKRecord)record;
+            objData.interactionPrefix = "Read ";
             objData.name = BOOK.FNAM != null ? BOOK.FNAM.value : BOOK.NAME.value;
 
             //objData.icon = TESUnity.instance.Engine.textureManager.LoadTexture(BOOK.ITEX.value, "icons");

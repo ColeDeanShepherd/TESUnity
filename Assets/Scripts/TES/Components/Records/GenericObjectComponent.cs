@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
 using TESUnity.ESM;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.Records
 {
     public class GenericObjectComponent : MonoBehaviour
     {
         public class ObjectData
         {
             public Texture2D icon;
+            public string interactionPrefix;
             public string name;
             public string weight;
             public string value;
@@ -43,7 +44,22 @@ namespace TESUnity.Components
 
             else if (record is BOOKRecord)
                 component = gameObject.AddComponent<BookComponent>();
- 
+
+            else if (record is CONTRecord)
+                component = gameObject.AddComponent<ContainerComponent>();
+
+            else if (record is MISCRecord)
+                component = gameObject.AddComponent<MiscObjectComponent>();
+
+            else if (record is WEAPRecord)
+                component = gameObject.AddComponent<WeaponComponent>();
+
+            else if (record is ARMORecord)
+                component = gameObject.AddComponent<ArmorComponent>();
+
+            else if (record is INGRRecord)
+                component = gameObject.AddComponent<IngredientComponent>();
+
             else
             {
                 // TODO: Create a component for each types.
@@ -51,9 +67,6 @@ namespace TESUnity.Components
 
                 if (record is ACTIRecord)
                     component.objData.name = (record as ACTIRecord).FNAM.value;
-
-                if (record is CONTRecord)
-                    component.objData.name = (record as CONTRecord).FNAM.value;
 
                 if (record is LOCKRecord)
                     component.objData.name = (record as LOCKRecord).FNAM.value;
@@ -64,26 +77,14 @@ namespace TESUnity.Components
                 if (record is REPARecord)
                     component.objData.name = (record as REPARecord).FNAM.value;
 
-                if (record is WEAPRecord)
-                    component.objData.name = (record as WEAPRecord).FNAM.value;
-
                 if (record is CLOTRecord)
                     component.objData.name = (record as CLOTRecord).FNAM.value;
-
-                if (record is ARMORecord)
-                    component.objData.name = (record as ARMORecord).FNAM.value;
-
-                if (record is INGRRecord)
-                    component.objData.name = (record as INGRRecord).FNAM.value;
 
                 if (record is ALCHRecord)
                     component.objData.name = (record as ALCHRecord).FNAM.value;
 
                 if (record is APPARecord)
                     component.objData.name = (record as APPARecord).FNAM.value;
-
-                if (record is MISCRecord)
-                    component.objData.name = (record as MISCRecord).FNAM.value;
             }
 
             component.record = record;

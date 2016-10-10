@@ -201,7 +201,7 @@ namespace TESUnity
 					var component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
 					if ( component != null )
 					{
-						if ( !string.IsNullOrEmpty( component.objData.name ) )
+						if (!string.IsNullOrEmpty(component.objData.name))
 						{
 							switch ( component.gameObject.tag )
 							{
@@ -212,9 +212,9 @@ namespace TESUnity
                                         OpenDoor((DoorComponent)component);
 
                                     break;
-								case "Container": ShowInteractiveText(component, "Open "); break;
+								case "Container": ShowInteractiveText(component); break;
 								case "Activator": ShowInteractiveText(component); break;
-								case "Lock": ShowInteractiveText(component, "Locked: "); break;
+								case "Lock": ShowInteractiveText(component); break;
 								case "Light":
 								case "Probe":
 								case "RepairTool":
@@ -225,8 +225,8 @@ namespace TESUnity
 								case "Alchemical":
 								case "Apparatus":
 								case "MiscObj":
-                                    ShowInteractiveText(component, "Take ");
-                                    TryRemoveObject(component.gameObject);
+                                    ShowInteractiveText(component);
+                                    TryAddToPlayerInventory(component.gameObject);
                                     break;
 
 								case "Book":
@@ -250,7 +250,7 @@ namespace TESUnity
 			}
 		}
 
-		private void TryRemoveObject ( GameObject obj ) // temp utility function representing character adding items to inventory
+		private void TryAddToPlayerInventory ( GameObject obj ) // temp utility function representing character adding items to inventory
 		{
 			if (Input.GetButtonDown("Fire1"))
 			{
@@ -260,9 +260,10 @@ namespace TESUnity
 			}
 		}
 
-        public void ShowInteractiveText(GenericObjectComponent component, string prefixTitle = null)
+        public void ShowInteractiveText(GenericObjectComponent component)
         {
-            _interactiveText.Show(GUIUtils.CreateSprite(component.objData.icon), prefixTitle, component.objData.name, component.objData.value, component.objData.weight);
+            var data = component.objData;
+            _interactiveText.Show(GUIUtils.CreateSprite(data.icon), data.interactionPrefix, data.name, data.value, data.weight);
         }
 
         public void CloseInteractiveText()
