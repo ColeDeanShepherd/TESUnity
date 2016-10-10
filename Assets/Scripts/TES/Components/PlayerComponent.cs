@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TESUnity.Components;
+using UnityEngine;
 using UnityEngine.VR;
 
 namespace TESUnity
@@ -40,6 +41,9 @@ namespace TESUnity
 
         public new GameObject camera;
         public GameObject lantern;
+        public PlayerInventory inventory;
+        public GameObject leftHand;
+        public GameObject rightHand; 
 
         private CapsuleCollider capsuleCollider;
         private new Rigidbody rigidbody;
@@ -57,6 +61,9 @@ namespace TESUnity
             var textureManager = TESUnity.instance.Engine.textureManager;
             var crosshairTexture = textureManager.LoadTexture("target");
             _crosshair = GUIUtils.CreateImage(GUIUtils.CreateSprite(crosshairTexture), GUIUtils.MainCanvas, 35, 35);
+
+            leftHand = CreateHand(true);
+            rightHand = CreateHand(false);
 
             if (VRSettings.enabled)
             {
@@ -98,6 +105,7 @@ namespace TESUnity
             if (Input.GetButtonDown("Recenter"))
                 InputTracking.Recenter();
         }
+
         private void FixedUpdate()
         {
             isGrounded = CalculateIsGrounded();
@@ -243,6 +251,15 @@ namespace TESUnity
             Time.timeScale = pause ? 0.0f : 1.0f;
             Cursor.lockState = pause ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = pause;
+        }
+
+        private GameObject CreateHand(bool left)
+        {
+            var hand = new GameObject((left ? "Left" : "Right") + " Hand");
+            hand.transform.parent = Camera.main.transform;
+            hand.transform.localPosition = new Vector3(left ? -0.3f : 0.3f, -0.3f, 0.45f);
+            hand.transform.localRotation = Quaternion.Euler(-50.0f, 0.0f, left ? -90.0f : 90.0f);
+            return hand;
         }
     }
 }

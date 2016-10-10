@@ -185,79 +185,124 @@ namespace TESUnity
 			CastInteractRay();
 		}
 
-		public void CastInteractRay()
-		{
-			// Cast a ray to see what the camera is looking at.
-			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
+        public void CastInteractRay2()
+        {
+            // Cast a ray to see what the camera is looking at.
+            var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
+            int raycastHitCount = Physics.RaycastNonAlloc(ray, interactRaycastHitBuffer, maxInteractDistance);
 
-			int raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance );
+            if (raycastHitCount > 0)
+            {
+                for (int i = 0; i < raycastHitCount; i++)
+                {
+                    var hitInfo = interactRaycastHitBuffer[i];
+                    var hitObj = hitInfo.collider.gameObject;
 
-			if ( raycastHitCount > 0 )
-			{
-				for ( int i = 0 ; i < raycastHitCount ; i++ )
-				{
-					var hitInfo = interactRaycastHitBuffer[ i ];
-					var hitObj = hitInfo.collider.gameObject;
-
-					var component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
-					if ( component != null )
-					{
-						if (!string.IsNullOrEmpty(component.objData.name))
-						{
-							switch ( component.gameObject.tag )
-							{
-								case "Door":
+                    var component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
+                    if (component != null)
+                    {
+                        if (!string.IsNullOrEmpty(component.objData.name))
+                        {
+                            switch (component.gameObject.tag)
+                            {
+                                case "Door":
                                     ShowInteractiveText(component);
 
                                     if (Input.GetButtonDown("Fire1"))
                                         OpenDoor((DoorComponent)component);
 
                                     break;
-								case "Container": ShowInteractiveText(component); break;
-								case "Activator": ShowInteractiveText(component); break;
-								case "Lock": ShowInteractiveText(component); break;
-								case "Light":
-								case "Probe":
-								case "RepairTool":
-								case "Clothing":
-								case "Armor":
-								case "Weapon":
-								case "Ingredient":
-								case "Alchemical":
-								case "Apparatus":
-								case "MiscObj":
+                                case "Container": ShowInteractiveText(component); break;
+                                case "Activator": ShowInteractiveText(component); break;
+                                case "Lock": ShowInteractiveText(component); break;
+                                case "Light":
+                                case "Probe":
+                                case "RepairTool":
+                                case "Clothing":
+                                case "Armor":
+                                case "Weapon":
+                                case "Ingredient":
+                                case "Alchemical":
+                                case "Apparatus":
+                                case "MiscObj":
                                     ShowInteractiveText(component);
                                     TryAddToPlayerInventory(component.gameObject);
                                     break;
 
-								case "Book":
+                                case "Book":
                                     ShowInteractiveText(component);
                                     //TryRemoveObject(component.gameObject);
                                     if (Input.GetButtonDown("Fire1"))
                                         component.Interact(); break;
-							}
-							break;
-						}
-					}
-					else
-					{
+                            }
+                            break;
+                        }
+                    }
+                    else
+                    {
                         CloseInteractiveText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
-					}
-				}
+                    }
+                }
+            }
+            else
+            {
+                CloseInteractiveText(); //deactivate text if nothing is raycasted against
+            }
+        }
+
+        public void CastInteractRay()
+		{
+			// Cast a ray to see what the camera is looking at.
+			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
+			var raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance);
+
+			if (raycastHitCount > 0)
+			{
+				for (int i = 0; i < raycastHitCount; i++)
+				{
+					var hitInfo = interactRaycastHitBuffer[i];
+					var component = hitInfo.collider.GetComponentInParent<GenericObjectComponent>();
+
+                    if (component != null)
+                    {
+                        if (string.IsNullOrEmpty(component.objData.name))
+                            return;
+
+                        ShowInteractiveText(component);
+
+                        if (component is DoorComponent)
+                        {
+                            if (Input.GetButtonDown("Fire1"))
+                                OpenDoor((DoorComponent)component);
+
+                            return;
+                        }
+
+                        if (Input.GetButtonDown("Fire1"))
+                            component.Interact();
+
+                        if (component is InventoryItemComponent && Input.GetButtonDown("Fire3"))
+                            playerInventory.Add((InventoryItemComponent)component);
+                        //    TryAddToPlayerInventory(component.gameObject);
+
+                        break;
+                    }
+                    else
+                        CloseInteractiveText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
+                }
 			}
 			else
-			{
                 CloseInteractiveText(); //deactivate text if nothing is raycasted against
-			}
 		}
 
-		private void TryAddToPlayerInventory ( GameObject obj ) // temp utility function representing character adding items to inventory
+		private void TryAddToPlayerInventory(GameObject obj) // temp utility function representing character adding items to inventory
 		{
-			if (Input.GetButtonDown("Fire1"))
+			if (Input.GetButtonDown("Fire3"))
 			{
 				var p = obj.transform;
-				while ( p.parent != null && p.parent.gameObject.name != "objects" ) p = p.parent; //kind of a hacky way to reference the entirety of an individual object
-				UnityEngine.Object.Destroy( p.gameObject );
+				while ( p.parent != null && p.parent.gameObject.name != "objects" )
+                    p = p.parent; //kind of a hacky way to reference the entirety of an individual object
+				UnityEngine.Object.Destroy(p.gameObject);
 			}
 		}
 
@@ -294,6 +339,7 @@ namespace TESUnity
 		private GameObject sunObj;
 		private GameObject waterObj;
 		private GameObject playerObj;
+        private PlayerInventory playerInventory;
 		private GameObject playerCameraObj;
         private UnderwaterEffect underwaterEffect;
 
@@ -975,6 +1021,9 @@ namespace TESUnity
 
 			playerComponent.camera = playerCamera;
 			playerComponent.lantern = lantern;
+
+            // Inventory
+            playerInventory = player.AddComponent<PlayerInventory>();
 
             var tes = TESUnity.instance;
 

@@ -2,7 +2,7 @@
 
 namespace TESUnity.Components.Records
 {
-    public class IngredientComponent : GenericObjectComponent
+    public class IngredientComponent : InventoryItemComponent
     {
         void Start()
         {
