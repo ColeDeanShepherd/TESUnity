@@ -83,9 +83,11 @@ public class UnityBinaryReader : IDisposable
 
 		var bytes = reader.ReadBytes(lengthIncludingPossibleNullTerminator);
 
-		// Ignore the null terminator.
-		var charCount = (Utils.Last(bytes) != 0) ? bytes.Length : (bytes.Length - 1);
-		return System.Text.Encoding.ASCII.GetString(bytes, 0, charCount);
+        // Ignore the null terminator.
+        var charCount = (Utils.Last(bytes) != 0) ? bytes.Length : (bytes.Length - 1);
+        // TODO: Better but not yet correct.
+        return System.Text.Encoding.UTF8.GetString(bytes, 0, charCount);
+        return System.Text.Encoding.ASCII.GetString(bytes, 0, charCount);
 	}
 
 	#region Little Endian

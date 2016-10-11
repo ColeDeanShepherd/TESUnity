@@ -20,30 +20,28 @@ namespace TESUnity
 
         public bool isFlying
         {
-            get
-            {
-                return _isFlying;
-            }
+            get { return _isFlying; }
             set
             {
                 _isFlying = value;
 
                 if (!_isFlying)
-                {
                     rigidbody.useGravity = true;
-                }
                 else
-                {
                     rigidbody.useGravity = false;
-                }
             }
+        }
+
+        public bool Paused
+        {
+            get { return _paused; }
         }
 
         public new GameObject camera;
         public GameObject lantern;
         public PlayerInventory inventory;
         public Transform leftHand;
-        public Transform rightHand; 
+        public Transform rightHand;
 
         private CapsuleCollider capsuleCollider;
         private new Rigidbody rigidbody;

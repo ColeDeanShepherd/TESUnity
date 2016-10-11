@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using TESUnity.Components;
+using TESUnity.Components.Records;
+using TESUnity.Effects;
+using TESUnity.ESM;
+using TESUnity.UI;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityStandardAssets.CinematicEffects;
 
 namespace TESUnity
 {
-    using Effects;
-	using ESM;
-    using global::TESUnity.Components;
-    using global::TESUnity.Components.Records;
-    using global::TESUnity.UI;
-    using UnityStandardAssets.CinematicEffects;
-
     public class InRangeCellInfo
 	{
 		public GameObject gameObject;
@@ -29,15 +26,35 @@ namespace TESUnity
 
 	public class MorrowindEngine
 	{
-		#region Public
 		public static MorrowindEngine instance;
 
 		public const float maxInteractDistance = 3;
 
-		public static int markerLayer
-		{
-			get	{ return LayerMask.NameToLayer("Marker");	}
-		}
+        #region Private Fields
+
+        private const float playerHeight = 2;
+        private const float playerRadius = 0.4f;
+        private float desiredWorkTimePerFrame = 1.0f / 160;
+        private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
+        private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
+        private int cellRadius = 4;
+        private int detailRadius = 3;
+        private int cellRadiusOnLoad = 2;
+        private CELLRecord _currentCell;
+        private UIInteractiveText _interactiveText;
+        private GameObject sunObj;
+        private GameObject waterObj;
+        private GameObject playerObj;
+        private PlayerComponent playerComponent;
+        private PlayerInventory playerInventory;
+        private GameObject playerCameraObj;
+        private UnderwaterEffect underwaterEffect;
+        private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
+        private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
+
+        #endregion
+
+        #region Public Fields
 
 		public MorrowindDataReader dataReader;
 		public TextureManager textureManager;
@@ -53,7 +70,12 @@ namespace TESUnity
 				return _currentCell;
 			}
 		}
-        
+
+        public static int markerLayer
+        {
+            get { return LayerMask.NameToLayer("Marker"); }
+        }
+
         public MorrowindEngine( MorrowindDataReader dataReader )
 		{
 			Debug.Assert(instance == null);
@@ -191,7 +213,7 @@ namespace TESUnity
 			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
 			var raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance);
 
-			if (raycastHitCount > 0)
+			if (raycastHitCount > 0 && !playerComponent.Paused)
 			{
 				for (int i = 0; i < raycastHitCount; i++)
 				{
@@ -213,7 +235,7 @@ namespace TESUnity
                             return;
                         }
 
-                        if (Input.GetButtonDown("Fire1"))
+                        if (component.usable && Input.GetButtonDown("Fire1"))
                             component.Interact();
 
                         if (component.pickable && Input.GetButtonDown("Fire3"))
@@ -243,32 +265,6 @@ namespace TESUnity
 		#endregion
 
 		#region Private
-		private const float playerHeight = 2;
-		private const float playerRadius = 0.4f;
-
-		private float desiredWorkTimePerFrame = 1.0f / 160;
-
-		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
-		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
-
-		private int cellRadius = 4;
-		private int detailRadius = 3;
-		private int cellRadiusOnLoad = 2;
-		private CELLRecord _currentCell;
-
-        private UI.UIInteractiveText _interactiveText;
-		//private GameObject interactTextObj;
-		//private Text interactText;
-		private GameObject sunObj;
-		private GameObject waterObj;
-		private GameObject playerObj;
-        private PlayerInventory playerInventory;
-		private GameObject playerCameraObj;
-        private UnderwaterEffect underwaterEffect;
-
-		private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
-
-		private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
 
 		/// <summary>
 		/// A coroutine that instantiates the terrain for, and all objects in, a cell.
@@ -913,7 +909,7 @@ namespace TESUnity
 			var rigidbody = player.AddComponent<Rigidbody>();
 			rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
 
-			var playerComponent = player.AddComponent<PlayerComponent>();
+			playerComponent = player.AddComponent<PlayerComponent>();
 
 			// Create the camera point object.
 			var eyeHeight = 0.9f * capsuleCollider.height;
@@ -989,6 +985,7 @@ namespace TESUnity
 
             return camera;
 		}
+
 		#endregion
 	}
 

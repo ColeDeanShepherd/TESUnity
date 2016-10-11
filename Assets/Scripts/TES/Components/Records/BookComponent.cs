@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using TESUnity.ESM;
-using System.Text.RegularExpressions;
 using UnityEngine.UI;
+using TESUnity.UI;
 
 namespace TESUnity.Components.Records
 {
@@ -9,11 +9,7 @@ namespace TESUnity.Components.Records
     {
         private static PlayerComponent _player = null;
         private GameObject _container = null;
-
-        public bool IsScroll
-        {
-            get { return ((BOOKRecord)record).BKDT.scroll == 1; }
-        }
+        private static UIBook _uiBook = null;
 
         public static PlayerComponent Player
         {
@@ -28,6 +24,9 @@ namespace TESUnity.Components.Records
 
         void Start()
         {
+            if (_uiBook == null)
+                _uiBook = UIBook.Create(GUIUtils.MainCanvas);
+             
             var BOOK = (BOOKRecord)record;
             objData.interactionPrefix = "Read ";
             objData.name = BOOK.FNAM != null ? BOOK.FNAM.value : BOOK.NAME.value;
@@ -35,6 +34,16 @@ namespace TESUnity.Components.Records
             //objData.icon = TESUnity.instance.Engine.textureManager.LoadTexture(BOOK.ITEX.value, "icons");
             objData.weight = BOOK.BKDT.weight.ToString();
             objData.value = BOOK.BKDT.value.ToString();
+        }
+
+        void Update()
+        {
+            if (Input.GetButtonDown("Fire1") && _container != null)
+            {
+                Destroy(_container);
+                Player.Pause(false);
+                return;
+            }
         }
 
         public override void Interact()
@@ -51,25 +60,31 @@ namespace TESUnity.Components.Records
             if (BOOK.BKDT.scroll == 1)
                 CreateScroll(BOOK);
             else
-                CreateBook(BOOK);
-
-            _container.transform.SetAsLastSibling();
+            {
+                _uiBook.Show(BOOK);
+                _uiBook.OnClosed += OnClosed;
+                _uiBook.OnTake += OnTake;
+            }
 
             Player.Pause(true);
         }
 
+        // TODO: Create UIScroll and delete that code.
         private void CreateScroll(BOOKRecord book)
         {
             var tes = TESUnity.instance;
             var scrollTexture = tes.Engine.textureManager.LoadTexture("scroll");
-            var targetText = Regex.Replace(book.TEXT.value, @"<[^>]*>", string.Empty);
+
+            var words = book.TEXT.value;
+            words = words.Replace("<BR>", "\r\n");
+            words = System.Text.RegularExpressions.Regex.Replace(words, @"<[^>]*>", string.Empty);
 
             _container = GUIUtils.CreateImage(Sprite.Create(scrollTexture, new Rect(0, 0, scrollTexture.width, scrollTexture.height), Vector2.zero), GUIUtils.MainCanvas);
             var scrollTransform = _container.GetComponent<RectTransform>();
             scrollTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 640);
             scrollTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 480);
 
-            var textGO = GUIUtils.CreateText(targetText, _container);
+            var textGO = GUIUtils.CreateText(words, _container);
             textGO.AddComponent<Shadow>();
 
             var textTransform = textGO.GetComponent<RectTransform>();
@@ -81,17 +96,21 @@ namespace TESUnity.Components.Records
             var text = textGO.GetComponent<Text>();
             text.color = Color.white;
             text.resizeTextForBestFit = true;
+
+            _container.transform.SetAsLastSibling();
         }
 
-        private void CreateBook(BOOKRecord book)
+        private void OnTake(BOOKRecord obj)
         {
-            var tes = TESUnity.instance;
-            var bookTexture = tes.Engine.textureManager.LoadTexture("tx_menubook");
-            var targetText = Regex.Replace(book.TEXT.value, @"<[^>]*>", string.Empty);
+            var inventory = FindObjectOfType<PlayerInventory>();
+            inventory.Add(obj);
+        }
 
-            _container = GUIUtils.CreateImage(Sprite.Create(bookTexture, new Rect(0, 0, bookTexture.width, bookTexture.height), Vector2.zero), GUIUtils.MainCanvas);
-
-            Debug.Log(book.TEXT.value);
+        private void OnClosed(BOOKRecord obj)
+        {
+            _uiBook.OnClosed -= OnClosed;
+            _uiBook.OnTake -= OnTake;
+            Player.Pause(false);
         }
     }
 }

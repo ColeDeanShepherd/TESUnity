@@ -65,7 +65,6 @@ namespace TESUnity.Components
         private void OnDestroy()
         {
             Destroy(canvas);
-            Destroy(eventSystem);
             Destroy(camera);
         }
 
