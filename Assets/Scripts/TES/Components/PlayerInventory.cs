@@ -9,12 +9,14 @@ namespace TESUnity.Components
     {
         private List<Record> _inventory = new List<Record>();
         private Transform _disabledObjects = null;
+        private PlayerComponent _player = null;
 
         void Start()
         {
             var disabledObjectGO = new GameObject("DisabledObjects");
             disabledObjectGO.SetActive(false);
             _disabledObjects = disabledObjectGO.GetComponent<Transform>();
+            _player = GetComponent<PlayerComponent>();
         }
 
         public void Add(GenericObjectComponent item)
@@ -22,27 +24,15 @@ namespace TESUnity.Components
             Add(item.record);
 
             // For now.
-            var weapon = item.record as WEAPRecord;
+            var weapon = item as WeaponComponent;
             if (weapon != null)
             {
-                //var p = obj.transform;
-                //while (p.parent != null && p.parent.gameObject.name != "objects")
-                    //p = p.parent;
+                var rightHand = _player.rightHand;
+                if (rightHand.childCount > 0)
+                    rightHand.GetChild(0).parent = _disabledObjects;
 
-                var renderer = item.GetComponentInChildren<Renderer>();
-                if (renderer != null)
-                {
-                    var rightHand = GetComponent<PlayerComponent>().rightHand;
-                    if (rightHand.childCount > 0)
-                        rightHand.GetChild(0).parent = _disabledObjects;
-
-                    ((WeaponComponent)item).Equip(rightHand.transform);
-                    /*var target = renderer.transform.parent;
-                    target.parent = rightHand.transform;
-                    target.localPosition = Vector3.zero;
-                    target.localRotation = Quaternion.identity;*/
-                    return;
-                }
+                ((WeaponComponent)item).Equip(rightHand);
+                return;
             }
 
             item.transform.parent = _disabledObjects.transform;
