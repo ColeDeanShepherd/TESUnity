@@ -6,6 +6,7 @@ namespace TESUnity.Components.Records
     {
         void Start()
         {
+            usable = true;
             pickable = false;
             var LOCK = (LOCKRecord)record;
             //objData.icon = TESUnity.instance.Engine.textureManager.LoadTexture(WPDT.ITEX.value, "icons"); 

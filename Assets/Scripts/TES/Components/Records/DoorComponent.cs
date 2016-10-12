@@ -25,6 +25,7 @@ namespace TESUnity.Components.Records
 
         void Start()
         {
+            usable = true;
             pickable = false;
 
             doorData = new DoorData();

@@ -3,6 +3,16 @@ using TESUnity.ESM;
 
 namespace TESUnity.Components.Records
 {
+    public interface IUsableComponent
+    {
+        void Use();
+    }
+
+    public interface IPickableComponent
+    {
+        void Pick();
+    }
+
     public class GenericObjectComponent : MonoBehaviour
     {
         public class ObjectData
@@ -19,7 +29,7 @@ namespace TESUnity.Components.Records
         public CELLRecord.RefObjDataGroup refObjDataGroup = null;
         public Record record;
         public ObjectData objData = new ObjectData();
-        public bool usable = true;
+        public bool usable = false;
         public bool pickable = true;
 
         protected virtual void Awake()

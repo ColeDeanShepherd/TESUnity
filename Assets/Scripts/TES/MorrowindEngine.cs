@@ -227,20 +227,17 @@ namespace TESUnity
 
                         ShowInteractiveText(component);
 
-                        if (component is DoorComponent)
+                        if (Input.GetButtonDown("Use"))
                         {
-                            if (Input.GetButtonDown("Fire1"))
+                            if (component is DoorComponent)
                                 OpenDoor((DoorComponent)component);
 
-                            return;
+                            else if (component.usable)
+                                component.Interact();
+
+                            else if (component.pickable)
+                                playerInventory.Add(component);
                         }
-
-                        if (component.usable && Input.GetButtonDown("Fire1"))
-                            component.Interact();
-
-                        if (component.pickable && Input.GetButtonDown("Fire3"))
-                            playerInventory.Add(component);
-
                         break;
                     }
                     else

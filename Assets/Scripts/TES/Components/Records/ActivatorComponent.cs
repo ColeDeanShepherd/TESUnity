@@ -6,6 +6,7 @@ namespace TESUnity.Components.Records
     {
         void Start()
         {
+            usable = true;
             pickable = false;
             var ACTI = (ACTIRecord)record; 
             objData.name = ACTI.FNAM.value;

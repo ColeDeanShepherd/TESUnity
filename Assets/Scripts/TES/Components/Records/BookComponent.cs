@@ -24,6 +24,9 @@ namespace TESUnity.Components.Records
 
         void Start()
         {
+            usable = true;
+            pickable = false;
+
             if (_uiBook == null)
             {
                 _uiBook = UIBook.Create(GUIUtils.MainCanvas);

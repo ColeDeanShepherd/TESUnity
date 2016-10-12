@@ -203,6 +203,23 @@ namespace TESUnity
         {
             // Calculate the local movement direction.
             var direction = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
+
+            // A small hack for French Keyboard...
+            if (Application.systemLanguage == SystemLanguage.French)
+            {
+                direction = Vector3.zero;
+
+                if (Input.GetKey(KeyCode.Z))
+                    direction.z = 1;
+                else if (Input.GetKey(KeyCode.S))
+                    direction.z = -1;
+
+                if (Input.GetKey(KeyCode.Q))
+                    direction.x = -1;
+                else if (Input.GetKey(KeyCode.D))
+                    direction.x = 1;
+            }
+
             return direction.normalized;
         }
 
