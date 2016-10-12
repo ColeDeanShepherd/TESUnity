@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using TESUnity.ESM;
-using UnityEngine.UI;
 using TESUnity.UI;
 
 namespace TESUnity.Components.Records
@@ -10,6 +9,7 @@ namespace TESUnity.Components.Records
         private static PlayerComponent _player = null;
         private GameObject _container = null;
         private static UIBook _uiBook = null;
+        private static UIScroll _uiScroll = null;
 
         public static PlayerComponent Player
         {
@@ -25,8 +25,11 @@ namespace TESUnity.Components.Records
         void Start()
         {
             if (_uiBook == null)
+            {
                 _uiBook = UIBook.Create(GUIUtils.MainCanvas);
-             
+                _uiScroll = UIScroll.Create(GUIUtils.MainCanvas);
+            }
+
             var BOOK = (BOOKRecord)record;
             objData.interactionPrefix = "Read ";
             objData.name = BOOK.FNAM != null ? BOOK.FNAM.value : BOOK.NAME.value;
@@ -58,58 +61,44 @@ namespace TESUnity.Components.Records
             var BOOK = (BOOKRecord)record;
 
             if (BOOK.BKDT.scroll == 1)
-                CreateScroll(BOOK);
+            {
+                _uiScroll.Show(BOOK);
+                _uiScroll.OnClosed += OnCloseScroll;
+                _uiScroll.OnTake += OnTakeScroll;
+            }
             else
             {
                 _uiBook.Show(BOOK);
-                _uiBook.OnClosed += OnClosed;
-                _uiBook.OnTake += OnTake;
+                _uiBook.OnClosed += OnCloseBook;
+                _uiBook.OnTake += OnTakeBook;
             }
 
             Player.Pause(true);
         }
 
-        // TODO: Create UIScroll and delete that code.
-        private void CreateScroll(BOOKRecord book)
-        {
-            var tes = TESUnity.instance;
-            var scrollTexture = tes.Engine.textureManager.LoadTexture("scroll");
-
-            var words = book.TEXT.value;
-            words = words.Replace("<BR>", "\r\n");
-            words = System.Text.RegularExpressions.Regex.Replace(words, @"<[^>]*>", string.Empty);
-
-            _container = GUIUtils.CreateImage(Sprite.Create(scrollTexture, new Rect(0, 0, scrollTexture.width, scrollTexture.height), Vector2.zero), GUIUtils.MainCanvas);
-            var scrollTransform = _container.GetComponent<RectTransform>();
-            scrollTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 640);
-            scrollTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 480);
-
-            var textGO = GUIUtils.CreateText(words, _container);
-            textGO.AddComponent<Shadow>();
-
-            var textTransform = textGO.GetComponent<RectTransform>();
-            textTransform.anchorMin = Vector3.zero;
-            textTransform.anchorMax = Vector3.one;
-            textTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 540);
-            textTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 380);
-
-            var text = textGO.GetComponent<Text>();
-            text.color = Color.white;
-            text.resizeTextForBestFit = true;
-
-            _container.transform.SetAsLastSibling();
-        }
-
-        private void OnTake(BOOKRecord obj)
+        private void OnTakeScroll(BOOKRecord obj)
         {
             var inventory = FindObjectOfType<PlayerInventory>();
-            inventory.Add(obj);
+            inventory.Add(this);
         }
 
-        private void OnClosed(BOOKRecord obj)
+        private void OnCloseScroll(BOOKRecord obj)
         {
-            _uiBook.OnClosed -= OnClosed;
-            _uiBook.OnTake -= OnTake;
+            _uiScroll.OnClosed -= OnCloseScroll;
+            _uiScroll.OnTake -= OnTakeScroll;
+            Player.Pause(false);
+        }
+
+        private void OnTakeBook(BOOKRecord obj)
+        {
+            var inventory = FindObjectOfType<PlayerInventory>();
+            inventory.Add(this);
+        }
+
+        private void OnCloseBook(BOOKRecord obj)
+        {
+            _uiBook.OnClosed -= OnCloseBook;
+            _uiBook.OnTake -= OnTakeBook;
             Player.Pause(false);
         }
     }

@@ -31,7 +31,7 @@ LightingData.asset.meta
 *.v12
 
 # Misc
-Config.ini
+[C|c]onfig.ini
 
 # Folder to exclude
 [Bb]in

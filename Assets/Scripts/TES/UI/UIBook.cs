@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using TESUnity.ESM;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,9 +18,9 @@ namespace TESUnity.UI
         [SerializeField]
         private Image _background = null;
         [SerializeField]
-        private Text _content1 = null;
+        private Text _page1 = null;
         [SerializeField]
-        private Text _content2 = null;
+        private Text _page2 = null;
         [SerializeField]
         private Button _nextButton = null;
         [SerializeField]
@@ -42,15 +43,18 @@ namespace TESUnity.UI
             _bookRecord = book;
 
             var words = _bookRecord.TEXT.value;
-            words = words.Replace("<BR>", "\r\n");
+            words = words.Replace("<BR>", "\n");
             words = System.Text.RegularExpressions.Regex.Replace(words, @"<[^>]*>", string.Empty);
 
             var countChar = words.Length;
-            var numCharPerPage = 350;
+            var numCharPerPage = 700;
             var j = 0;
 
+            // Ceil returns the bad value... 16.6 returns 16..
             _numberOfPages = Mathf.CeilToInt(countChar / numCharPerPage) + 1;
             _pages = new string[_numberOfPages];
+
+
 
             for (int i = 0; i < countChar; i++)
             {
@@ -74,17 +78,20 @@ namespace TESUnity.UI
         {
             if (_numberOfPages > 1)
             {
-                _content1.text = _pages[_cursor];
-                _content2.text = _cursor + 1 >= _numberOfPages ? "" : _pages[_cursor + 1];
+                _page1.text = _pages[_cursor];
+                _page2.text = _cursor + 1 >= _numberOfPages ? "" : _pages[_cursor + 1];
             }
             else
             {
-                _content1.text = _pages[0];
-                _content2.text = string.Empty;
+                _page1.text = _pages[0];
+                _page2.text = string.Empty;
             }
 
             _nextButton.interactable = _cursor + 2 < _numberOfPages;
             _previousButton.interactable = _cursor - 2 >= 0;
+
+            if (_cursor + 2 < _numberOfPages && _pages[_cursor + 2] == string.Empty)
+                _nextButton.interactable = false;
         }
 
         public void Take()
@@ -98,6 +105,9 @@ namespace TESUnity.UI
         public void Next()
         {
             if (_cursor + 2 >= _numberOfPages)
+                return;
+
+            if (_pages[_cursor + 2] == string.Empty)
                 return;
 
             _cursor += 2;

@@ -132,18 +132,17 @@ namespace TESUnity.Components
 
                                 switch (temp[0].Trim())
                                 {
-                                    case "AntiAliasing": tes.antiAliasing = bool.Parse(value); break;
-                                    case "AmbientOcclusion": tes.ambientOcclusion = bool.Parse(value); break;
-                                    case "AnimateLights": tes.animateLights = bool.Parse(value); break;
-                                    case "Bloom": tes.bloom = bool.Parse(value); break;
-                                    case "FollowHeadDirection": tes.followHeadDirection = bool.Parse(value); break;
-                                    case "SunShadows": tes.renderSunShadows = bool.Parse(value); break;
-                                    case "LightShadows": tes.renderLightShadows = bool.Parse(value); break;
-                                    case "PlayMusic": tes.playMusic = bool.Parse(value); break;
-                                    case "RenderExteriorCellLights": tes.renderExteriorCellLights = bool.Parse(value); break;
+                                    case "AntiAliasing": tes.antiAliasing = ParseBool(value, tes.antiAliasing); break;
+                                    case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
+                                    case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
+                                    case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
+                                    case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
+                                    case "SunShadows": tes.renderSunShadows = ParseBool(value, tes.renderSunShadows); break;
+                                    case "LightShadows": tes.renderLightShadows = ParseBool(value, tes.renderLightShadows); break;
+                                    case "PlayMusic": tes.playMusic = ParseBool(value, tes.playMusic); break;
+                                    case "RenderExteriorCellLights": tes.renderExteriorCellLights = ParseBool(value, tes.renderExteriorCellLights); break;
                                     case "RenderPath":
-                                        var renderPathID = int.Parse(value);
-
+                                        var renderPathID = ParseInt(value, 0);
                                         if (renderPathID == 1 || renderPathID == 3)
                                             tes.renderPath = (RenderingPath)renderPathID;
 
@@ -168,6 +167,26 @@ namespace TESUnity.Components
 
                 savedData.Close();
             }
+        }
+
+        private bool ParseBool(string value, bool defaultValue)
+        {
+            bool result;
+
+            if (bool.TryParse(value, out result))
+                return result;
+
+            return defaultValue;
+        }
+
+        private int ParseInt(string value, int defaultValue)
+        {
+            int result;
+
+            if (int.TryParse(value, out result))
+                return result;
+
+            return defaultValue;
         }
     }
 }

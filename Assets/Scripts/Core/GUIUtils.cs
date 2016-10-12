@@ -88,7 +88,9 @@ public static class GUIUtils
 		mainCanvas = CreateUIObject("Canvas");
         var canvas =  mainCanvas.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-		mainCanvas.AddComponent<CanvasScaler>();
+		var scaler = mainCanvas.AddComponent<CanvasScaler>();
+        scaler.referenceResolution = new Vector2(1280, 720);
+        scaler.matchWidthOrHeight = 1.0f;
 		mainCanvas.AddComponent<GraphicRaycaster>();
 
 		return mainCanvas;
