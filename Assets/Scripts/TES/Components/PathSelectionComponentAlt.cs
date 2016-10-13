@@ -1,25 +1,40 @@
 ﻿using System.Collections;
 using System.IO;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace TESUnity.Components
 {
-    /// <summary>
-    /// Deprecated.
-    /// </summary>
-    public class PathSelectionComponent : MonoBehaviour
+    public class PathSelectionComponentAlt : MonoBehaviour
     {
         private static readonly string SavePathKey = "keepMWPath";
         private string defaultMWDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
 
-        private new GameObject camera;
-        private GameObject eventSystem;
-        private GameObject canvas;
-        private InputField inputField;
-        private Toggle toggle;
-        private Text errorText;
+        [SerializeField]
+        private InputField _path;
+        [SerializeField]
+        private Toggle _keepPath;
+        [SerializeField]
+        private Text _errorText;
+
+        public TESUnity TESUnity
+        {
+            get
+            {
+                if (TESUnity.instance != null)
+                    return TESUnity.instance;
+
+                var tes = FindObjectOfType<TESUnity>();
+                if (tes == null)
+                {
+                    var go = new GameObject("TESUnity");
+                    tes = go.AddComponent<TESUnity>();
+                    tes.enabled = false;
+                }
+
+                return tes;
+            }
+        }
 
         private void Start()
         {
@@ -29,34 +44,6 @@ namespace TESUnity.Components
             if (savedPath != string.Empty)
                 defaultMWDataPath = savedPath;
 
-            camera = GameObjectUtils.CreateMainCamera(Vector3.zero, Quaternion.identity);
-            eventSystem = GUIUtils.CreateEventSystem();
-            canvas = GUIUtils.CreateCanvas();
-
-            var inputFieldGO = GUIUtils.CreateInputField(defaultMWDataPath, Vector3.zero, new Vector2(620, 30), canvas);
-            inputField = inputFieldGO.GetComponent<InputField>();
-
-            var toggleGO = GUIUtils.CreateToggle("Remember this path", canvas);
-            toggle = toggleGO.GetComponent<Toggle>();
-            toggle.isOn = savedPath != string.Empty;
-            toggle.gameObject.AddComponent<Outline>();
-            toggle.GetComponentInChildren<Text>().color = Color.white;
-            toggle.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -40);
-
-            var button = GUIUtils.CreateTextButton("Load World", canvas);
-            button.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -80);
-            button.GetComponent<Button>().onClick.AddListener(LoadWorld);
-
-            eventSystem.GetComponent<EventSystem>().SetSelectedGameObject(button);
-
-            var errorTextGo = GUIUtils.CreateText("", canvas);
-            errorText = errorTextGo.GetComponent<Text>();
-            errorText.rectTransform.anchoredPosition = new Vector2(0, -120);
-            errorText.color = Color.white;
-            errorText.fontSize = 26;
-            errorText.gameObject.AddComponent<Outline>();
-            errorText.enabled = false;
-
             var path = Path.Combine(System.Environment.CurrentDirectory, "Data Files");
             if (Directory.Exists(path))
             {
@@ -65,17 +52,11 @@ namespace TESUnity.Components
             }
         }
 
-        private void OnDestroy()
-        {
-            Destroy(canvas);
-            Destroy(camera);
-        }
-
         private void LoadWorld()
         {
-            var path = inputField.text;
+            var path = _path.text;
 
-            if (toggle.isOn)
+            if (_keepPath.isOn)
                 PlayerPrefs.SetString(SavePathKey, path);
 
             LoadWorld(path);
@@ -85,10 +66,8 @@ namespace TESUnity.Components
         {
             if (Directory.Exists(path))
             {
-                var TESUnityComponent = GetComponent<TESUnity>();
-                TESUnityComponent.dataPath = path;
-                TESUnityComponent.enabled = true;
-
+                TESUnity.dataPath = path;
+                TESUnity.enabled = true;
                 Destroy(this);
             }
             else
@@ -97,10 +76,10 @@ namespace TESUnity.Components
 
         private IEnumerator ShowErrorMessage(string message)
         {
-            errorText.text = message;
-            errorText.enabled = true;
+            _errorText.text = message;
+            _errorText.enabled = true;
             yield return new WaitForSeconds(5.0f);
-            errorText.enabled = false;
+            _errorText.enabled = false;
         }
 
         /// <summary>
@@ -122,7 +101,7 @@ namespace TESUnity.Components
                     {
                         var line = stream.ReadLine();
                         var temp = new string[2];
-                        var tes = GetComponent<TESUnity>();
+                        var tes = TESUnity;
                         var value = string.Empty;
 
                         while (line != null)
