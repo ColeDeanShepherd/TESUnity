@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using TESUnity.ESM;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.Records
 {
     public class LightComponent : GenericObjectComponent
     {
@@ -29,14 +30,15 @@ namespace TESUnity.Components
 
         void Start()
         {
+            LIGHRecord LIGH = (LIGHRecord)record;
+
             lightData = new LightData();
-            ESM.LIGHRecord LIGH = record as ESM.LIGHRecord;
             lightData.lightComponent = gameObject.GetComponentInChildren<Light>(true);
 
             if (LIGH.FNAM != null)
-            {
                 objData.name = LIGH.FNAM.value;
-            }
+
+            objData.interactionPrefix = "Take ";
 
             if (LIGH.LHDT != null)
             {
@@ -46,9 +48,7 @@ namespace TESUnity.Components
                     gameObject.AddComponent<BoxCollider>().size *= 0.5f; //very weak-- adding a box collider to light objects so we can interact with them
                                                                          //adding kinematic rigidbodies to static colliders prevents the physics collision tree from being rebuilt, which impacts performance
                     if (TESUnity.instance.useKinematicRigidbodies)
-                    {
                         gameObject.AddComponent<Rigidbody>().isKinematic = true;
-                    }
                 }
                 StartCoroutine(ConfigureLightComponent());
             }
@@ -69,9 +69,7 @@ namespace TESUnity.Components
             {
                 // Only disable the light based on flags if the light component hasn't already been disabled due to settings.
                 if (lightData.lightComponent.enabled)
-                {
                     lightData.lightComponent.enabled = !Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.OffDefault);
-                }
 
                 var flicker = Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.Flicker);
                 var flickerSlow = Utils.ContainsBitFlags((uint)lightData.flags, (uint)LightData.LightFlags.FlickerSlow);

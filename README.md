@@ -28,10 +28,10 @@ You can create a configuration file named `Config.ini` at the root folder of the
 | Move | W, A, S, D | Left thumbstick |
 | Sprint | Left Shift | Left thumbstick button | 
 | Walk | Left Ctrl | Right thumstick button |
-| Jump | Space | button Y |
-| Interact | E | button A |
+| Jump | E | button Y |
+| Interact | Space | button A |
 | Toggle Flight Mode | Tab | Nothing |
-|Toggle Lantern | L | button X |
+| Toggle Lantern | L | button X |
 | Free Cursor Lock | Backquote | Nothing |
 
 

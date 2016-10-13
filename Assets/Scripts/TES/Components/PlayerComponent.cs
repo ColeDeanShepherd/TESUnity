@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TESUnity.Components;
+using UnityEngine;
 using UnityEngine.VR;
 
 namespace TESUnity
@@ -19,27 +20,28 @@ namespace TESUnity
 
         public bool isFlying
         {
-            get
-            {
-                return _isFlying;
-            }
+            get { return _isFlying; }
             set
             {
                 _isFlying = value;
 
                 if (!_isFlying)
-                {
                     rigidbody.useGravity = true;
-                }
                 else
-                {
                     rigidbody.useGravity = false;
-                }
             }
+        }
+
+        public bool Paused
+        {
+            get { return _paused; }
         }
 
         public new GameObject camera;
         public GameObject lantern;
+        public PlayerInventory inventory;
+        public Transform leftHand;
+        public Transform rightHand;
 
         private CapsuleCollider capsuleCollider;
         private new Rigidbody rigidbody;
@@ -57,6 +59,13 @@ namespace TESUnity
             var textureManager = TESUnity.instance.Engine.textureManager;
             var crosshairTexture = textureManager.LoadTexture("target");
             _crosshair = GUIUtils.CreateImage(GUIUtils.CreateSprite(crosshairTexture), GUIUtils.MainCanvas, 35, 35);
+
+            // The crosshair needs an X and Y flip
+            //var cursor = textureManager.LoadTexture("tx_cursor");
+            //Cursor.SetCursor(cursor, Vector2.zero, CursorMode.Auto);
+
+            leftHand = CreateHand(true);
+            rightHand = CreateHand(false);
 
             if (VRSettings.enabled)
             {
@@ -98,6 +107,7 @@ namespace TESUnity
             if (Input.GetButtonDown("Recenter"))
                 InputTracking.Recenter();
         }
+
         private void FixedUpdate()
         {
             isGrounded = CalculateIsGrounded();
@@ -193,6 +203,23 @@ namespace TESUnity
         {
             // Calculate the local movement direction.
             var direction = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
+
+            // A small hack for French Keyboard...
+            if (Application.systemLanguage == SystemLanguage.French)
+            {
+                direction = Vector3.zero;
+
+                if (Input.GetKey(KeyCode.Z))
+                    direction.z = 1;
+                else if (Input.GetKey(KeyCode.S))
+                    direction.z = -1;
+
+                if (Input.GetKey(KeyCode.Q))
+                    direction.x = -1;
+                else if (Input.GetKey(KeyCode.D))
+                    direction.x = 1;
+            }
+
             return direction.normalized;
         }
 
@@ -243,6 +270,16 @@ namespace TESUnity
             Time.timeScale = pause ? 0.0f : 1.0f;
             Cursor.lockState = pause ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = pause;
+        }
+
+        private Transform CreateHand(bool left)
+        {
+            var hand = new GameObject((left ? "Left" : "Right") + " Hand");
+            var hTransform = hand.GetComponent<Transform>();
+            hand.transform.parent = Camera.main.transform;
+            hand.transform.localPosition = new Vector3(left ? -0.3f : 0.3f, -0.3f, 0.45f);
+            hand.transform.localRotation = Quaternion.Euler(-50.0f, 0.0f, left ? -90.0f : 90.0f);
+            return hTransform;
         }
     }
 }

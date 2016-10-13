@@ -12,7 +12,7 @@ public class UnityBinaryReader : IDisposable
 
 	public UnityBinaryReader(Stream input)
 	{
-		reader = new BinaryReader(input);
+		reader = new BinaryReader(input, System.Text.Encoding.UTF8);
 	}
 	public UnityBinaryReader(Stream input, System.Text.Encoding encoding)
 	{
@@ -83,9 +83,9 @@ public class UnityBinaryReader : IDisposable
 
 		var bytes = reader.ReadBytes(lengthIncludingPossibleNullTerminator);
 
-		// Ignore the null terminator.
-		var charCount = (Utils.Last(bytes) != 0) ? bytes.Length : (bytes.Length - 1);
-		return System.Text.Encoding.ASCII.GetString(bytes, 0, charCount);
+        // Ignore the null terminator.
+        var charCount = (Utils.Last(bytes) != 0) ? bytes.Length : (bytes.Length - 1);
+        return System.Text.Encoding.Default.GetString(bytes, 0, charCount);
 	}
 
 	#region Little Endian

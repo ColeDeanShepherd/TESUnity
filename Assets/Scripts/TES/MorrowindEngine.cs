@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using TESUnity.Components;
+using TESUnity.Components.Records;
+using TESUnity.Effects;
+using TESUnity.ESM;
+using TESUnity.UI;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityStandardAssets.CinematicEffects;
 
 namespace TESUnity
 {
-    using Effects;
-	using ESM;
-    using global::TESUnity.Components;
-    using global::TESUnity.UI;
-    using UnityStandardAssets.CinematicEffects;
-
     public class InRangeCellInfo
 	{
 		public GameObject gameObject;
@@ -28,15 +26,35 @@ namespace TESUnity
 
 	public class MorrowindEngine
 	{
-		#region Public
 		public static MorrowindEngine instance;
 
 		public const float maxInteractDistance = 3;
 
-		public static int markerLayer
-		{
-			get	{ return LayerMask.NameToLayer("Marker");	}
-		}
+        #region Private Fields
+
+        private const float playerHeight = 2;
+        private const float playerRadius = 0.4f;
+        private float desiredWorkTimePerFrame = 1.0f / 160;
+        private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
+        private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
+        private int cellRadius = 4;
+        private int detailRadius = 3;
+        private int cellRadiusOnLoad = 2;
+        private CELLRecord _currentCell;
+        private UIInteractiveText _interactiveText;
+        private GameObject sunObj;
+        private GameObject waterObj;
+        private GameObject playerObj;
+        private PlayerComponent playerComponent;
+        private PlayerInventory playerInventory;
+        private GameObject playerCameraObj;
+        private UnderwaterEffect underwaterEffect;
+        private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
+        private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
+
+        #endregion
+
+        #region Public Fields
 
 		public MorrowindDataReader dataReader;
 		public TextureManager textureManager;
@@ -52,7 +70,12 @@ namespace TESUnity
 				return _currentCell;
 			}
 		}
-        
+
+        public static int markerLayer
+        {
+            get { return LayerMask.NameToLayer("Marker"); }
+        }
+
         public MorrowindEngine( MorrowindDataReader dataReader )
 		{
 			Debug.Assert(instance == null);
@@ -65,10 +88,6 @@ namespace TESUnity
 
 			canvasObj = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
-
-            /*var interactiveTextAsset = Resources.Load<GameObject>("UI/InteractiveText");
-            var interactiveTextGO = (GameObject)GameObject.Instantiate(interactiveTextAsset, GUIUtils.MainCanvas.transform);
-            _interactiveText = interactiveTextGO.GetComponent<UIInteractiveText>();*/
 
             _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas);
 
@@ -188,85 +207,51 @@ namespace TESUnity
 			CastInteractRay();
 		}
 
-		public void CastInteractRay()
+        public void CastInteractRay()
 		{
 			// Cast a ray to see what the camera is looking at.
 			var ray = new Ray(playerCameraObj.transform.position, playerCameraObj.transform.forward);
+			var raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance);
 
-			int raycastHitCount = Physics.RaycastNonAlloc(ray , interactRaycastHitBuffer , maxInteractDistance );
-
-			if ( raycastHitCount > 0 )
+			if (raycastHitCount > 0 && !playerComponent.Paused)
 			{
-				for ( int i = 0 ; i < raycastHitCount ; i++ )
+				for (int i = 0; i < raycastHitCount; i++)
 				{
-					var hitInfo = interactRaycastHitBuffer[ i ];
-					var hitObj = hitInfo.collider.gameObject;
+					var hitInfo = interactRaycastHitBuffer[i];
+					var component = hitInfo.collider.GetComponentInParent<GenericObjectComponent>();
 
-					var component = hitObj.gameObject.GetComponentInParent<GenericObjectComponent>();
-					if ( component != null )
-					{
-						if ( !string.IsNullOrEmpty( component.objData.name ) )
-						{
-							switch ( component.gameObject.tag )
-							{
-								case "Door":
-                                    ShowInteractiveText(component);
+                    if (component != null)
+                    {
+                        if (string.IsNullOrEmpty(component.objData.name))
+                            return;
 
-                                    if (Input.GetButtonDown("Fire1"))
-                                        OpenDoor((DoorComponent)component);
+                        ShowInteractiveText(component);
 
-                                    break;
-								case "Container": ShowInteractiveText(component, "Open "); break;
-								case "Activator": ShowInteractiveText(component); break;
-								case "Lock": ShowInteractiveText(component, "Locked: "); break;
-								case "Light":
-								case "Probe":
-								case "RepairTool":
-								case "Clothing":
-								case "Armor":
-								case "Weapon":
-								case "Ingredient":
-								case "Alchemical":
-								case "Apparatus":
-								case "MiscObj":
-                                    ShowInteractiveText(component, "Take ");
-                                    TryRemoveObject(component.gameObject);
-                                    break;
+                        if (Input.GetButtonDown("Use"))
+                        {
+                            if (component is DoorComponent)
+                                OpenDoor((DoorComponent)component);
 
-								case "Book":
-                                    ShowInteractiveText(component);
-                                    //TryRemoveObject(component.gameObject);
-                                    if (Input.GetButtonDown("Fire1"))
-                                        component.Interact(); break;
-							}
-							break;
-						}
-					}
-					else
-					{
+                            else if (component.usable)
+                                component.Interact();
+
+                            else if (component.pickable)
+                                playerInventory.Add(component);
+                        }
+                        break;
+                    }
+                    else
                         CloseInteractiveText(); //deactivate text if no interactable [ DOORS ONLY - REQUIRES EXPANSION ] is found
-					}
-				}
+                }
 			}
 			else
-			{
                 CloseInteractiveText(); //deactivate text if nothing is raycasted against
-			}
 		}
 
-		private void TryRemoveObject ( GameObject obj ) // temp utility function representing character adding items to inventory
-		{
-			if (Input.GetButtonDown("Fire1"))
-			{
-				var p = obj.transform;
-				while ( p.parent != null && p.parent.gameObject.name != "objects" ) p = p.parent; //kind of a hacky way to reference the entirety of an individual object
-				UnityEngine.Object.Destroy( p.gameObject );
-			}
-		}
-
-        public void ShowInteractiveText(GenericObjectComponent component, string prefixTitle = null)
+        public void ShowInteractiveText(GenericObjectComponent component)
         {
-            _interactiveText.Show(GUIUtils.CreateSprite(component.objData.icon), prefixTitle, component.objData.name, component.objData.value, component.objData.weight);
+            var data = component.objData;
+            _interactiveText.Show(GUIUtils.CreateSprite(data.icon), data.interactionPrefix, data.name, data.value, data.weight);
         }
 
         public void CloseInteractiveText()
@@ -277,31 +262,6 @@ namespace TESUnity
 		#endregion
 
 		#region Private
-		private const float playerHeight = 2;
-		private const float playerRadius = 0.4f;
-
-		private float desiredWorkTimePerFrame = 1.0f / 160;
-
-		private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
-		private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
-
-		private int cellRadius = 4;
-		private int detailRadius = 3;
-		private int cellRadiusOnLoad = 2;
-		private CELLRecord _currentCell;
-
-        private UI.UIInteractiveText _interactiveText;
-		//private GameObject interactTextObj;
-		//private Text interactText;
-		private GameObject sunObj;
-		private GameObject waterObj;
-		private GameObject playerObj;
-		private GameObject playerCameraObj;
-        private UnderwaterEffect underwaterEffect;
-
-		private Color32 defaultAmbientColor = new Color32(137, 140, 160, 255);
-
-		private RaycastHit[] interactRaycastHitBuffer = new RaycastHit[32];
 
 		/// <summary>
 		/// A coroutine that instantiates the terrain for, and all objects in, a cell.
@@ -946,7 +906,7 @@ namespace TESUnity
 			var rigidbody = player.AddComponent<Rigidbody>();
 			rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
 
-			var playerComponent = player.AddComponent<PlayerComponent>();
+			playerComponent = player.AddComponent<PlayerComponent>();
 
 			// Create the camera point object.
 			var eyeHeight = 0.9f * capsuleCollider.height;
@@ -977,6 +937,9 @@ namespace TESUnity
 
 			playerComponent.camera = playerCamera;
 			playerComponent.lantern = lantern;
+
+            // Inventory
+            playerInventory = player.AddComponent<PlayerInventory>();
 
             var tes = TESUnity.instance;
 
@@ -1019,6 +982,7 @@ namespace TESUnity
 
             return camera;
 		}
+
 		#endregion
 	}
 
