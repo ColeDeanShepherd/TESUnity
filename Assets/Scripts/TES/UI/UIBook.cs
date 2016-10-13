@@ -22,6 +22,10 @@ namespace TESUnity.UI
         [SerializeField]
         private Text _page2 = null;
         [SerializeField]
+        private Text _numPage1 = null;
+        [SerializeField]
+        private Text _numPage2 = null;
+        [SerializeField]
         private Button _nextButton = null;
         [SerializeField]
         private Button _previousButton = null;
@@ -43,19 +47,21 @@ namespace TESUnity.UI
             _bookRecord = book;
 
             var words = _bookRecord.TEXT.value;
-            words = words.Replace("<BR>", "\n");
+            words = words.Replace("<BR><BR>", "\n");
             words = System.Text.RegularExpressions.Regex.Replace(words, @"<[^>]*>", string.Empty);
 
-            var countChar = words.Length;
-            var numCharPerPage = 700;
+            var countChar = 0;
+            var numCharPerPage = 665;
             var j = 0;
+
+            for (var i = 0; i < words.Length; i++)
+                if (words[i] != '\n')
+                    countChar++;
 
             // Ceil returns the bad value... 16.6 returns 16..
             _numberOfPages = Mathf.CeilToInt(countChar / numCharPerPage) + 1;
             _pages = new string[_numberOfPages];
-
-
-
+            
             for (int i = 0; i < countChar; i++)
             {
                 if (i % numCharPerPage == 0 && i > 0)
@@ -92,6 +98,9 @@ namespace TESUnity.UI
 
             if (_cursor + 2 < _numberOfPages && _pages[_cursor + 2] == string.Empty)
                 _nextButton.interactable = false;
+
+            _numPage1.text = (_cursor + 1).ToString();
+            _numPage2.text = (_cursor + 2).ToString();
         }
 
         public void Take()
