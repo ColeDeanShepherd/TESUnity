@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 
-namespace TESUnity
+namespace TESUnity.Components
 {
-    public class CreatureComponent : MonoBehaviour
+    public class CreatureComponent : GenericObjectComponent
     {
         void Start()
         {

@@ -58,6 +58,16 @@ namespace TESUnity
         private GameObject testObj;
         private string testObjPath;
 
+        public MorrowindEngine Engine
+        {
+            get { return MWEngine; }
+        }
+
+        public MorrowindDataReader DataReader
+        {
+            get { return MWDataReader; }
+        }
+
         private void Awake()
         {
             instance = this;
