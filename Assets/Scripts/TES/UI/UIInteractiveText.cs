@@ -33,9 +33,6 @@ namespace TESUnity.UI
 
         public void Show(Sprite icon, string prefixTitle, string title, string weight, string value)
         {
-            if (_opened)
-                return;
-
             _icon.enabled = icon != null;
             if (_icon.enabled)
                 _icon.sprite = icon;

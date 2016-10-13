@@ -14,6 +14,9 @@ namespace TESUnity.UI
         private BOOKRecord _bookRecord;
 
         [SerializeField]
+        private int _numCharPerPage = 565;
+
+        [SerializeField]
         private GameObject _container = null;
         [SerializeField]
         private Image _background = null;
@@ -47,11 +50,11 @@ namespace TESUnity.UI
             _bookRecord = book;
 
             var words = _bookRecord.TEXT.value;
+            words = words.Replace("<BR>", "\n");
             words = words.Replace("<BR><BR>", "\n");
             words = System.Text.RegularExpressions.Regex.Replace(words, @"<[^>]*>", string.Empty);
 
             var countChar = 0;
-            var numCharPerPage = 665;
             var j = 0;
 
             for (var i = 0; i < words.Length; i++)
@@ -59,13 +62,16 @@ namespace TESUnity.UI
                     countChar++;
 
             // Ceil returns the bad value... 16.6 returns 16..
-            _numberOfPages = Mathf.CeilToInt(countChar / numCharPerPage) + 1;
+            _numberOfPages = Mathf.CeilToInt(countChar / _numCharPerPage) + 1;
             _pages = new string[_numberOfPages];
             
             for (int i = 0; i < countChar; i++)
             {
-                if (i % numCharPerPage == 0 && i > 0)
+                if (i % _numCharPerPage == 0 && i > 0)
+                {
+                    _pages[j] = _pages[j].TrimEnd('\n');
                     j++;
+                }
 
                 if (_pages[j] == null)
                     _pages[j] = String.Empty;
