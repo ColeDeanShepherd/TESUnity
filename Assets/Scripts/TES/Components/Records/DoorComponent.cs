@@ -2,7 +2,7 @@
 using System.Collections;
 using TESUnity.ESM;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.Records
 {
     public class DoorComponent : GenericObjectComponent
     {
@@ -25,6 +25,9 @@ namespace TESUnity.Components
 
         void Start()
         {
+            usable = true;
+            pickable = false;
+
             doorData = new DoorData();
             doorData.closedRotation = transform.rotation;
             doorData.openRotation = doorData.closedRotation * Quaternion.Euler(Vector3.up * 90f);

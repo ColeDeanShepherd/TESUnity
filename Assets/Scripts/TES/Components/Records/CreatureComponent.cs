@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.Records
 {
     public class CreatureComponent : GenericObjectComponent
     {
