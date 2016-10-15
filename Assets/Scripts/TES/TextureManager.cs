@@ -8,10 +8,32 @@ namespace TESUnity
 	/// </summary>
 	public class TextureManager
 	{
+        private static TextureManager instance = null;
+
+        public static TextureManager Instance
+        {
+            get { return instance; }
+        }
+
 		public TextureManager(MorrowindDataReader dataReader)
 		{
+            instance = this;
 			this.dataReader = dataReader;
 		}
+
+        public static Texture2D FlipTexture(Texture2D orig)
+        {
+            var flippedTexture = new Texture2D(orig.width, orig.height);
+            var width = orig.width;
+            var height = orig.height;
+
+            for(var i = 0; i<width; i++)
+                for(var j = 0; j<height; j++) 
+                    flippedTexture.SetPixel(i, height - j - 1, orig.GetPixel(i, j));
+
+            flippedTexture.Apply();
+            return flippedTexture;
+        }
 
 		/// <summary>
 		/// Loads a texture and caches it. Thread safe.
