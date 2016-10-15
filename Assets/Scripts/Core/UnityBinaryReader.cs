@@ -207,7 +207,7 @@ public class UnityBinaryReader : IDisposable
 			for(int rowIndex = 0; rowIndex < 4; rowIndex++)
 			{
 				// If we're in the 3x3 part of the matrix, read values. Otherwise, use the identity matrix.
-				if(rowIndex <= 2 && columnIndex <= 2)
+				if((rowIndex <= 2) && (columnIndex <= 2))
 				{
 					matrix[rowIndex, columnIndex] = ReadLESingle();
 				}
@@ -233,7 +233,7 @@ public class UnityBinaryReader : IDisposable
 			for(int columnIndex = 0; columnIndex < 4; columnIndex++)
 			{
 				// If we're in the 3x3 part of the matrix, read values. Otherwise, use the identity matrix.
-				if(rowIndex <= 2 && columnIndex <= 2)
+				if((rowIndex <= 2) && (columnIndex <= 2))
 				{
 					matrix[rowIndex, columnIndex] = ReadLESingle();
 				}
@@ -291,6 +291,214 @@ public class UnityBinaryReader : IDisposable
 		float y = ReadLESingle();
 		float z = ReadLESingle();
 		float w = ReadLESingle();
+
+		return new Quaternion(x, y, z, w);
+	}
+	#endregion
+
+	#region Big Endian
+	public bool ReadBEBool32()
+	{
+		return ReadBEUInt32() != 0;
+	}
+
+	public ushort ReadBEUInt16()
+	{
+		reader.Read(readBuffer, 0, 2);
+
+		return (ushort)((readBuffer[0] << 8) | readBuffer[1]);
+	}
+	public uint ReadBEUInt32()
+	{
+		reader.Read(readBuffer, 0, 4);
+
+		return ((uint)readBuffer[0] << 24) | ((uint)readBuffer[1] << 16) | ((uint)readBuffer[2] << 8) | readBuffer[3];
+	}
+	public ulong ReadBEUInt64()
+	{
+		reader.Read(readBuffer, 0, 8);
+
+		return ((ulong)readBuffer[0] << 56) | ((ulong)readBuffer[1] << 48) | ((ulong)readBuffer[2] << 40) | ((ulong)readBuffer[3] << 32) | ((ulong)readBuffer[4] << 24) | ((ulong)readBuffer[5] << 16) | ((ulong)readBuffer[6] << 8) | readBuffer[7];
+	}
+
+	public short ReadBEInt16()
+	{
+		var shortAsUShort = ReadBEUInt16();
+
+		unsafe
+		{
+			return *((short*)(&shortAsUShort));
+		}
+	}
+	public int ReadBEInt32()
+	{
+		var intAsUInt = ReadBEUInt32();
+
+		unsafe
+		{
+			return *((int*)(&intAsUInt));
+		}
+	}
+	public long ReadBEInt64()
+	{
+		var longAsULong = ReadBEUInt64();
+
+		unsafe
+		{
+			return *((long*)(&longAsULong));
+		}
+	}
+
+	public float ReadBESingle()
+	{
+		var singleAsUInt = ReadBEUInt32();
+
+		unsafe
+		{
+			return *((float*)(&singleAsUInt));
+		}
+	}
+	public double ReadBEDouble()
+	{
+		var doubleAsUInt = ReadBEUInt64();
+
+		unsafe
+		{
+			return *((double*)(&doubleAsUInt));
+		}
+	}
+
+	public byte[] ReadBELength32PrefixedBytes()
+	{
+		var length = ReadBEUInt32();
+		return reader.ReadBytes((int)length);
+	}
+	public string ReadBELength32PrefixedASCIIString()
+	{
+		return System.Text.Encoding.ASCII.GetString(ReadBELength32PrefixedBytes());
+	}
+
+	public Vector2 ReadBEVector2()
+	{
+		var x = ReadBESingle();
+		var y = ReadBESingle();
+
+		return new Vector2(x, y);
+	}
+	public Vector3 ReadBEVector3()
+	{
+		var x = ReadBESingle();
+		var y = ReadBESingle();
+		var z = ReadBESingle();
+
+		return new Vector3(x, y, z);
+	}
+	public Vector4 ReadBEVector4()
+	{
+		var x = ReadBESingle();
+		var y = ReadBESingle();
+		var z = ReadBESingle();
+		var w = ReadBESingle();
+
+		return new Vector4(x, y, z, w);
+	}
+
+	/// <summary>
+	/// Reads a column-major 3x3 matrix but returns a functionally equivalent 4x4 matrix.
+	/// </summary>
+	public Matrix4x4 ReadBEColumnMajorMatrix3x3()
+	{
+		var matrix = new Matrix4x4();
+
+		for(int columnIndex = 0; columnIndex < 4; columnIndex++)
+		{
+			for(int rowIndex = 0; rowIndex < 4; rowIndex++)
+			{
+				// If we're in the 3x3 part of the matrix, read values. Otherwise, use the identity matrix.
+				if((rowIndex <= 2) && (columnIndex <= 2))
+				{
+					matrix[rowIndex, columnIndex] = ReadBESingle();
+				}
+				else
+				{
+					matrix[rowIndex, columnIndex] = (rowIndex == columnIndex) ? 1 : 0;
+				}
+			}
+		}
+
+		return matrix;
+	}
+
+	/// <summary>
+	/// Reads a row-major 3x3 matrix but returns a functionally equivalent 4x4 matrix.
+	/// </summary>
+	public Matrix4x4 ReadBERowMajorMatrix3x3()
+	{
+		var matrix = new Matrix4x4();
+
+		for(int rowIndex = 0; rowIndex < 4; rowIndex++)
+		{
+			for(int columnIndex = 0; columnIndex < 4; columnIndex++)
+			{
+				// If we're in the 3x3 part of the matrix, read values. Otherwise, use the identity matrix.
+				if((rowIndex <= 2) && (columnIndex <= 2))
+				{
+					matrix[rowIndex, columnIndex] = ReadBESingle();
+				}
+				else
+				{
+					matrix[rowIndex, columnIndex] = (rowIndex == columnIndex) ? 1 : 0;
+				}
+			}
+		}
+
+		return matrix;
+	}
+
+	public Matrix4x4 ReadBEColumnMajorMatrix4x4()
+	{
+		var matrix = new Matrix4x4();
+
+		for(int columnIndex = 0; columnIndex < 4; columnIndex++)
+		{
+			for(int rowIndex = 0; rowIndex < 4; rowIndex++)
+			{
+				matrix[rowIndex, columnIndex] = ReadBESingle();
+			}
+		}
+
+		return matrix;
+	}
+	public Matrix4x4 ReadBERowMajorMatrix4x4()
+	{
+		var matrix = new Matrix4x4();
+
+		for(int rowIndex = 0; rowIndex < 4; rowIndex++)
+		{
+			for(int columnIndex = 0; columnIndex < 4; columnIndex++)
+			{
+				matrix[rowIndex, columnIndex] = ReadBESingle();
+			}
+		}
+
+		return matrix;
+	}
+
+	public Quaternion ReadBEQuaternionWFirst()
+	{
+		float w = ReadBESingle();
+		float x = ReadBESingle();
+		float y = ReadBESingle();
+		float z = ReadBESingle();
+
+		return new Quaternion(x, y, z, w);
+	}
+	public Quaternion ReadBEQuaternionWLast()
+	{
+		float x = ReadBESingle();
+		float y = ReadBESingle();
+		float z = ReadBESingle();
+		float w = ReadBESingle();
 
 		return new Quaternion(x, y, z, w);
 	}
