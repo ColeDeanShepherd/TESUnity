@@ -8,6 +8,8 @@ namespace TESUnity
 	/// </summary>
 	public class TextureManager
 	{
+        private static TextureManager instance = null;
+
 		public TextureManager(MorrowindDataReader dataReader)
 		{
 			this.dataReader = dataReader;
@@ -36,10 +38,13 @@ namespace TESUnity
 			}
 		}
 
-		/// <summary>
-		/// Loads a texture. Can only be called from the main thread.
-		/// </summary>
-		public Texture2D LoadTexture(string texturePath)
+        /// <summary>
+        /// Loads a texture. Can only be called from the main thread.
+        /// </summary>
+        /// <param name="texturePath">The texture's path</param>
+        /// <param name="flip">Indicates if the texture must be vertically flipped. Default is False.</param>
+        /// <returns></returns>
+        public Texture2D LoadTexture(string texturePath, bool flip = false)
 		{
 			// Try to get the cached Texture2D.
 			Texture2D texture;
@@ -63,10 +68,13 @@ namespace TESUnity
 				}
 			}
 
+            if (texture != null && flip)
+                TextureUtils.FlipTexture2DVertically(texture);
+
 			return texture;
 		}
 
-		private MorrowindDataReader dataReader;
+        private MorrowindDataReader dataReader;
 
 		private object dictionariesLock = new object();
 		private Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();

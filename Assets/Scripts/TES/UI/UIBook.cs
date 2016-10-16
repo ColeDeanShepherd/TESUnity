@@ -38,7 +38,7 @@ namespace TESUnity.UI
 
         void Start()
         {
-            var texture = TESUnity.instance.Engine.textureManager.LoadTexture("tx_menubook");
+            var texture = TESUnity.instance.TextureManager.LoadTexture("tx_menubook", true);
             _background.sprite = GUIUtils.CreateSprite(texture);
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
