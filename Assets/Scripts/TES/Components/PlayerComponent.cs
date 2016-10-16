@@ -56,13 +56,13 @@ namespace TESUnity
             rigidbody = GetComponent<Rigidbody>();
 
             // Add the crosshair
-            var textureManager = TextureManager.Instance;
-            var crosshairTexture = textureManager.LoadTexture("target");
+            var textureManager = TESUnity.instance.TextureManager;
+            var crosshairTexture = textureManager.LoadTexture("target", true);
             _crosshair = GUIUtils.CreateImage(GUIUtils.CreateSprite(crosshairTexture), GUIUtils.MainCanvas, 35, 35);
 
             // The crosshair needs an X and Y flip
-            var cursor = textureManager.LoadTexture("tx_cursor");
-            Cursor.SetCursor(TextureManager.FlipTexture(cursor), Vector2.zero, CursorMode.Auto);
+            var cursor = textureManager.LoadTexture("tx_cursor", true);
+            Cursor.SetCursor(cursor, Vector2.zero, CursorMode.Auto);
 
             leftHand = CreateHand(true);
             rightHand = CreateHand(false);

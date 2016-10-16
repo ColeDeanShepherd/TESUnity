@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace TESUnity
 {
@@ -59,9 +57,9 @@ namespace TESUnity
             get { return MWEngine; }
         }
 
-        public MorrowindDataReader DataReader
+        public TextureManager TextureManager
         {
-            get { return MWDataReader; }
+            get { return MWEngine.textureManager; }
         }
 
         private void Awake()
