@@ -21,7 +21,7 @@ namespace TESUnity.UI
 
         void Start()
         {
-            var texture = TESUnity.instance.Engine.textureManager.LoadTexture("scroll");
+            var texture = TESUnity.instance.TextureManager.LoadTexture("scroll", true);
             _background.sprite = GUIUtils.CreateSprite(texture);
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
