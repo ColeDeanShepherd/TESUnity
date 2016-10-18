@@ -14,21 +14,27 @@ namespace TESUnity
 
         #region Inspector-set Members
 
+        [Header("Global")]
         public string dataPath;
         public bool useKinematicRigidbodies = true;
         public bool playMusic = true;
+
+        [Header("Rendering")]
+        public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
+        public RenderingPath renderPath = RenderingPath.Forward;
+
+        [Header("Lighting")]
         public float ambientIntensity = 1.5f;
         public bool renderSunShadows = false;
         public bool renderLightShadows = false;
-        public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
-        public RenderingPath renderPath = RenderingPath.Forward;
         public bool renderExteriorCellLights = false;
         public bool animateLights = false;
 
         [Header("Effects")]
-        public bool antiAliasing;
-        public bool ambientOcclusion;
-        public bool bloom;
+        public bool antiAliasing = false;
+        public bool ambientOcclusion = false;
+        public bool bloom = false;
+        public bool waterBackSideTransparent = false;
 
         [Header("VR")]
         public bool followHeadDirection = false;
@@ -42,6 +48,7 @@ namespace TESUnity
         public Sprite UIMaskImg;
         public Sprite UISpriteImg;
 
+        [Header("Prefabs")]
         public GameObject waterPrefab;
 
         [Header("Debug")]

@@ -11,29 +11,46 @@ To get started, download the source code as a ZIP file, extract it, and open the
 You can copy the `Data Files` folder from your Morrowind installation to the root folder of the project / release. The game will start automatically without asking for a path.
 
 ## Configuration file
-You can create a configuration file named `Config.ini` at the root folder of the project / release folder.
+You can use the `config.ini` file located at the root folder of the project / release folder to configure and tweak your game experience.
+The first step is to rename the `config.ini.dist` file to `config.ini`.
+
 
 | Parameter | Values |
 |-----------|---------|
+|**Global** | |
+| PlayMusic  | `True` or `False` |
+| MorrowindPath | The Morrowind's `Data Files` path |
+|**Lighting**| |
+| AnimateLights  | `True` or `False` |
 | SunShadows  | `True` or `False` |
 | LightShadows  | `True` or `False` |
-| PlayMusic  | `True` or `False` |
+| RenderExteriorCellLights | `True` or `False` |
+|**Effects** | |
+|AntiAliasing | `True` or `False` |
+|AmbientOcclusion | `True` or `False` |
+|Bloom | `True` or `False` |
+|WaterBackSideTransparent | `True` or `False` |
+|**Rendering** | |
 | Shader  | `Unlit` or `Standard` or `Default` or `Bumped` |
 | RenderPath  | `1` = Forward, `3` = Deferred |
-
+|**Debug** | |
+| CreaturesEnabled | `True` or `False` |
 
 ## Controls
 | Action | Keys | Gamepad |
 |--------|------|---------|
-| Move | W, A, S, D | Left thumbstick |
+| Move | W, A, S, D* | Left thumbstick |
 | Sprint | Left Shift | Left thumbstick button | 
 | Walk | Left Ctrl | Right thumstick button |
+| Use / Open / Attack | Space | Button A |
+| Cancel / Menu | Left click | Button B | 
+| Take (book mode) | Nothing | Button X |
 | Jump | E | button Y |
-| Interact | Space | button A |
 | Toggle Flight Mode | Tab | Nothing |
-| Toggle Lantern | L | button X |
+| Toggle Lantern | L | Nothing |
 | Free Cursor Lock | Backquote | Nothing |
 
+\* *It uses the AZERTY mapping for French users.*
 
 ## Contribute
 

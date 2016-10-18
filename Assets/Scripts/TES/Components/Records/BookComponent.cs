@@ -7,7 +7,6 @@ namespace TESUnity.Components.Records
     public class BookComponent : GenericObjectComponent
     {
         private static PlayerComponent _player = null;
-        private GameObject _container = null;
         private static UIBook _uiBook = null;
         private static UIScroll _uiScroll = null;
 
@@ -42,25 +41,8 @@ namespace TESUnity.Components.Records
             objData.value = BOOK.BKDT.value.ToString();
         }
 
-        void Update()
-        {
-            if (Input.GetButtonDown("Fire1") && _container != null)
-            {
-                Destroy(_container);
-                Player.Pause(false);
-                return;
-            }
-        }
-
         public override void Interact()
         {
-            if (_container != null)
-            {
-                Destroy(_container);
-                Player.Pause(false);
-                return;
-            }
-
             var BOOK = (BOOKRecord)record;
 
             if (BOOK.BKDT.scroll == 1)

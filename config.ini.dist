@@ -1,0 +1,28 @@
+# TESUnity Configuration File
+
+[Global]
+PlayMusic = True
+MorrowindPath = C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files
+
+[Rendering]
+RenderPath = 1
+Shader = Bumped
+
+[Lighting]
+AnimateLights = False
+SunShadows = True
+LightShadows = False
+RenderExteriorCellLights = False
+
+[Effects]
+AntiAliasing = False
+AmbientOcclusion = False
+Bloom = False
+WaterBackSideTransparent = False
+
+[VR]
+FollowHeadDirection = False
+
+[Debug]
+CreaturesEnabled = False
+

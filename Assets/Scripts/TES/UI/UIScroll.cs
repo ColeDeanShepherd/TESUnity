@@ -25,7 +25,16 @@ namespace TESUnity.UI
             _background.sprite = GUIUtils.CreateSprite(texture);
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
             Close();
+        }
+
+        void Update()
+        {
+            if (Input.GetButtonDown("Button_3"))
+                Take();
+            else if (Input.GetButton("Button_2"))
+                Close();
         }
 
         public void Show(BOOKRecord book)

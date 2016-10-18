@@ -100,6 +100,19 @@ namespace TESUnity
 
 			waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
 			waterObj.SetActive(false);
+
+            if (!TESUnity.instance.waterBackSideTransparent)
+            {
+                var side = waterObj.transform.GetChild(0);
+                var sideMaterial = side.GetComponent<Renderer>().sharedMaterial;
+                sideMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                sideMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                sideMaterial.SetInt("_ZWrite", 1);
+                sideMaterial.DisableKeyword("_ALPHATEST_ON");
+                sideMaterial.DisableKeyword("_ALPHABLEND_ON");
+                sideMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                sideMaterial.renderQueue = -1;
+            }
 		}
 
 		public Vector2i GetExteriorCellIndices(Vector3 point)
@@ -227,7 +240,7 @@ namespace TESUnity
 
                         ShowInteractiveText(component);
 
-                        if (Input.GetButtonDown("Use"))
+                        if (Input.GetButtonDown("Button_1"))
                         {
                             if (component is DoorComponent)
                                 OpenDoor((DoorComponent)component);
