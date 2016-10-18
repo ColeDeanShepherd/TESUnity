@@ -90,7 +90,7 @@ namespace TESUnity
                 isFlying = !isFlying;
             }
 
-            if (isGrounded && !isFlying && Input.GetButtonDown("Jump"))
+            if (isGrounded && !isFlying && Input.GetButtonDown("Button_4"))
             {
                 var newVelocity = rigidbody.velocity;
                 newVelocity.y = 5;
@@ -207,8 +207,13 @@ namespace TESUnity
             // A small hack for French Keyboard...
             if (Application.systemLanguage == SystemLanguage.French)
             {
-                direction = Vector3.zero;
+                // Cancel Qwerty
+                if (Input.GetKeyDown(KeyCode.W))
+                    direction.z = 0;
+                else if (Input.GetKeyDown(KeyCode.A))
+                    direction.x = 0;
 
+                // Use Azerty
                 if (Input.GetKey(KeyCode.Z))
                     direction.z = 1;
                 else if (Input.GetKey(KeyCode.S))

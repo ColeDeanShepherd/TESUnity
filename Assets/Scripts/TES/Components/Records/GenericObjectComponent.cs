@@ -97,6 +97,12 @@ namespace TESUnity.Components.Records
             else if (record is APPARecord)
                 component = gameObject.AddComponent<AlchemyApparatusComponent>();
 
+            else if (record is CREARecord)
+                component = gameObject.AddComponent<CreatureComponent>();
+
+            else if (record is NPC_Record)
+                component = gameObject.AddComponent<NPCComponent>();
+
             else
                 component = gameObject.AddComponent<GenericObjectComponent>();
 

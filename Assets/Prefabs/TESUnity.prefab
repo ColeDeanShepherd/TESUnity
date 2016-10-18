@@ -44,16 +44,17 @@ MonoBehaviour:
   dataPath: 
   useKinematicRigidbodies: 1
   playMusic: 1
+  materialType: 2
+  renderPath: 1
   ambientIntensity: 1.5
   renderSunShadows: 0
   renderLightShadows: 0
-  materialType: 2
-  renderPath: 1
   renderExteriorCellLights: 0
   animateLights: 0
   antiAliasing: 0
   ambientOcclusion: 0
   bloom: 0
+  waterBackSideTransparent: 0
   followHeadDirection: 0
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
@@ -65,6 +66,8 @@ MonoBehaviour:
   UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   waterPrefab: {fileID: 1000013936092580, guid: e8e3a26facab0b742b401e1c0da419dc,
     type: 2}
+  creaturesEnabled: 0
+  npcsEnabled: 0
 --- !u!114 &11482094
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -76,6 +79,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18f65c96457599848b0d63ff346899ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bypassConfigINI: 0
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

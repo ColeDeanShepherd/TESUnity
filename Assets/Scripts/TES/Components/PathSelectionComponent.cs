@@ -21,10 +21,19 @@ namespace TESUnity.Components
         private Toggle toggle;
         private Text errorText;
 
+#if UNITY_EDITOR
+        [SerializeField]
+        private bool bypassConfigINI = false;
+#endif
+
         private void Start()
         {
+#if UNITY_EDITOR
+            if (!bypassConfigINI)
+                CheckConfigINI();
+#else
             CheckConfigINI();
-
+#endif
             var savedPath = PlayerPrefs.GetString(SavePathKey, string.Empty);
             if (savedPath != string.Empty)
                 defaultMWDataPath = savedPath;
@@ -57,10 +66,19 @@ namespace TESUnity.Components
             errorText.gameObject.AddComponent<Outline>();
             errorText.enabled = false;
 
+            // Load the game if the Data Files folder is here
             var path = Path.Combine(System.Environment.CurrentDirectory, "Data Files");
             if (Directory.Exists(path))
             {
                 LoadWorld(path);
+                return;
+            }
+
+            // Or if it's already in the config.ini file.
+            var tes = GetComponent<TESUnity>();
+            if (Directory.Exists(tes.dataPath))
+            {
+                LoadWorld(tes.dataPath);
                 return;
             }
         }
@@ -139,11 +157,13 @@ namespace TESUnity.Components
                                     case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
                                     case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
                                     case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
+                                    case "MorrowindPath": tes.dataPath = value; break;
                                     case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
                                     case "SunShadows": tes.renderSunShadows = ParseBool(value, tes.renderSunShadows); break;
                                     case "LightShadows": tes.renderLightShadows = ParseBool(value, tes.renderLightShadows); break;
                                     case "PlayMusic": tes.playMusic = ParseBool(value, tes.playMusic); break;
                                     case "RenderExteriorCellLights": tes.renderExteriorCellLights = ParseBool(value, tes.renderExteriorCellLights); break;
+                                    case "WaterBackSideTransparent": tes.waterBackSideTransparent = ParseBool(value, tes.waterBackSideTransparent); break;
                                     case "RenderPath":
                                         var renderPathID = ParseInt(value, 0);
                                         if (renderPathID == 1 || renderPathID == 3)

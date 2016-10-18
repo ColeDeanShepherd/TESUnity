@@ -20,6 +20,8 @@ TagManager:
   - Probe
   - Apparatus
   - Alchemical
+  - Creatures
+  - NPCs
   layers:
   - Default
   - TransparentFX

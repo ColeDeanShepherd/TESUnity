@@ -1,5 +1,20 @@
 #TESUnity Changelog
 
+## Version 0.4 - 10/18/2016
+### Added
+- New flags to enable new features (see readme.md)
+- Experimental static creatures support
+- Experimental weapon support (with home made animation)
+- Books and scrolls support
+- Crosshair
+- Morrowind cursor
+
+### Changes
+- Use the same keys binding as Morrowind
+
+### Fixes
+- Fixed an encoding issue for texts with accents
+
 ## Version 0.3 - 10/09/2016
 ### Added
 - More parameters in config.ini
