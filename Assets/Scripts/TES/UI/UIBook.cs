@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using TESUnity.ESM;
 using UnityEngine;
 using UnityEngine.UI;
@@ -157,10 +156,10 @@ namespace TESUnity.UI
                 OnClosed(_bookRecord);
         }
 
-        public static UIBook Create(GameObject parent)
+        public static UIBook Create(Transform parent)
         {
             var uiBookAsset = Resources.Load<GameObject>("UI/Book");
-            var uiBookGO = (GameObject)GameObject.Instantiate(uiBookAsset, parent.transform);
+            var uiBookGO = (GameObject)GameObject.Instantiate(uiBookAsset, parent);
             return uiBookGO.GetComponent<UIBook>();
         }
     }

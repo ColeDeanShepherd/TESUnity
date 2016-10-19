@@ -97,15 +97,15 @@ public static class GUIUtils
 		return mainCanvas;
 	}
 
-    public static void SetupCanvasToVR(Canvas canvas, Transform parent)
+    public static void SetCanvasToWorldSpace(Canvas canvas, Transform parent, float depth, float scale)
     {
         canvas.renderMode = RenderMode.WorldSpace;
         canvas.worldCamera = Camera.main;
         var canvasTransform = canvas.GetComponent<Transform>();
         canvasTransform.parent = parent;
-        canvasTransform.localPosition = new Vector3(0.0f, 0.0f, 1.0f);
+        canvasTransform.localPosition = new Vector3(0.0f, 0.0f, depth);
         canvasTransform.localRotation = Quaternion.identity;
-        canvasTransform.localScale = new Vector3(0.003f, 0.003f, 0.003f);
+        canvasTransform.localScale = new Vector3(scale, scale, scale);
     }
 
 	public static GameObject CreateEventSystem()

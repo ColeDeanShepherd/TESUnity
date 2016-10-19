@@ -89,7 +89,7 @@ namespace TESUnity
 			canvasObj = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-            _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas);
+            _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas.transform);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
 			RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;

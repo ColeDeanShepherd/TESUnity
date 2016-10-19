@@ -68,10 +68,10 @@ namespace TESUnity.UI
                 OnClosed(_bookRecord);
         }
 
-        public static UIScroll Create(GameObject parent)
+        public static UIScroll Create(Transform parent)
         {
             var uiScrollAsset = Resources.Load<GameObject>("UI/Scroll");
-            var uiScrollGO = (GameObject)GameObject.Instantiate(uiScrollAsset, parent.transform);
+            var uiScrollGO = (GameObject)GameObject.Instantiate(uiScrollAsset, parent);
             return uiScrollGO.GetComponent<UIScroll>();
         }
     }

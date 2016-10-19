@@ -1,4 +1,5 @@
 ﻿using TESUnity.Components;
+using TESUnity.UI;
 using UnityEngine;
 using UnityEngine.VR;
 
@@ -42,6 +43,8 @@ namespace TESUnity
         public PlayerInventory inventory;
         public Transform leftHand;
         public Transform rightHand;
+        public Canvas mainCanvas;
+        public Canvas hudCanvas;
 
         private CapsuleCollider capsuleCollider;
         private new Rigidbody rigidbody;
@@ -67,14 +70,54 @@ namespace TESUnity
             leftHand = CreateHand(true);
             rightHand = CreateHand(false);
 
+            // HUD and UI uses the same canvas in Flat mode.
+            mainCanvas = GUIUtils.MainCanvas.GetComponent<Canvas>();
+            hudCanvas = GUIUtils.MainCanvas.GetComponent<Canvas>();
+
             if (VRSettings.enabled)
             {
                 InputTracking.Recenter();
                 // Put the Canvas in WorldSpace and Attach it to the camera.
-                GUIUtils.SetupCanvasToVR(FindObjectOfType<Canvas>(), Camera.main.transform.parent);
+
+                // Add a pivot to the UI. It'll help to rotate it in the inverse direction of the camera.
+                var uiPivot = new GameObject("UI Pivot");
+                var uipTransform = uiPivot.GetComponent<Transform>();
+                uipTransform.parent = transform;
+                uipTransform.localPosition = Vector3.zero;
+                uipTransform.localRotation = Quaternion.identity;
+                uipTransform.localScale = Vector3.one;
+                GUIUtils.SetCanvasToWorldSpace(mainCanvas, uipTransform, 1.0f, 0.003f);
+
+                // Add the HUD
+                var hud = GUIUtils.CreateCanvas();
+                hudCanvas = hud.GetComponent<Canvas>();
+                hud.name = "HUD";
+                GUIUtils.SetCanvasToWorldSpace(hud.GetComponent<Canvas>(), Camera.main.GetComponent<Transform>(), 1.0f, 0.003f);
+
+                // We have to do that in an other place. A prefab for the player is a good start.
+                var interactiveText = mainCanvas.GetComponentInChildren<UIInteractiveText>();
+                var itRect = interactiveText.GetComponent<RectTransform>();
+                itRect.SetParent(hud.GetComponent<RectTransform>());
+
+                // Setup the camera
                 Camera.main.nearClipPlane = 0.1f;
 
                 _crosshair.GetComponent<UnityEngine.UI.Image>().enabled = false;
+            }
+        }
+        
+        public void RecenterUI()
+        {
+            if (VRSettings.enabled)
+            {
+                var camTransform = Camera.main.GetComponent<Transform>();
+                var pivot = mainCanvas.transform.parent;
+                pivot.localRotation = camTransform.localRotation;
+
+                var camPosition = camTransform.localPosition;
+                var targetPosition = pivot.localPosition;
+                targetPosition.y = camPosition.y;
+                pivot.localPosition = targetPosition;
             }
         }
 

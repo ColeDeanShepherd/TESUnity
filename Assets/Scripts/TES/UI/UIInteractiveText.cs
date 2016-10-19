@@ -64,10 +64,10 @@ namespace TESUnity.UI
             }
         }
 
-        public static UIInteractiveText Create(GameObject parent)
+        public static UIInteractiveText Create(Transform parent)
         {
             var interactiveTextAsset = Resources.Load<GameObject>("UI/InteractiveText");
-            var interactiveTextGO = (GameObject)GameObject.Instantiate(interactiveTextAsset, parent.transform);
+            var interactiveTextGO = (GameObject)GameObject.Instantiate(interactiveTextAsset, parent);
             return interactiveTextGO.GetComponent<UIInteractiveText>();
         }
     }
