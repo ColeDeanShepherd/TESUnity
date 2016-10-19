@@ -42,14 +42,16 @@ namespace TESUnity.UI
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
             transform.localScale = Vector3.one;
-            Close();
+            
+            if (_bookRecord == null)
+                Close();
         }
 
         void Update()
         {
-            if (Input.GetButtonDown("Button_3"))
+            if (Input.GetButtonDown("Use"))
                 Take();
-            else if (Input.GetButton("Button_2"))
+            else if (Input.GetButton("Menu"))
                 Close();
         }
 
@@ -72,7 +74,7 @@ namespace TESUnity.UI
             // Ceil returns the bad value... 16.6 returns 16..
             _numberOfPages = Mathf.CeilToInt(countChar / _numCharPerPage) + 1;
             _pages = new string[_numberOfPages];
-            
+
             for (int i = 0; i < countChar; i++)
             {
                 if (i % _numCharPerPage == 0 && i > 0)

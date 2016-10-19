@@ -1,4 +1,5 @@
-﻿using TESUnity.Components;
+﻿using System.Collections;
+using TESUnity.Components;
 using TESUnity.UI;
 using UnityEngine;
 using UnityEngine.VR;
@@ -8,6 +9,7 @@ namespace TESUnity
     public class PlayerComponent : MonoBehaviour
     {
         private bool _paused = false;
+        private bool _vrEnabled = false;
 
         public float slowSpeed = 3;
         public float normalSpeed = 5;
@@ -53,6 +55,23 @@ namespace TESUnity
         private bool _isFlying = false;
         private GameObject _crosshair;
 
+        void Awake()
+        {
+            _vrEnabled = VRSettings.enabled;
+#if OSVR
+            var clientKitGO = new GameObject("ClientKit");
+            clientKitGO.SetActive(false);
+
+            var clientKit = clientKitGO.AddComponent<OSVR.Unity.ClientKit>();
+            clientKit.AppID = "io.github.TESUnity";
+            clientKitGO.SetActive(true);
+
+            _vrEnabled = clientKit != null && clientKit.context != null && clientKit.context.CheckStatus();
+
+            VRSettings.enabled = false;
+#endif
+        }
+
         private void Start()
         {
             capsuleCollider = GetComponent<CapsuleCollider>();
@@ -74,9 +93,21 @@ namespace TESUnity
             mainCanvas = GUIUtils.MainCanvas.GetComponent<Canvas>();
             hudCanvas = GUIUtils.MainCanvas.GetComponent<Canvas>();
 
-            if (VRSettings.enabled)
+            InitializeVR();
+        }
+
+        #region Virtual Reality
+
+        /// <summary>
+        /// Intialize the VR support for the player.
+        /// - The HUD and UI will use a WorldSpace Canvas
+        /// - The HUD canvas is not recommanded, it's usefull for small informations
+        /// - The UI is for all other UIs: Menu, Life, etc.
+        /// </summary>
+        private void InitializeVR()
+        {
+            if (_vrEnabled)
             {
-                InputTracking.Recenter();
                 // Put the Canvas in WorldSpace and Attach it to the camera.
 
                 // Add a pivot to the UI. It'll help to rotate it in the inverse direction of the camera.
@@ -95,7 +126,7 @@ namespace TESUnity
                 GUIUtils.SetCanvasToWorldSpace(hud.GetComponent<Canvas>(), Camera.main.GetComponent<Transform>(), 1.0f, 0.003f);
 
                 // We have to do that in an other place. A prefab for the player is a good start.
-                var interactiveText = mainCanvas.GetComponentInChildren<UIInteractiveText>();
+                var interactiveText = mainCanvas.GetComponentInChildren<UIInteractiveText>(true);
                 var itRect = interactiveText.GetComponent<RectTransform>();
                 itRect.SetParent(hud.GetComponent<RectTransform>());
 
@@ -103,12 +134,27 @@ namespace TESUnity
                 Camera.main.nearClipPlane = 0.1f;
 
                 _crosshair.GetComponent<UnityEngine.UI.Image>().enabled = false;
+
+#if OSVR
+                // OSVR: Open Source VR Implementation
+                var displayController = Camera.main.transform.parent.gameObject.AddComponent<OSVR.Unity.DisplayController>();
+                displayController.showDirectModePreview = true;
+                camera.gameObject.AddComponent<OSVR.Unity.VRViewer>();
+#endif
+
+                ResetOrientationAndPosition();
             }
         }
-        
-        public void RecenterUI()
+
+        /// <summary>
+        /// Recenter the Main UI.
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator RecenterUI()
         {
-            if (VRSettings.enabled)
+            yield return new WaitForSeconds(0.1f);
+
+            if (_vrEnabled)
             {
                 var camTransform = Camera.main.GetComponent<Transform>();
                 var pivot = mainCanvas.transform.parent;
@@ -121,8 +167,50 @@ namespace TESUnity
             }
         }
 
+        /// <summary>
+        /// Reset the orientation and the position of the HMD.
+        /// </summary>
+        /// <param name="delay">Delay before reseting.</param>
+        /// <returns>IEnumerator.</returns>
+        private IEnumerator ResetOrientationAndPosition(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (_vrEnabled)
+            {
+#if OSVR
+                var clientKit = OSVR.Unity.ClientKit.instance;
+                var displayController = FindObjectOfType<OSVR.Unity.DisplayController>();
+
+                if (clientKit != null && displayController != null)
+                {
+                    if (displayController.UseRenderManager)
+                        displayController.RenderManager.SetRoomRotationUsingHead();
+                    else
+                        clientKit.context.SetRoomRotationUsingHead();
+                }
+#else
+                InputTracking.Recenter();
+#endif
+            }
+        }
+
+        /// <summary>
+        /// Reset the orientation and the position of the HMD with a delay of 0.1ms.
+        /// </summary>
+        public void ResetOrientationAndPosition()
+        {
+            StartCoroutine(ResetOrientationAndPosition(0.1f));
+        }
+
+        #endregion
+
         private void Update()
         {
+            // At any time, the user might want to reset the orientation and position.
+            if (Input.GetButtonDown("Recenter"))
+                ResetOrientationAndPosition();
+
             if (_paused)
                 return;
 
@@ -133,7 +221,7 @@ namespace TESUnity
                 isFlying = !isFlying;
             }
 
-            if (isGrounded && !isFlying && Input.GetButtonDown("Button_4"))
+            if (isGrounded && !isFlying && Input.GetButtonDown("Jump"))
             {
                 var newVelocity = rigidbody.velocity;
                 newVelocity.y = 5;
@@ -146,9 +234,6 @@ namespace TESUnity
                 var light = lantern.GetComponent<Light>();
                 light.enabled = !light.enabled;
             }
-
-            if (Input.GetButtonDown("Recenter"))
-                InputTracking.Recenter();
         }
 
         private void FixedUpdate()
@@ -318,6 +403,9 @@ namespace TESUnity
             Time.timeScale = pause ? 0.0f : 1.0f;
             Cursor.lockState = pause ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = pause;
+
+            if (_paused)
+                RecenterUI();
         }
 
         private Transform CreateHand(bool left)

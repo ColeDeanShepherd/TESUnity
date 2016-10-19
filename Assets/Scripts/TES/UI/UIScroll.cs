@@ -26,14 +26,16 @@ namespace TESUnity.UI
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
             transform.localScale = Vector3.one;
-            Close();
+
+            if (_bookRecord == null)
+                Close();
         }
 
         void Update()
         {
-            if (Input.GetButtonDown("Button_3"))
+            if (Input.GetButtonDown("Use"))
                 Take();
-            else if (Input.GetButton("Button_2"))
+            else if (Input.GetButton("Menu"))
                 Close();
         }
 

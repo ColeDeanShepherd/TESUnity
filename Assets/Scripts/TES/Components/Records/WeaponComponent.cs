@@ -32,7 +32,7 @@ namespace TESUnity.Components.Records
         {
             if (_isEquiped)
             {
-                if (Input.GetButtonDown("Button_1"))
+                if (Input.GetButtonDown("Attack"))
                 {
                     if (_isVisible)
                         PlayAttackAnimation();
