@@ -38,6 +38,7 @@ namespace TESUnity
 
         [Header("VR")]
         public bool followHeadDirection = false;
+        public bool directModePreview = true;
 
         [Header("UI")]
         public Sprite UIBackgroundImg;

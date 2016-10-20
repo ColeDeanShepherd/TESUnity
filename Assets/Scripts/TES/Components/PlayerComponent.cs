@@ -2,24 +2,32 @@
 using TESUnity.Components;
 using TESUnity.UI;
 using UnityEngine;
-using UnityEngine.VR;
 
 namespace TESUnity
 {
     public class PlayerComponent : MonoBehaviour
     {
         private bool _paused = false;
-        private bool _vrEnabled = false;
+        private CapsuleCollider capsuleCollider;
+        private new Rigidbody rigidbody;
+        private bool isGrounded;
+        private bool _isFlying = false;
+        private UICrosshair _crosshair;
 
         public float slowSpeed = 3;
         public float normalSpeed = 5;
         public float fastSpeed = 10;
         public float flightSpeedMultiplier = 3;
         public float airborneForceMultiplier = 5;
-
         public float mouseSensitivity = 3;
         public float minVerticalAngle = -90;
         public float maxVerticalAngle = 90;
+        
+        public new GameObject camera;
+        public GameObject lantern;
+        public PlayerInventory inventory;
+        public Transform leftHand;
+        public Transform rightHand;
 
         public bool isFlying
         {
@@ -40,177 +48,24 @@ namespace TESUnity
             get { return _paused; }
         }
 
-        public new GameObject camera;
-        public GameObject lantern;
-        public PlayerInventory inventory;
-        public Transform leftHand;
-        public Transform rightHand;
-        public Canvas mainCanvas;
-        public Canvas hudCanvas;
-
-        private CapsuleCollider capsuleCollider;
-        private new Rigidbody rigidbody;
-
-        private bool isGrounded;
-        private bool _isFlying = false;
-        private GameObject _crosshair;
-
-        void Awake()
-        {
-            _vrEnabled = VRSettings.enabled;
-#if OSVR
-            var clientKitGO = new GameObject("ClientKit");
-            clientKitGO.SetActive(false);
-
-            var clientKit = clientKitGO.AddComponent<OSVR.Unity.ClientKit>();
-            clientKit.AppID = "io.github.TESUnity";
-            clientKitGO.SetActive(true);
-
-            _vrEnabled = clientKit != null && clientKit.context != null && clientKit.context.CheckStatus();
-
-            VRSettings.enabled = false;
-#endif
-        }
-
         private void Start()
         {
             capsuleCollider = GetComponent<CapsuleCollider>();
             rigidbody = GetComponent<Rigidbody>();
 
-            // Add the crosshair
+            // Add the crosshair and the cursor
             var textureManager = TESUnity.instance.TextureManager;
-            var crosshairTexture = textureManager.LoadTexture("target", true);
-            _crosshair = GUIUtils.CreateImage(GUIUtils.CreateSprite(crosshairTexture), GUIUtils.MainCanvas, 35, 35);
-
-            // The crosshair needs an X and Y flip
             var cursor = textureManager.LoadTexture("tx_cursor", true);
             Cursor.SetCursor(cursor, Vector2.zero, CursorMode.Auto);
+            _crosshair = UICrosshair.Create(GUIUtils.MainCanvas.transform);
 
+            // The two hands nodes.
             leftHand = CreateHand(true);
             rightHand = CreateHand(false);
-
-            // HUD and UI uses the same canvas in Flat mode.
-            mainCanvas = GUIUtils.MainCanvas.GetComponent<Canvas>();
-            hudCanvas = GUIUtils.MainCanvas.GetComponent<Canvas>();
-
-            InitializeVR();
         }
-
-        #region Virtual Reality
-
-        /// <summary>
-        /// Intialize the VR support for the player.
-        /// - The HUD and UI will use a WorldSpace Canvas
-        /// - The HUD canvas is not recommanded, it's usefull for small informations
-        /// - The UI is for all other UIs: Menu, Life, etc.
-        /// </summary>
-        private void InitializeVR()
-        {
-            if (_vrEnabled)
-            {
-                // Put the Canvas in WorldSpace and Attach it to the camera.
-
-                // Add a pivot to the UI. It'll help to rotate it in the inverse direction of the camera.
-                var uiPivot = new GameObject("UI Pivot");
-                var uipTransform = uiPivot.GetComponent<Transform>();
-                uipTransform.parent = transform;
-                uipTransform.localPosition = Vector3.zero;
-                uipTransform.localRotation = Quaternion.identity;
-                uipTransform.localScale = Vector3.one;
-                GUIUtils.SetCanvasToWorldSpace(mainCanvas, uipTransform, 1.0f, 0.003f);
-
-                // Add the HUD
-                var hud = GUIUtils.CreateCanvas();
-                hudCanvas = hud.GetComponent<Canvas>();
-                hud.name = "HUD";
-                GUIUtils.SetCanvasToWorldSpace(hud.GetComponent<Canvas>(), Camera.main.GetComponent<Transform>(), 1.0f, 0.003f);
-
-                // We have to do that in an other place. A prefab for the player is a good start.
-                var interactiveText = mainCanvas.GetComponentInChildren<UIInteractiveText>(true);
-                var itRect = interactiveText.GetComponent<RectTransform>();
-                itRect.SetParent(hud.GetComponent<RectTransform>());
-
-                // Setup the camera
-                Camera.main.nearClipPlane = 0.1f;
-
-                _crosshair.GetComponent<UnityEngine.UI.Image>().enabled = false;
-
-#if OSVR
-                // OSVR: Open Source VR Implementation
-                var displayController = Camera.main.transform.parent.gameObject.AddComponent<OSVR.Unity.DisplayController>();
-                displayController.showDirectModePreview = true;
-                camera.gameObject.AddComponent<OSVR.Unity.VRViewer>();
-#endif
-
-                ResetOrientationAndPosition();
-            }
-        }
-
-        /// <summary>
-        /// Recenter the Main UI.
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerator RecenterUI()
-        {
-            yield return new WaitForSeconds(0.1f);
-
-            if (_vrEnabled)
-            {
-                var camTransform = Camera.main.GetComponent<Transform>();
-                var pivot = mainCanvas.transform.parent;
-                pivot.localRotation = camTransform.localRotation;
-
-                var camPosition = camTransform.localPosition;
-                var targetPosition = pivot.localPosition;
-                targetPosition.y = camPosition.y;
-                pivot.localPosition = targetPosition;
-            }
-        }
-
-        /// <summary>
-        /// Reset the orientation and the position of the HMD.
-        /// </summary>
-        /// <param name="delay">Delay before reseting.</param>
-        /// <returns>IEnumerator.</returns>
-        private IEnumerator ResetOrientationAndPosition(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-
-            if (_vrEnabled)
-            {
-#if OSVR
-                var clientKit = OSVR.Unity.ClientKit.instance;
-                var displayController = FindObjectOfType<OSVR.Unity.DisplayController>();
-
-                if (clientKit != null && displayController != null)
-                {
-                    if (displayController.UseRenderManager)
-                        displayController.RenderManager.SetRoomRotationUsingHead();
-                    else
-                        clientKit.context.SetRoomRotationUsingHead();
-                }
-#else
-                InputTracking.Recenter();
-#endif
-            }
-        }
-
-        /// <summary>
-        /// Reset the orientation and the position of the HMD with a delay of 0.1ms.
-        /// </summary>
-        public void ResetOrientationAndPosition()
-        {
-            StartCoroutine(ResetOrientationAndPosition(0.1f));
-        }
-
-        #endregion
 
         private void Update()
         {
-            // At any time, the user might want to reset the orientation and position.
-            if (Input.GetButtonDown("Recenter"))
-                ResetOrientationAndPosition();
-
             if (_paused)
                 return;
 
@@ -404,8 +259,7 @@ namespace TESUnity
             Cursor.lockState = pause ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = pause;
 
-            if (_paused)
-                RecenterUI();
+            SendMessage("OnPlayerPause", pause);
         }
 
         private Transform CreateHand(bool left)

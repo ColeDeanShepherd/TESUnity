@@ -28,7 +28,7 @@ namespace TESUnity.Components.Records
 
             if (_uiBook == null)
             {
-                var uiTransform = Player.mainCanvas.GetComponent<Transform>();
+                var uiTransform = GUIUtils.MainCanvas.GetComponent<Transform>();
                 _uiBook = UIBook.Create(uiTransform);
                 _uiScroll = UIScroll.Create(uiTransform);
             }

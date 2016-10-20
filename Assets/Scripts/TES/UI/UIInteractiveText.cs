@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace TESUnity.UI
 {
-    public class UIInteractiveText : MonoBehaviour
+    public class UIInteractiveText : MonoBehaviour, IHUDWidget
     {
         private const int WidgetWidth = 200;
         private const int WidgetHeight = 100;
@@ -69,6 +70,12 @@ namespace TESUnity.UI
             var interactiveTextAsset = Resources.Load<GameObject>("UI/InteractiveText");
             var interactiveTextGO = (GameObject)GameObject.Instantiate(interactiveTextAsset, parent);
             return interactiveTextGO.GetComponent<UIInteractiveText>();
+        }
+
+        public void SetParent(Transform transform)
+        {
+            var rectTransform = GetComponent<RectTransform>();
+            rectTransform.SetParent(transform, false);
         }
     }
 }

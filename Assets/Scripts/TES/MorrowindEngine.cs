@@ -504,8 +504,8 @@ namespace TESUnity
 			ProcessObjectType<APPARecord>( tagTarget , refCellObjInfo , "Apparatus");
 			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
 			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
-            ProcessObjectType<CREARecord>( tagTarget , refCellObjInfo , "Creatures");
-            ProcessObjectType<NPC_Record>( tagTarget , refCellObjInfo , "NPCs");
+            ProcessObjectType<CREARecord>( tagTarget , refCellObjInfo , "Creature");
+            ProcessObjectType<NPC_Record>( tagTarget , refCellObjInfo , "NPC");
 		}
 
 		/// <summary>
@@ -954,6 +954,9 @@ namespace TESUnity
 
             // Inventory
             playerInventory = player.AddComponent<PlayerInventory>();
+
+            // VR Support
+            player.AddComponent<PlayerVRComponent>();
 
             var tes = TESUnity.instance;
 

@@ -1,6 +1,6 @@
 # TESUnity
 
-World viewers for Elder Scrolls games in the Unity game engine with VR support supporting Oculus and OpenVR.
+World viewers for Elder Scrolls games in the Unity game engine with VR support supporting Oculus, OSVR and OpenVR. For advanced VR support, please read the README.md located into the `Vendors` folder.
 
 ## Getting Started
 
@@ -33,6 +33,9 @@ The first step is to rename the `config.ini.dist` file to `config.ini`.
 |**Rendering** | |
 | Shader  | `Unlit` or `Standard` or `Default` or `Bumped` |
 | RenderPath  | `1` = Forward, `3` = Deferred |
+|**VR** | |
+| FollowHeadDirection | `True` or `False` |
+| DirectModePreview | `True` or `False` |
 |**Debug** | |
 | CreaturesEnabled | `True` or `False` |
 
