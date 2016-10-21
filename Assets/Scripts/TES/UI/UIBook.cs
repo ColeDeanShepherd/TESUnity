@@ -39,10 +39,8 @@ namespace TESUnity.UI
         {
             var texture = TESUnity.instance.TextureManager.LoadTexture("tx_menubook", true);
             _background.sprite = GUIUtils.CreateSprite(texture);
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
-            transform.localScale = Vector3.one;
-            
+
+            // If the book is already opened, don't change its transform.
             if (_bookRecord == null)
                 Close();
         }
@@ -162,6 +160,10 @@ namespace TESUnity.UI
         {
             var uiBookAsset = Resources.Load<GameObject>("UI/Book");
             var uiBookGO = (GameObject)GameObject.Instantiate(uiBookAsset, parent);
+            var uiTransform = uiBookGO.GetComponent<RectTransform>();
+            uiTransform.localPosition = Vector3.zero;
+            uiTransform.localRotation = Quaternion.identity;
+            uiTransform.localScale = Vector3.one;
             return uiBookGO.GetComponent<UIBook>();
         }
     }

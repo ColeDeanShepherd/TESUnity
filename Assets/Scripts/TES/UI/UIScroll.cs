@@ -23,10 +23,8 @@ namespace TESUnity.UI
         {
             var texture = TESUnity.instance.TextureManager.LoadTexture("scroll", true);
             _background.sprite = GUIUtils.CreateSprite(texture);
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
-            transform.localScale = Vector3.one;
 
+            // If the book is already opened, don't change its transform.
             if (_bookRecord == null)
                 Close();
         }
@@ -74,6 +72,10 @@ namespace TESUnity.UI
         {
             var uiScrollAsset = Resources.Load<GameObject>("UI/Scroll");
             var uiScrollGO = (GameObject)GameObject.Instantiate(uiScrollAsset, parent);
+            var uiTransform = uiScrollGO.GetComponent<RectTransform>();
+            uiTransform.localPosition = Vector3.zero;
+            uiTransform.localRotation = Quaternion.identity;
+            uiTransform.localScale = Vector3.one;
             return uiScrollGO.GetComponent<UIScroll>();
         }
     }

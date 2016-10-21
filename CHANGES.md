@@ -1,5 +1,11 @@
 #TESUnity Changelog
 
+## Version 0.5 - 10/21/2016
+### Added
+- OSVR Support
+- Other VR SDKs Support (not yet enabled)
+- Enhanced VR support for UI and HUD
+
 ## Version 0.4 - 10/18/2016
 ### Added
 - New flags to enable new features (see readme.md)

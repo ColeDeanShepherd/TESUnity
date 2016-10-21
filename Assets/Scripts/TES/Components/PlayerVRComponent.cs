@@ -125,11 +125,8 @@ namespace TESUnity.Components
         /// <summary>
         /// Recenter the Main UI.
         /// </summary>
-        /// <returns></returns>
-        private IEnumerator RecenterUI()
+        private void RecenterUI()
         {
-            yield return new WaitForSeconds(0.1f);
-
             if (_vrVendor != VRVendor.None)
             {
                 var pivotRot = _pivotCanvas.localRotation;
@@ -179,10 +176,10 @@ namespace TESUnity.Components
         /// Sent by the PlayerComponent when the pause method is called.
         /// </summary>
         /// <param name="paused">Boolean: Indicates if the player is paused.</param>
-        void OnPlayerPause(object paused)
+        void OnPlayerPause(bool paused)
         {
-            if (((bool)paused))
-                StartCoroutine(RecenterUI());
+            if (paused)
+                RecenterUI();
         }
     }
 }

@@ -76,6 +76,9 @@ namespace TESUnity.UI
         {
             var rectTransform = GetComponent<RectTransform>();
             rectTransform.SetParent(transform, false);
+            rectTransform.localPosition = Vector3.zero;
+            rectTransform.localRotation = Quaternion.identity;
+            rectTransform.localScale = Vector3.one;
         }
     }
 }
