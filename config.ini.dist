@@ -2,7 +2,7 @@
 
 [Global]
 PlayMusic = True
-MorrowindPath = C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files
+MorrowindPath = C:\Users\demon\Documents\Unity\Demonixis\TESUnity\Data Files
 
 [Rendering]
 RenderPath = 1
@@ -11,18 +11,19 @@ Shader = Bumped
 [Lighting]
 AnimateLights = False
 SunShadows = True
-LightShadows = False
+LightShadows = True
 RenderExteriorCellLights = False
 
 [Effects]
 AntiAliasing = False
 AmbientOcclusion = False
-Bloom = False
+Bloom = True
 WaterBackSideTransparent = False
 
 [VR]
-FollowHeadDirection = False
+FollowHeadDirection = True
+DirectModePreview = False
 
 [Debug]
-CreaturesEnabled = False
+CreaturesEnabled = True
 

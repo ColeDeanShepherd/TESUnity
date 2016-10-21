@@ -55,7 +55,8 @@ MonoBehaviour:
   ambientOcclusion: 0
   bloom: 0
   waterBackSideTransparent: 0
-  followHeadDirection: 0
+  followHeadDirection: 1
+  directModePreview: 1
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   UIDropdownArrowImg: {fileID: 10915, guid: 0000000000000000f000000000000000, type: 0}
@@ -66,7 +67,7 @@ MonoBehaviour:
   UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   waterPrefab: {fileID: 1000013936092580, guid: e8e3a26facab0b742b401e1c0da419dc,
     type: 2}
-  creaturesEnabled: 0
+  creaturesEnabled: 1
   npcsEnabled: 0
 --- !u!114 &11482094
 MonoBehaviour:

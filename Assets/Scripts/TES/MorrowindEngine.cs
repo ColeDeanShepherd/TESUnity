@@ -89,7 +89,7 @@ namespace TESUnity
 			canvasObj = GUIUtils.CreateCanvas();
 			GUIUtils.CreateEventSystem();
 
-            _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas);
+            _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas.transform);
 
 			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
 			RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;
@@ -240,7 +240,7 @@ namespace TESUnity
 
                         ShowInteractiveText(component);
 
-                        if (Input.GetButtonDown("Button_1"))
+                        if (Input.GetButtonDown("Use"))
                         {
                             if (component is DoorComponent)
                                 OpenDoor((DoorComponent)component);
@@ -504,8 +504,8 @@ namespace TESUnity
 			ProcessObjectType<APPARecord>( tagTarget , refCellObjInfo , "Apparatus");
 			ProcessObjectType<BOOKRecord>( tagTarget , refCellObjInfo , "Book");
 			ProcessObjectType<MISCRecord>( tagTarget , refCellObjInfo , "MiscObj");
-            ProcessObjectType<CREARecord>( tagTarget , refCellObjInfo , "Creatures");
-            ProcessObjectType<NPC_Record>( tagTarget , refCellObjInfo , "NPCs");
+            ProcessObjectType<CREARecord>( tagTarget , refCellObjInfo , "Creature");
+            ProcessObjectType<NPC_Record>( tagTarget , refCellObjInfo , "NPC");
 		}
 
 		/// <summary>
@@ -954,6 +954,9 @@ namespace TESUnity
 
             // Inventory
             playerInventory = player.AddComponent<PlayerInventory>();
+
+            // VR Support
+            player.AddComponent<PlayerVRComponent>();
 
             var tes = TESUnity.instance;
 

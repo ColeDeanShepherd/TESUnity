@@ -1,22 +1,33 @@
-﻿using TESUnity.Components;
+﻿using System.Collections;
+using TESUnity.Components;
+using TESUnity.UI;
 using UnityEngine;
-using UnityEngine.VR;
 
 namespace TESUnity
 {
     public class PlayerComponent : MonoBehaviour
     {
         private bool _paused = false;
+        private CapsuleCollider capsuleCollider;
+        private new Rigidbody rigidbody;
+        private bool isGrounded;
+        private bool _isFlying = false;
+        private UICrosshair _crosshair;
 
         public float slowSpeed = 3;
         public float normalSpeed = 5;
         public float fastSpeed = 10;
         public float flightSpeedMultiplier = 3;
         public float airborneForceMultiplier = 5;
-
         public float mouseSensitivity = 3;
         public float minVerticalAngle = -90;
         public float maxVerticalAngle = 90;
+        
+        public new GameObject camera;
+        public GameObject lantern;
+        public PlayerInventory inventory;
+        public Transform leftHand;
+        public Transform rightHand;
 
         public bool isFlying
         {
@@ -37,45 +48,20 @@ namespace TESUnity
             get { return _paused; }
         }
 
-        public new GameObject camera;
-        public GameObject lantern;
-        public PlayerInventory inventory;
-        public Transform leftHand;
-        public Transform rightHand;
-
-        private CapsuleCollider capsuleCollider;
-        private new Rigidbody rigidbody;
-
-        private bool isGrounded;
-        private bool _isFlying = false;
-        private GameObject _crosshair;
-
         private void Start()
         {
             capsuleCollider = GetComponent<CapsuleCollider>();
             rigidbody = GetComponent<Rigidbody>();
 
-            // Add the crosshair
+            // Add the crosshair and the cursor
             var textureManager = TESUnity.instance.TextureManager;
-            var crosshairTexture = textureManager.LoadTexture("target", true);
-            _crosshair = GUIUtils.CreateImage(GUIUtils.CreateSprite(crosshairTexture), GUIUtils.MainCanvas, 35, 35);
-
-            // The crosshair needs an X and Y flip
             var cursor = textureManager.LoadTexture("tx_cursor", true);
             Cursor.SetCursor(cursor, Vector2.zero, CursorMode.Auto);
+            _crosshair = UICrosshair.Create(GUIUtils.MainCanvas.transform);
 
+            // The two hands nodes.
             leftHand = CreateHand(true);
             rightHand = CreateHand(false);
-
-            if (VRSettings.enabled)
-            {
-                InputTracking.Recenter();
-                // Put the Canvas in WorldSpace and Attach it to the camera.
-                GUIUtils.SetupCanvasToVR(FindObjectOfType<Canvas>(), Camera.main.transform.parent);
-                Camera.main.nearClipPlane = 0.1f;
-
-                _crosshair.GetComponent<UnityEngine.UI.Image>().enabled = false;
-            }
         }
 
         private void Update()
@@ -90,7 +76,7 @@ namespace TESUnity
                 isFlying = !isFlying;
             }
 
-            if (isGrounded && !isFlying && Input.GetButtonDown("Button_4"))
+            if (isGrounded && !isFlying && Input.GetButtonDown("Jump"))
             {
                 var newVelocity = rigidbody.velocity;
                 newVelocity.y = 5;
@@ -103,9 +89,6 @@ namespace TESUnity
                 var light = lantern.GetComponent<Light>();
                 light.enabled = !light.enabled;
             }
-
-            if (Input.GetButtonDown("Recenter"))
-                InputTracking.Recenter();
         }
 
         private void FixedUpdate()
@@ -275,6 +258,8 @@ namespace TESUnity
             Time.timeScale = pause ? 0.0f : 1.0f;
             Cursor.lockState = pause ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = pause;
+
+            SendMessage("OnPlayerPause", pause);
         }
 
         private Transform CreateHand(bool left)

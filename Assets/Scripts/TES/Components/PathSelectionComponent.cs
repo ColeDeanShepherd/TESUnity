@@ -159,6 +159,7 @@ namespace TESUnity.Components
                                     case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
                                     case "MorrowindPath": tes.dataPath = value; break;
                                     case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
+                                    case "DirectModePreview": tes.directModePreview = ParseBool(value, tes.directModePreview); break;
                                     case "SunShadows": tes.renderSunShadows = ParseBool(value, tes.renderSunShadows); break;
                                     case "LightShadows": tes.renderLightShadows = ParseBool(value, tes.renderLightShadows); break;
                                     case "PlayMusic": tes.playMusic = ParseBool(value, tes.playMusic); break;

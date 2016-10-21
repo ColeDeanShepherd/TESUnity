@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using TESUnity.ESM;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,17 +39,17 @@ namespace TESUnity.UI
         {
             var texture = TESUnity.instance.TextureManager.LoadTexture("tx_menubook", true);
             _background.sprite = GUIUtils.CreateSprite(texture);
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
-            transform.localScale = Vector3.one;
-            Close();
+
+            // If the book is already opened, don't change its transform.
+            if (_bookRecord == null)
+                Close();
         }
 
         void Update()
         {
-            if (Input.GetButtonDown("Button_3"))
+            if (Input.GetButtonDown("Use"))
                 Take();
-            else if (Input.GetButton("Button_2"))
+            else if (Input.GetButton("Menu"))
                 Close();
         }
 
@@ -73,7 +72,7 @@ namespace TESUnity.UI
             // Ceil returns the bad value... 16.6 returns 16..
             _numberOfPages = Mathf.CeilToInt(countChar / _numCharPerPage) + 1;
             _pages = new string[_numberOfPages];
-            
+
             for (int i = 0; i < countChar; i++)
             {
                 if (i % _numCharPerPage == 0 && i > 0)
@@ -157,10 +156,14 @@ namespace TESUnity.UI
                 OnClosed(_bookRecord);
         }
 
-        public static UIBook Create(GameObject parent)
+        public static UIBook Create(Transform parent)
         {
             var uiBookAsset = Resources.Load<GameObject>("UI/Book");
-            var uiBookGO = (GameObject)GameObject.Instantiate(uiBookAsset, parent.transform);
+            var uiBookGO = (GameObject)GameObject.Instantiate(uiBookAsset, parent);
+            var uiTransform = uiBookGO.GetComponent<RectTransform>();
+            uiTransform.localPosition = Vector3.zero;
+            uiTransform.localRotation = Quaternion.identity;
+            uiTransform.localScale = Vector3.one;
             return uiBookGO.GetComponent<UIBook>();
         }
     }

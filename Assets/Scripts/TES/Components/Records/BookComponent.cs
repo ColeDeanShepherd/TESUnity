@@ -28,8 +28,9 @@ namespace TESUnity.Components.Records
 
             if (_uiBook == null)
             {
-                _uiBook = UIBook.Create(GUIUtils.MainCanvas);
-                _uiScroll = UIScroll.Create(GUIUtils.MainCanvas);
+                var uiTransform = GUIUtils.MainCanvas.GetComponent<Transform>();
+                _uiBook = UIBook.Create(uiTransform);
+                _uiScroll = UIScroll.Create(uiTransform);
             }
 
             var BOOK = (BOOKRecord)record;

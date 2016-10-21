@@ -83,29 +83,39 @@ public static class GUIUtils
         }
     }
 
-    public static GameObject CreateCanvas()
+    /// <summary>
+    /// Create a canvas node.
+    /// </summary>
+    /// <param name="isMainCanvas">Indicates if this canvas will be the main canvas.</param>
+    /// <returns>Returns the GameObject that contains the Canvas element.</returns>
+    public static GameObject CreateCanvas(bool isMainCanvas = true)
 	{
-		mainCanvas = CreateUIObject("Canvas");
-        var canvas =  mainCanvas.AddComponent<Canvas>();
+		var canvasGO = CreateUIObject("Canvas");
+        var canvas = canvasGO.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-		var scaler = mainCanvas.AddComponent<CanvasScaler>();
+
+		var scaler = canvasGO.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1280, 720);
         scaler.matchWidthOrHeight = 1.0f;
-		mainCanvas.AddComponent<GraphicRaycaster>();
 
-		return mainCanvas;
+        canvasGO.AddComponent<GraphicRaycaster>();
+
+        if (isMainCanvas)
+            mainCanvas = canvasGO;
+
+		return canvasGO;
 	}
 
-    public static void SetupCanvasToVR(Canvas canvas, Transform parent)
+    public static void SetCanvasToWorldSpace(Canvas canvas, Transform parent, float depth, float scale)
     {
         canvas.renderMode = RenderMode.WorldSpace;
         canvas.worldCamera = Camera.main;
         var canvasTransform = canvas.GetComponent<Transform>();
         canvasTransform.parent = parent;
-        canvasTransform.localPosition = new Vector3(0.0f, 0.0f, 1.0f);
+        canvasTransform.localPosition = new Vector3(0.0f, 0.0f, depth);
         canvasTransform.localRotation = Quaternion.identity;
-        canvasTransform.localScale = new Vector3(0.003f, 0.003f, 0.003f);
+        canvasTransform.localScale = new Vector3(scale, scale, scale);
     }
 
 	public static GameObject CreateEventSystem()
