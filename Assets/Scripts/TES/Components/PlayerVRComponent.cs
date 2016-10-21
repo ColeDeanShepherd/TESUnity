@@ -16,7 +16,12 @@ namespace TESUnity.Components
     [RequireComponent(typeof(PlayerComponent))]
     public class PlayerVRComponent : MonoBehaviour
     {
-        private bool _vrEnabled = false;
+        public enum VRVendor
+        {
+            OSVR, UnityVR, None
+        }
+
+        private VRVendor _vrVendor = VRVendor.None;
         private Transform _camTransform = null;
         private Transform _canvas = null;
         private Transform _pivotCanvas = null;
@@ -24,18 +29,29 @@ namespace TESUnity.Components
 
         void Awake()
         {
-            _vrEnabled = VRSettings.enabled;
+            if (VRSettings.enabled)
+                _vrVendor = VRVendor.UnityVR;
 #if OSVR
             var clientKitGO = new GameObject("ClientKit");
             clientKitGO.SetActive(false);
 
             var clientKit = clientKitGO.AddComponent<ClientKit>();
             clientKit.AppID = "io.github.TESUnity";
+
+#if UNITY_STANDALONE_WIN
+            // Prevent OSVR Server to launch
+            clientKit.autoStartServer = false;
+#endif
+
             clientKitGO.SetActive(true);
 
-            _vrEnabled = clientKit != null && clientKit.context != null && clientKit.context.CheckStatus();
+            var osvrEnabled = clientKit != null && clientKit.context != null && clientKit.context.CheckStatus();
 
-            VRSettings.enabled = false;
+            if (osvrEnabled)
+            {
+                _vrVendor = VRVendor.OSVR;
+                VRSettings.enabled = false;
+            }
 #endif
         }
 
@@ -47,7 +63,7 @@ namespace TESUnity.Components
         /// </summary>
         void Start()
         {
-            if (_vrEnabled)
+            if (_vrVendor != VRVendor.None)
             {
                 var canvas = FindObjectOfType<Canvas>();
                 _canvas = canvas.GetComponent<Transform>();
@@ -79,12 +95,13 @@ namespace TESUnity.Components
                 Camera.main.nearClipPlane = 0.1f;
 
 #if OSVR
-                // OSVR: Open Source VR Implementation
-                var displayController = _camTransform.parent.gameObject.AddComponent<DisplayController>();
-                displayController.showDirectModePreview = TESUnity.instance.directModePreview;
-                Camera.main.gameObject.AddComponent<VRViewer>();
-#else
-                VRSettings.showDeviceView = TESUnity.instance.directModePreview;
+                if (_vrVendor == VRVendor.OSVR)
+                {
+                    // OSVR: Open Source VR Implementation
+                    var displayController = _camTransform.parent.gameObject.AddComponent<DisplayController>();
+                    displayController.showDirectModePreview = TESUnity.instance.directModePreview;
+                    Camera.main.gameObject.AddComponent<VRViewer>();
+                }
 #endif
 
 #if OCULUS
@@ -113,7 +130,7 @@ namespace TESUnity.Components
         {
             yield return new WaitForSeconds(0.1f);
 
-            if (_vrEnabled)
+            if (_vrVendor != VRVendor.None)
             {
                 var pivotRot = _pivotCanvas.localRotation;
                 pivotRot.y = _camTransform.localRotation.y;
@@ -130,9 +147,12 @@ namespace TESUnity.Components
         {
             yield return new WaitForSeconds(delay);
 
-            if (_vrEnabled)
-            {
+            if (_vrVendor == VRVendor.UnityVR)
+                InputTracking.Recenter();
+
 #if OSVR
+            if (_vrVendor == VRVendor.OSVR)
+            {
                 var clientKit = ClientKit.instance;
                 var displayController = FindObjectOfType<DisplayController>();
 
@@ -143,10 +163,8 @@ namespace TESUnity.Components
                     else
                         clientKit.context.SetRoomRotationUsingHead();
                 }
-#else
-                InputTracking.Recenter();
-#endif
             }
+#endif
         }
 
         /// <summary>
