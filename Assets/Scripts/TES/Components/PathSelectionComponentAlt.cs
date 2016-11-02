@@ -1,74 +1,53 @@
 ﻿using System.Collections;
 using System.IO;
+using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace TESUnity.Components
 {
     public class PathSelectionComponentAlt : MonoBehaviour
     {
-        private static readonly string SavePathKey = "keepMWPath";
-        private string defaultMWDataPath = "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files";
+        private static readonly string ConfigFile = "config.ini";
 
         [SerializeField]
-        private InputField _path;
+        private InputField _path = null;
         [SerializeField]
-        private Toggle _keepPath;
+        private Button _button = null;
         [SerializeField]
-        private Text _errorText;
+        private Text _infoMessage = null;
 
-        public TESUnity TESUnity
+        private void Awake()
         {
-            get
-            {
-                if (TESUnity.instance != null)
-                    return TESUnity.instance;
-
-                var tes = FindObjectOfType<TESUnity>();
-                if (tes == null)
-                {
-                    var go = new GameObject("TESUnity");
-                    tes = go.AddComponent<TESUnity>();
-                    tes.enabled = false;
-                }
-
-                return tes;
-            }
-        }
-
-        private void Start()
-        {
-            CheckConfigINI();
-
-            var savedPath = PlayerPrefs.GetString(SavePathKey, string.Empty);
+            var savedPath = CheckForPath();
             if (savedPath != string.Empty)
-                defaultMWDataPath = savedPath;
-
-            var path = Path.Combine(System.Environment.CurrentDirectory, "Data Files");
-            if (Directory.Exists(path))
-            {
-                LoadWorld(path);
-                return;
-            }
+                StartCoroutine(LoadWorld(savedPath));
         }
 
         private void LoadWorld()
         {
-            var path = _path.text;
-
-            if (_keepPath.isOn)
-                PlayerPrefs.SetString(SavePathKey, path);
-
-            LoadWorld(path);
+            // TODO: Add the path to the ini file.
+            StartCoroutine(LoadWorld(_path.text));
         }
 
-        private void LoadWorld(string path)
+        private IEnumerator LoadWorld(string path)
         {
             if (Directory.Exists(path))
             {
-                TESUnity.dataPath = path;
-                TESUnity.enabled = true;
-                Destroy(this);
+                _path.gameObject.SetActive(false);
+                _button.gameObject.SetActive(false);
+                _infoMessage.text = "Loading...";
+                _infoMessage.enabled = true;
+
+                var asyncOperation = SceneManager.LoadSceneAsync("Scene"); // TODO: Replace by Menu
+                var waitForSeconds = new WaitForSeconds(0.1f);
+
+                while (!asyncOperation.isDone)
+                {
+                    _infoMessage.text = string.Format("Loading {0}%", Mathf.RoundToInt(asyncOperation.progress * 100.0f));
+                    yield return waitForSeconds;
+                }
             }
             else
                 StartCoroutine(ShowErrorMessage("Invalid path."));
@@ -76,20 +55,25 @@ namespace TESUnity.Components
 
         private IEnumerator ShowErrorMessage(string message)
         {
-            _errorText.text = message;
-            _errorText.enabled = true;
+            _infoMessage.text = message;
+            _infoMessage.enabled = true;
             yield return new WaitForSeconds(5.0f);
-            _errorText.enabled = false;
+            _infoMessage.enabled = false;
         }
 
         /// <summary>
         /// Checks if a file named Config.ini is located left to the main executable.
         /// Open/Parse it and configure default values.
         /// </summary>
-        private void CheckConfigINI()
+        private string CheckForPath()
         {
+            var path = string.Empty;
+
             if (!File.Exists("config.ini"))
-                return;
+            {
+                CreateINIFile();
+                return string.Empty;
+            }
 
             using (var savedData = File.OpenText("config.ini"))
             {
@@ -101,45 +85,13 @@ namespace TESUnity.Components
                     {
                         var line = stream.ReadLine();
                         var temp = new string[2];
-                        var tes = TESUnity;
-                        var value = string.Empty;
 
-                        while (line != null)
+                        while (path == string.Empty)
                         {
                             temp = line.Split('=');
 
-                            if (temp.Length == 2)
-                            {
-                                value = temp[1].Trim();
-
-                                switch (temp[0].Trim())
-                                {
-                                    case "AntiAliasing": tes.antiAliasing = ParseBool(value, tes.antiAliasing); break;
-                                    case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
-                                    case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
-                                    case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
-                                    case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
-                                    case "SunShadows": tes.renderSunShadows = ParseBool(value, tes.renderSunShadows); break;
-                                    case "LightShadows": tes.renderLightShadows = ParseBool(value, tes.renderLightShadows); break;
-                                    case "PlayMusic": tes.playMusic = ParseBool(value, tes.playMusic); break;
-                                    case "RenderExteriorCellLights": tes.renderExteriorCellLights = ParseBool(value, tes.renderExteriorCellLights); break;
-                                    case "RenderPath":
-                                        var renderPathID = ParseInt(value, 0);
-                                        if (renderPathID == 1 || renderPathID == 3)
-                                            tes.renderPath = (RenderingPath)renderPathID;
-
-                                        break;
-                                    case "Shader":
-                                        switch (value)
-                                        {
-                                            case "Default": tes.materialType = TESUnity.MWMaterialType.Default; break;
-                                            case "Standard": tes.materialType = TESUnity.MWMaterialType.Standard; break;
-                                            case "Unlit": tes.materialType = TESUnity.MWMaterialType.Unlit; break;
-                                            default: tes.materialType = TESUnity.MWMaterialType.BumpedDiffuse; break;
-                                        }
-                                        break;
-                                }
-                            }
+                            if (temp.Length == 2 && temp[0].Trim() == "MorrowindDataPath")
+                                path = temp[1].Trim();
 
                             line = stream.ReadLine();
                         }
@@ -149,26 +101,49 @@ namespace TESUnity.Components
 
                 savedData.Close();
             }
+
+            return path;
         }
 
-        private bool ParseBool(string value, bool defaultValue)
+        private static void CreateINIFile()
         {
-            bool result;
+            var sb = new StringBuilder();
+            sb.Append("# TESUnity Configuration File\n");
+            sb.Append("\n");
 
-            if (bool.TryParse(value, out result))
-                return result;
+            sb.Append("[Global]\n");
+            sb.Append("PlayMusic = True");
+            sb.Append("MorrowindPath = \n");
+            sb.Append("\n");
 
-            return defaultValue;
-        }
+            sb.Append("[Rendering]\n");
+            sb.Append("RenderPath = 1\n");
+            sb.Append("Shader = Standard\n");
+            sb.Append("\n");
 
-        private int ParseInt(string value, int defaultValue)
-        {
-            int result;
+            sb.Append("[Lighting]\n");
+            sb.Append("AnimateLights = False\n");
+            sb.Append("SunShadows = True\n");
+            sb.Append("LightShadows = True\n");
+            sb.Append("RenderExteriorCellLights = False\n");
+            sb.Append("\n");
 
-            if (int.TryParse(value, out result))
-                return result;
+            sb.Append("[Effects]\n");
+            sb.Append("AntiAliasing = False\n");
+            sb.Append("AmbientOcclusion = False\n");
+            sb.Append("Bloom = True\n");
+            sb.Append("WaterBackSideTransparent = False\n");
+            sb.Append("\n");
 
-            return defaultValue;
+            sb.Append("[VR]\n");
+            sb.Append("FollowHeadDirection = False\n");
+            sb.Append("DirectModePreview = False\n");
+            sb.Append("\n");
+
+            sb.Append("[Debug]\n");
+            sb.Append("CreaturesEnabled = True\n");
+
+            File.WriteAllText(ConfigFile, sb.ToString());
         }
     }
 }

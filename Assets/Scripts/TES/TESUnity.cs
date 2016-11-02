@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using UnityEngine;
 
 namespace TESUnity
@@ -64,6 +65,8 @@ namespace TESUnity
         private GameObject testObj;
         private string testObjPath;
 
+        public event Action LoadingCompleted = null;
+
         public MorrowindEngine Engine
         {
             get { return MWEngine; }
@@ -98,6 +101,9 @@ namespace TESUnity
                 }
                 musicPlayer.Play();
             }
+
+            if (LoadingCompleted != null)
+                LoadingCompleted();
 
             // Spawn the player.
             //MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
