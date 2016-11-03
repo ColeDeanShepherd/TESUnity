@@ -10,6 +10,7 @@ namespace TESUnity.Components
     public class PathSelectionComponentAlt : MonoBehaviour
     {
         private static readonly string ConfigFile = "config.ini";
+        private static readonly string MWDataPathName = "MorrowindDataPath";
 
         [SerializeField]
         private InputField _path = null;
@@ -25,25 +26,38 @@ namespace TESUnity.Components
                 StartCoroutine(LoadWorld(savedPath));
         }
 
-        private void LoadWorld()
+        public void LoadWorld()
         {
-            // TODO: Add the path to the ini file.
-            StartCoroutine(LoadWorld(_path.text));
+            var path = _path.text;
+
+            if (IsValidPath(path))
+            {
+                CreateINIFile();
+
+                var lines = File.ReadAllLines(ConfigFile);
+                for (var i = 0; i < lines.Length; i++)
+                    if (lines[i].Contains(MWDataPathName))
+                        lines[i] = string.Format("{0} = {1}", MWDataPathName, path);
+
+                File.WriteAllLines(ConfigFile, lines);
+
+                StartCoroutine(LoadWorld(_path.text));
+            }
+            else
+                StartCoroutine(ShowErrorMessage("This path is not valid."));
+
         }
 
         private IEnumerator LoadWorld(string path)
         {
-            if (!path.Contains("Data Files"))
-                path = Path.Combine(path, "Data Files");
-
-            if (Directory.Exists(path))
+            if (IsValidPath(path))
             {
                 _path.gameObject.SetActive(false);
                 _button.gameObject.SetActive(false);
                 _infoMessage.text = "Loading...";
                 _infoMessage.enabled = true;
-
-                var asyncOperation = SceneManager.LoadSceneAsync("Scene"); // TODO: Replace by Menu
+                
+                var asyncOperation = SceneManager.LoadSceneAsync("Scene");
                 var waitForSeconds = new WaitForSeconds(0.1f);
 
                 while (!asyncOperation.isDone)
@@ -64,48 +78,32 @@ namespace TESUnity.Components
             _infoMessage.enabled = false;
         }
 
+        private bool IsValidPath(string path)
+        {
+            return File.Exists(Path.Combine(path, "Morrowind.esm"));
+        }
+
         /// <summary>
         /// Checks if a file named Config.ini is located left to the main executable.
         /// Open/Parse it and configure default values.
         /// </summary>
         private string CheckForPath()
         {
-            var path = string.Empty;
-
             if (!File.Exists("config.ini"))
-            {
-                CreateINIFile();
                 return string.Empty;
-            }
 
-            using (var savedData = File.OpenText("config.ini"))
+            var lines = File.ReadAllLines(ConfigFile);
+            foreach (var line in lines)
             {
-                var text = savedData.ReadToEnd();
-
-                if (text != string.Empty)
+                if (line.Contains(MWDataPathName))
                 {
-                    using (var stream = new StringReader(text))
-                    {
-                        var line = stream.ReadLine();
-                        var temp = new string[2];
-
-                        while (path == string.Empty)
-                        {
-                            temp = line.Split('=');
-
-                            if (temp.Length == 2 && temp[0].Trim() == "MorrowindPath")
-                                path = temp[1].Trim();
-
-                            line = stream.ReadLine();
-                        }
-                        stream.Close();
-                    }
+                    var tmp = line.Split('=');
+                    if (tmp.Length == 2)
+                        return tmp[1].Trim();
                 }
-
-                savedData.Close();
             }
 
-            return path;
+            return string.Empty;
         }
 
         private static void CreateINIFile()
@@ -116,7 +114,7 @@ namespace TESUnity.Components
 
             sb.Append("[Global]\r\n");
             sb.Append("PlayMusic = True\r\n");
-            sb.Append("MorrowindPath = \r\n");
+            sb.Append(string.Format("{0} = \r\n", MWDataPathName));
             sb.Append("\r\n");
 
             sb.Append("[Rendering]\r\n");

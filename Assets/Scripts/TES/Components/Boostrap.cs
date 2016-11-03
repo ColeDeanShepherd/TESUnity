@@ -22,16 +22,18 @@ namespace TESUnity
             // We need to do that in the menu and use it only in the editor.
             var path = CheckConfigINI(tes);
 
-            if (!path.Contains("Data Files"))
-                path = Path.Combine(path, "Data Files");
-
-            if (Directory.Exists(path))
+            if (!File.Exists(Path.Combine(path, "Morrowind.esm")))
             {
-                tes.dataPath = path;
-                tes.enabled = true;
+                var lines = File.ReadAllLines(ConfigFile);
+                for (var i = 0; i < lines.Length; i++)
+                    if (lines[i].Contains("MorrowindDataPath"))
+                        lines[i] = string.Format("MorrowindDataPath = ");
+
+                File.WriteAllLines(ConfigFile, lines);
             }
-            else
-                SceneManager.LoadScene("AskPath");
+
+            tes.dataPath = path;
+            tes.enabled = true;
         }
 
         private void OnEngineLoaded()
@@ -47,66 +49,49 @@ namespace TESUnity
         private string CheckConfigINI(TESUnity tes)
         {
             var path = string.Empty;
+            var lines = File.ReadAllLines(ConfigFile);
+            var temp = new string[2];
+            var value = string.Empty;
 
-            using (var savedData = File.OpenText(ConfigFile))
+            foreach (var line in lines)
             {
-                var text = savedData.ReadToEnd();
+                temp = line.Split('=');
 
-                if (text != string.Empty)
+                if (temp.Length == 2)
                 {
-                    using (var stream = new StringReader(text))
+                    value = temp[1].Trim();
+
+                    switch (temp[0].Trim())
                     {
-                        var line = stream.ReadLine();
-                        var temp = new string[2];
-                        var value = string.Empty;
+                        case "AntiAliasing": tes.antiAliasing = ParseBool(value, tes.antiAliasing); break;
+                        case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
+                        case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
+                        case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
+                        case "MorrowindDataPath": path = value; break;
+                        case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
+                        case "DirectModePreview": tes.directModePreview = ParseBool(value, tes.directModePreview); break;
+                        case "SunShadows": tes.renderSunShadows = ParseBool(value, tes.renderSunShadows); break;
+                        case "LightShadows": tes.renderLightShadows = ParseBool(value, tes.renderLightShadows); break;
+                        case "PlayMusic": tes.playMusic = ParseBool(value, tes.playMusic); break;
+                        case "RenderExteriorCellLights": tes.renderExteriorCellLights = ParseBool(value, tes.renderExteriorCellLights); break;
+                        case "WaterBackSideTransparent": tes.waterBackSideTransparent = ParseBool(value, tes.waterBackSideTransparent); break;
+                        case "RenderPath":
+                            var renderPathID = ParseInt(value, 0);
+                            if (renderPathID == 1 || renderPathID == 3)
+                                tes.renderPath = (RenderingPath)renderPathID;
 
-                        while (line != null)
-                        {
-                            temp = line.Split('=');
-
-                            if (temp.Length == 2)
+                            break;
+                        case "Shader":
+                            switch (value)
                             {
-                                value = temp[1].Trim();
-
-                                switch (temp[0].Trim())
-                                {
-                                    case "AntiAliasing": tes.antiAliasing = ParseBool(value, tes.antiAliasing); break;
-                                    case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
-                                    case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
-                                    case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
-                                    case "MorrowindPath": path = value; break;
-                                    case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
-                                    case "DirectModePreview": tes.directModePreview = ParseBool(value, tes.directModePreview); break;
-                                    case "SunShadows": tes.renderSunShadows = ParseBool(value, tes.renderSunShadows); break;
-                                    case "LightShadows": tes.renderLightShadows = ParseBool(value, tes.renderLightShadows); break;
-                                    case "PlayMusic": tes.playMusic = ParseBool(value, tes.playMusic); break;
-                                    case "RenderExteriorCellLights": tes.renderExteriorCellLights = ParseBool(value, tes.renderExteriorCellLights); break;
-                                    case "WaterBackSideTransparent": tes.waterBackSideTransparent = ParseBool(value, tes.waterBackSideTransparent); break;
-                                    case "RenderPath":
-                                        var renderPathID = ParseInt(value, 0);
-                                        if (renderPathID == 1 || renderPathID == 3)
-                                            tes.renderPath = (RenderingPath)renderPathID;
-
-                                        break;
-                                    case "Shader":
-                                        switch (value)
-                                        {
-                                            case "Default": tes.materialType = TESUnity.MWMaterialType.Default; break;
-                                            case "Standard": tes.materialType = TESUnity.MWMaterialType.Standard; break;
-                                            case "Unlit": tes.materialType = TESUnity.MWMaterialType.Unlit; break;
-                                            default: tes.materialType = TESUnity.MWMaterialType.BumpedDiffuse; break;
-                                        }
-                                        break;
-                                }
+                                case "Default": tes.materialType = TESUnity.MWMaterialType.Default; break;
+                                case "Standard": tes.materialType = TESUnity.MWMaterialType.Standard; break;
+                                case "Unlit": tes.materialType = TESUnity.MWMaterialType.Unlit; break;
+                                default: tes.materialType = TESUnity.MWMaterialType.BumpedDiffuse; break;
                             }
-
-                            line = stream.ReadLine();
-                        }
-                        stream.Close();
+                            break;
                     }
                 }
-
-                savedData.Close();
             }
 
             return path;

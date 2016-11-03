@@ -62,9 +62,6 @@ namespace TESUnity
         private MorrowindEngine MWEngine;
         private MusicPlayer musicPlayer;
 
-        private GameObject testObj;
-        private string testObjPath;
-
         public event Action LoadingCompleted = null;
 
         public MorrowindEngine Engine
