@@ -33,6 +33,9 @@ namespace TESUnity.Components
 
         private IEnumerator LoadWorld(string path)
         {
+            if (!path.Contains("Data Files"))
+                path = Path.Combine(path, "Data Files");
+
             if (Directory.Exists(path))
             {
                 _path.gameObject.SetActive(false);
@@ -90,7 +93,7 @@ namespace TESUnity.Components
                         {
                             temp = line.Split('=');
 
-                            if (temp.Length == 2 && temp[0].Trim() == "MorrowindDataPath")
+                            if (temp.Length == 2 && temp[0].Trim() == "MorrowindPath")
                                 path = temp[1].Trim();
 
                             line = stream.ReadLine();
@@ -108,40 +111,40 @@ namespace TESUnity.Components
         private static void CreateINIFile()
         {
             var sb = new StringBuilder();
-            sb.Append("# TESUnity Configuration File\n");
-            sb.Append("\n");
+            sb.Append("# TESUnity Configuration File\r\n");
+            sb.Append("\r\n");
 
-            sb.Append("[Global]\n");
-            sb.Append("PlayMusic = True");
-            sb.Append("MorrowindPath = \n");
-            sb.Append("\n");
+            sb.Append("[Global]\r\n");
+            sb.Append("PlayMusic = True\r\n");
+            sb.Append("MorrowindPath = \r\n");
+            sb.Append("\r\n");
 
-            sb.Append("[Rendering]\n");
-            sb.Append("RenderPath = 1\n");
-            sb.Append("Shader = Standard\n");
-            sb.Append("\n");
+            sb.Append("[Rendering]\r\n");
+            sb.Append("RenderPath = 1\r\n");
+            sb.Append("Shader = Standard\r\n");
+            sb.Append("\r\n");
 
-            sb.Append("[Lighting]\n");
-            sb.Append("AnimateLights = False\n");
-            sb.Append("SunShadows = True\n");
-            sb.Append("LightShadows = True\n");
-            sb.Append("RenderExteriorCellLights = False\n");
-            sb.Append("\n");
+            sb.Append("[Lighting]\r\n");
+            sb.Append("AnimateLights = False\r\n");
+            sb.Append("SunShadows = True\r\n");
+            sb.Append("LightShadows = True\r\n");
+            sb.Append("RenderExteriorCellLights = False\r\n");
+            sb.Append("\r\n");
 
-            sb.Append("[Effects]\n");
-            sb.Append("AntiAliasing = False\n");
-            sb.Append("AmbientOcclusion = False\n");
-            sb.Append("Bloom = True\n");
-            sb.Append("WaterBackSideTransparent = False\n");
-            sb.Append("\n");
+            sb.Append("[Effects]\r\n");
+            sb.Append("AntiAliasing = False\r\n");
+            sb.Append("AmbientOcclusion = False\r\n");
+            sb.Append("Bloom = True\r\n");
+            sb.Append("WaterBackSideTransparent = False\r\n");
+            sb.Append("\r\n");
 
-            sb.Append("[VR]\n");
-            sb.Append("FollowHeadDirection = False\n");
-            sb.Append("DirectModePreview = False\n");
-            sb.Append("\n");
+            sb.Append("[VR]\r\n");
+            sb.Append("FollowHeadDirection = False\r\n");
+            sb.Append("DirectModePreview = False\r\n");
+            sb.Append("\r\n");
 
-            sb.Append("[Debug]\n");
-            sb.Append("CreaturesEnabled = True\n");
+            sb.Append("[Debug]\r\n");
+            sb.Append("CreaturesEnabled = True\r\n");
 
             File.WriteAllText(ConfigFile, sb.ToString());
         }

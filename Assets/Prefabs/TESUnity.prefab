@@ -8,7 +8,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 477232}
-  - 114: {fileID: 11482094}
+  - 114: {fileID: 114000012341587610}
   - 114: {fileID: 11464354}
   m_Layer: 0
   m_Name: TESUnity
@@ -69,18 +69,6 @@ MonoBehaviour:
     type: 2}
   creaturesEnabled: 1
   npcsEnabled: 0
---- !u!114 &11482094
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 156636}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18f65c96457599848b0d63ff346899ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bypassConfigINI: 0
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
@@ -92,3 +80,15 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 156636}
   m_IsPrefabParent: 1
+--- !u!114 &114000012341587610
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 156636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f30bd11184a77954b8bf881e5f2a3c98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _mainUI: {fileID: 0}

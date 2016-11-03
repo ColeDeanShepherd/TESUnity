@@ -2,7 +2,7 @@
 
 [Global]
 PlayMusic = True
-MorrowindPath = C:\Users\demon\Documents\Unity\Demonixis\TESUnity\Data Files
+MorrowindPath = D:\Jeux\Oldies\Morrowind
 
 [Rendering]
 RenderPath = 1

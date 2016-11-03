@@ -1,6 +1,6 @@
 ﻿using System.IO;
-using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TESUnity
 {
@@ -20,9 +20,18 @@ namespace TESUnity
             tes.LoadingCompleted += OnEngineLoaded;
 
             // We need to do that in the menu and use it only in the editor.
-            CheckConfigINI(tes);
+            var path = CheckConfigINI(tes);
 
-            tes.enabled = true;
+            if (!path.Contains("Data Files"))
+                path = Path.Combine(path, "Data Files");
+
+            if (Directory.Exists(path))
+            {
+                tes.dataPath = path;
+                tes.enabled = true;
+            }
+            else
+                SceneManager.LoadScene("AskPath");
         }
 
         private void OnEngineLoaded()
@@ -35,8 +44,10 @@ namespace TESUnity
         /// Checks if a file named Config.ini is located left to the main executable.
         /// Open/Parse it and configure default values.
         /// </summary>
-        private void CheckConfigINI(TESUnity tes)
+        private string CheckConfigINI(TESUnity tes)
         {
+            var path = string.Empty;
+
             using (var savedData = File.OpenText(ConfigFile))
             {
                 var text = savedData.ReadToEnd();
@@ -63,7 +74,7 @@ namespace TESUnity
                                     case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
                                     case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
                                     case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
-                                    case "MorrowindPath": tes.dataPath = value; break;
+                                    case "MorrowindPath": path = value; break;
                                     case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
                                     case "DirectModePreview": tes.directModePreview = ParseBool(value, tes.directModePreview); break;
                                     case "SunShadows": tes.renderSunShadows = ParseBool(value, tes.renderSunShadows); break;
@@ -97,6 +108,8 @@ namespace TESUnity
 
                 savedData.Close();
             }
+
+            return path;
         }
 
         private bool ParseBool(string value, bool defaultValue)
