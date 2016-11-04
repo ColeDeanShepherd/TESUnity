@@ -62,7 +62,7 @@ namespace TESUnity
         private MorrowindEngine MWEngine;
         private MusicPlayer musicPlayer;
 
-        public event Action LoadingCompleted = null;
+        public event EventHandler<EventArgs> LoadingCompleted = null;
 
         public MorrowindEngine Engine
         {
@@ -100,7 +100,7 @@ namespace TESUnity
             }
 
             if (LoadingCompleted != null)
-                LoadingCompleted();
+                LoadingCompleted(this, EventArgs.Empty);
 
             // Spawn the player.
             //MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
