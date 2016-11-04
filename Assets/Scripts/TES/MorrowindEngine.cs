@@ -120,6 +120,7 @@ namespace TESUnity
 		{
 			return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
 		}
+
 		public InRangeCellInfo InstantiateCell(CELLRecord CELL)
 		{
 			Debug.Assert(CELL != null);
@@ -149,24 +150,24 @@ namespace TESUnity
 			return new InRangeCellInfo(cellObj, cellObjectsContainer, cellCreationCoroutine);
 		}
 
-		public void SpawnPlayerOutside(Vector3 position)
+		public void SpawnPlayerOutside(GameObject playerPrefab, Vector3 position)
 		{
 			var cellIndices = GetExteriorCellIndices(position);
 			_currentCell = dataReader.FindExteriorCellRecord(cellIndices);
 
-			playerObj = CreatePlayer(position, out playerCameraObj);
+			playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
 
 			UpdateExteriorCells(true, cellRadiusOnLoad);
 			OnExteriorCell(_currentCell);
 		}
 
-		public void SpawnPlayerInside(string interiorCellName, Vector3 position)
+		public void SpawnPlayerInside(GameObject playerPrefab, string interiorCellName, Vector3 position)
 		{
 			_currentCell = dataReader.FindInteriorCellRecord(interiorCellName);
 
 			Debug.Assert(_currentCell != null);
 
-			playerObj = CreatePlayer(position, out playerCameraObj);
+			playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             if (_currentCell == null)
             {
@@ -180,13 +181,13 @@ namespace TESUnity
 			OnInteriorCell(_currentCell);
 		}
 
-        public void SpawnPlayerInside(Vector2i gridCoords, Vector3 position)
+        public void SpawnPlayerInside(GameObject playerPrefab, Vector2i gridCoords, Vector3 position)
         {
             _currentCell = dataReader.FindInteriorCellRecord(gridCoords);
 
             Debug.Assert(_currentCell != null);
 
-            playerObj = CreatePlayer(position, out playerCameraObj);
+            playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             var cellInfo = CreateInteriorCell(gridCoords);
             temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
@@ -194,13 +195,13 @@ namespace TESUnity
             OnInteriorCell(_currentCell);
         }
 
-        public void SpawnPlayerOutside(Vector2i gridCoords, Vector3 position)
+        public void SpawnPlayerOutside(GameObject playerPrefab, Vector2i gridCoords, Vector3 position)
         {
             _currentCell = dataReader.FindExteriorCellRecord(gridCoords);
 
             Debug.Assert(_currentCell != null);
 
-            playerObj = CreatePlayer(position, out playerCameraObj);
+            playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             var cellInfo = CreateExteriorCell(gridCoords);
             temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
@@ -908,96 +909,25 @@ namespace TESUnity
 			}
 		}
 
-		private GameObject CreatePlayer(Vector3 position, out GameObject playerCamera)
-		{
-			// Create the player.
-			var player = new GameObject();
-			player.name = "Player";
+        private GameObject CreatePlayer(GameObject playerPrefab, Vector3 position, out GameObject playerCamera)
+        {
+            var player = (GameObject)GameObject.Instantiate(playerPrefab);
+            player.name = "Player";
+            player.transform.position = position;
 
-			var capsuleCollider = player.AddComponent<CapsuleCollider>();
-			capsuleCollider.height = playerHeight;
-			capsuleCollider.radius = playerRadius;
-
-			var rigidbody = player.AddComponent<Rigidbody>();
-			rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
-
-			playerComponent = player.AddComponent<PlayerComponent>();
-
-			// Create the camera point object.
-			var eyeHeight = 0.9f * capsuleCollider.height;
-
-			var cameraPoint = new GameObject("Camera Point");
-			cameraPoint.transform.localPosition = new Vector3(0, eyeHeight - (capsuleCollider.height / 2), 0);
-			cameraPoint.transform.SetParent(player.transform, false);
-
-			player.transform.position = position;
-
-			// Create the player camera.
-			playerCamera = CreatePlayerCamera(position);
-			playerCamera.transform.localPosition = Vector3.zero;
-			playerCamera.transform.SetParent(cameraPoint.transform, false);
-
-			// Create the player's lantern.
-			var lantern = new GameObject("Lantern");
-
-			var lightComponent = lantern.AddComponent<Light>();
-			lightComponent.range = 20f;
-			lightComponent.intensity = 1.5f;
-			lightComponent.color = new Color32(245, 140, 40, 255);
-			lightComponent.enabled = false;
-			lightComponent.shadows = TESUnity.instance.renderLightShadows ? LightShadows.Hard : LightShadows.None;
-
-			lantern.transform.localPosition = cameraPoint.transform.localPosition - Vector3.up * 0.5f;
-			lantern.transform.SetParent(playerComponent.transform, false);
-
-			playerComponent.camera = playerCamera;
-			playerComponent.lantern = lantern;
-
-            // Inventory
-            playerInventory = player.AddComponent<PlayerInventory>();
-
-            // VR Support
-            player.AddComponent<PlayerVRComponent>();
-
-            var tes = TESUnity.instance;
-
-            if (tes.ambientOcclusion)
-                playerCamera.AddComponent<AmbientOcclusion>();
-
-            if (tes.bloom)
-            {
-                var bloom = playerCamera.AddComponent<Bloom>();
-                bloom.settings.threshold = 0.8f;
-            }
-
-            if (tes.antiAliasing)
-            {
-                var antiAliasing = playerCamera.AddComponent<AntiAliasing>();
-                antiAliasing.method = (int)AntiAliasing.Method.Fxaa;
-            }
+            playerCamera = player.GetComponentInChildren<Camera>().gameObject;
+            playerComponent = player.GetComponent<PlayerComponent>();
+            playerInventory = player.GetComponent<PlayerInventory>();
+            underwaterEffect = playerCamera.GetComponent<UnderwaterEffect>();
 
             return player;
-		}
-		private GameObject CreatePlayerCamera(Vector3 position)
-		{
-			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
-			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-			camera.GetComponent<Camera>().renderingPath = TESUnity.instance.renderPath;
+        }
 
-            // Effects
-            underwaterEffect = camera.AddComponent<UnderwaterEffect>();
-
-            return camera;
-		}
 		private GameObject CreateFlyingCamera(Vector3 position)
 		{
 			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
 			camera.AddComponent<FlyingCameraComponent>();
 			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-
-            // Effects
-            underwaterEffect = camera.AddComponent<UnderwaterEffect>();
-
             return camera;
 		}
 

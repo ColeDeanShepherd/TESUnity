@@ -51,6 +51,7 @@ namespace TESUnity
         public Sprite UISpriteImg;
 
         [Header("Prefabs")]
+        public GameObject playerPrefab;
         public GameObject waterPrefab;
 
         [Header("Debug")]
@@ -104,7 +105,7 @@ namespace TESUnity
 
             // Spawn the player.
             //MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
-            MWEngine.SpawnPlayerOutside(new Vector2i(-2, -9), new Vector3(-137.94f, 2.30f, -1037.6f));
+            MWEngine.SpawnPlayerOutside(playerPrefab, new Vector2i(-2, -9), new Vector3(-137.94f, 2.30f, -1037.6f));
         }
 
         private void OnDestroy()
