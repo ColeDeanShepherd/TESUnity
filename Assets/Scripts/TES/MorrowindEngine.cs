@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TESUnity.Components;
 using TESUnity.Components.Records;
+using TESUnity.Components.VR;
 using TESUnity.Effects;
 using TESUnity.ESM;
 using TESUnity.UI;

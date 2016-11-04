@@ -44,9 +44,9 @@ namespace TESUnity.Components
                 _path.gameObject.SetActive(false);
                 _button.gameObject.SetActive(false);
                 _infoMessage.text = "Loading...";
-                _infoMessage.enabled = true;
+                _infoMessage.enabled = true;yield return null;
                 
-                var asyncOperation = SceneManager.LoadSceneAsync("Scene");
+                var asyncOperation = SceneManager.LoadSceneAsync("GameScene");
                 var waitForSeconds = new WaitForSeconds(0.1f);
 
                 while (!asyncOperation.isDone)

@@ -6,14 +6,13 @@ using TESUnity.UI;
 using UnityEngine;
 using UnityEngine.VR;
 
-namespace TESUnity.Components
+namespace TESUnity.Components.VR
 {
     /// <summary>
     /// This component is responsible to enable the VR feature and deal with VR SDKs.
     /// VR SDKs allows us to provide more support (moving controller, teleportation, etc.)
     /// To enable a VR SDKs, please read the README.md file located in the Vendors folder.
     /// </summary>
-    [RequireComponent(typeof(PlayerComponent))]
     public class PlayerVRComponent : MonoBehaviour
     {
         public enum VRVendor
@@ -26,6 +25,16 @@ namespace TESUnity.Components
         private Transform _canvas = null;
         private Transform _pivotCanvas = null;
         private Transform _hud = null;
+
+        [SerializeField]
+        private bool _isSpectator = false;
+        [SerializeField]
+        private Canvas _mainCanvas = null;
+
+        public bool VREnabled
+        {
+            get { return _vrVendor != VRVendor.None; }
+        }
 
         void Awake()
         {
@@ -65,8 +74,10 @@ namespace TESUnity.Components
         {
             if (_vrVendor != VRVendor.None)
             {
-                var canvas = FindObjectOfType<Canvas>();
-                _canvas = canvas.GetComponent<Transform>();
+                if (_mainCanvas == null)
+                    _mainCanvas = FindObjectOfType<Canvas>();
+
+                _canvas = _mainCanvas.GetComponent<Transform>();
                 _pivotCanvas = _canvas.parent;
 
                 // Put the Canvas in WorldSpace and Attach it to the camera.
@@ -82,14 +93,21 @@ namespace TESUnity.Components
                 GUIUtils.SetCanvasToWorldSpace(_canvas.GetComponent<Canvas>(), _pivotCanvas, 1.0f, 0.002f);
 
                 // Add the HUD
-                var hud = GUIUtils.CreateCanvas(false);
-                hud.name = "HUD";
-                _hud = hud.GetComponent<Transform>();
-                GUIUtils.SetCanvasToWorldSpace(hud.GetComponent<Canvas>(), _camTransform, 1.0f, 0.002f);
+                if (!_isSpectator)
+                {
+                    var hud = GUIUtils.CreateCanvas(false);
+                    hud.name = "HUD";
+                    _hud = hud.GetComponent<Transform>();
+                    GUIUtils.SetCanvasToWorldSpace(hud.GetComponent<Canvas>(), _camTransform, 1.0f, 0.002f);
 
-                var hudWidgets = _canvas.GetComponentsInChildren<IHUDWidget>(true);
-                for (int i = 0; i < hudWidgets.Length; i++)
-                    hudWidgets[i].SetParent(_hud);
+                    var hudWidgets = _canvas.GetComponentsInChildren<IHUDWidget>(true);
+                    for (int i = 0; i < hudWidgets.Length; i++)
+                        hudWidgets[i].SetParent(_hud);
+                }
+                else
+                {
+                    ShowUICursor(true);
+                }
 
                 // Setup the camera
                 Camera.main.nearClipPlane = 0.1f;
@@ -120,6 +138,13 @@ namespace TESUnity.Components
             // At any time, the user might want to reset the orientation and position.
             if (Input.GetButtonDown("Recenter"))
                 ResetOrientationAndPosition();
+        }
+
+        public void ShowUICursor(bool visible)
+        {
+            // TODO: Add hand selector for the Touchs and the Vive.
+            var uiCursor = GetComponentInChildren<VRGazeUI>(true);
+            uiCursor.SetActive(visible);
         }
 
         /// <summary>

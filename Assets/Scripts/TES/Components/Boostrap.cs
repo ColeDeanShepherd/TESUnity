@@ -27,7 +27,7 @@ namespace TESUnity
             // We need to do that in the menu and use it only in the editor.
             var path = tes.dataPath;
 
-            if (_bypassConfig)
+            if (!_bypassConfig)
                 path = GameSettings.CheckSettings(tes);
 #else
             var path = GameSettings.CheckSettings(tes);
@@ -36,7 +36,7 @@ namespace TESUnity
             if (!GameSettings.IsValidPath(path))
             {
                 GameSettings.SetDataPath(string.Empty);
-                SceneManager.LoadScene("AskScene");
+                SceneManager.LoadScene("AskPathScene");
             }
             else
             {
