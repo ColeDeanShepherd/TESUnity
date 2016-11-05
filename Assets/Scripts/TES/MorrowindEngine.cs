@@ -45,7 +45,7 @@ namespace TESUnity
         private UIInteractiveText _interactiveText;
         private GameObject sunObj;
         private GameObject waterObj;
-        private GameObject playerObj;
+        private Transform playerTransform;
         private PlayerComponent playerComponent;
         private PlayerInventory playerInventory;
         private GameObject playerCameraObj;
@@ -66,10 +66,7 @@ namespace TESUnity
 
 		public CELLRecord currentCell
 		{
-			get
-			{
-				return _currentCell;
-			}
+            get { return _currentCell; }
 		}
 
         public static int markerLayer
@@ -77,18 +74,17 @@ namespace TESUnity
             get { return LayerMask.NameToLayer("Marker"); }
         }
 
-        public MorrowindEngine( MorrowindDataReader dataReader )
+        public MorrowindEngine(MorrowindDataReader mwDataReader)
 		{
 			Debug.Assert(instance == null);
 
 			instance = this;
-			this.dataReader = dataReader;
-			textureManager = new TextureManager(this.dataReader);
+			dataReader = mwDataReader;
+			textureManager = new TextureManager(dataReader);
 			materialManager = new MaterialManager(textureManager);
-			theNIFManager = new NIFManager(this.dataReader, materialManager);
+			theNIFManager = new NIFManager(dataReader, materialManager);
 
 			canvasObj = GUIUtils.CreateCanvas();
-			GUIUtils.CreateEventSystem();
 
             _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas.transform);
 
@@ -150,30 +146,20 @@ namespace TESUnity
 			return new InRangeCellInfo(cellObj, cellObjectsContainer, cellCreationCoroutine);
 		}
 
-		public void SpawnPlayerOutside(GameObject playerPrefab, Vector3 position)
-		{
-			var cellIndices = GetExteriorCellIndices(position);
-			_currentCell = dataReader.FindExteriorCellRecord(cellIndices);
-
-			playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
-
-			UpdateExteriorCells(true, cellRadiusOnLoad);
-			OnExteriorCell(_currentCell);
-		}
-
+        /// <summary>
+        /// Spawns the player inside. Be carefull, the name of the cell is not the same for each languages.
+        /// Use it with the correct name.
+        /// </summary>
+        /// <param name="playerPrefab">The player prefab.</param>
+        /// <param name="interiorCellName">The name of the desired cell.</param>
+        /// <param name="position">The target position of the player.</param>
 		public void SpawnPlayerInside(GameObject playerPrefab, string interiorCellName, Vector3 position)
 		{
 			_currentCell = dataReader.FindInteriorCellRecord(interiorCellName);
 
 			Debug.Assert(_currentCell != null);
 
-			playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
-
-            if (_currentCell == null)
-            {
-                playerObj.transform.Translate(0, 100, 0);
-                return;
-            }
+			CreatePlayer(playerPrefab, position, out playerCameraObj);
 
 			var cellInfo = CreateInteriorCell(interiorCellName);
 			temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
@@ -181,13 +167,19 @@ namespace TESUnity
 			OnInteriorCell(_currentCell);
 		}
 
+        /// <summary>
+        /// Spawns the player inside using the cell's grid coordinates.
+        /// </summary>
+        /// <param name="playerPrefab">The player prefab.</param>
+        /// <param name="gridCoords">The grid coordinates.</param>
+        /// <param name="position">The target position of the player.</param>
         public void SpawnPlayerInside(GameObject playerPrefab, Vector2i gridCoords, Vector3 position)
         {
             _currentCell = dataReader.FindInteriorCellRecord(gridCoords);
 
             Debug.Assert(_currentCell != null);
 
-            playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
+            CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             var cellInfo = CreateInteriorCell(gridCoords);
             temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
@@ -195,17 +187,39 @@ namespace TESUnity
             OnInteriorCell(_currentCell);
         }
 
+        /// <summary>
+        /// Spawns the player outside using the cell's grid coordinates.
+        /// </summary>
+        /// <param name="playerPrefab">The player prefab.</param>
+        /// <param name="gridCoords">The grid coordinates.</param>
+        /// <param name="position">The target position of the player.</param>
         public void SpawnPlayerOutside(GameObject playerPrefab, Vector2i gridCoords, Vector3 position)
         {
             _currentCell = dataReader.FindExteriorCellRecord(gridCoords);
 
             Debug.Assert(_currentCell != null);
 
-            playerObj = CreatePlayer(playerPrefab, position, out playerCameraObj);
+            CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             var cellInfo = CreateExteriorCell(gridCoords);
             temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 
+            OnExteriorCell(_currentCell);
+        }
+
+        /// <summary>
+        /// Spawns the player outside using the position of the player.
+        /// </summary>
+        /// <param name="playerPrefab">The player prefab.</param>
+        /// <param name="position">The target position of the player.</param>
+        public void SpawnPlayerOutside(GameObject playerPrefab, Vector3 position)
+        {
+            var cellIndices = GetExteriorCellIndices(position);
+            _currentCell = dataReader.FindExteriorCellRecord(cellIndices);
+
+            CreatePlayer(playerPrefab, position, out playerCameraObj);
+
+            UpdateExteriorCells(true, cellRadiusOnLoad);
             OnExteriorCell(_currentCell);
         }
 
@@ -856,7 +870,8 @@ namespace TESUnity
 
             if (CELL.WHGT != null)
 			{
-				waterObj.transform.position = new Vector3(0, CELL.WHGT.value / Convert.meterInMWUnits, 0);
+                var offset = 1.6f; // Interiors cells needs this offset to render at the correct location.
+				waterObj.transform.position = new Vector3(0, (CELL.WHGT.value / Convert.meterInMWUnits) - offset, 0);
 				waterObj.SetActive(true);
                 underwaterEffect.Level = waterObj.transform.position.y;
             }
@@ -878,8 +893,8 @@ namespace TESUnity
 				DestroyAllCells();
 
 				// Move the player.
-				playerObj.transform.position = component.doorData.doorExitPos;
-				playerObj.transform.localEulerAngles = new Vector3(0, component.doorData.doorExitOrientation.eulerAngles.y, 0);
+				playerTransform.position = component.doorData.doorExitPos;
+				playerTransform.localEulerAngles = new Vector3(0, component.doorData.doorExitOrientation.eulerAngles.y, 0);
 
 				// Load the new cell.
 				CELLRecord newCell;
@@ -915,6 +930,7 @@ namespace TESUnity
             player.name = "Player";
             player.transform.position = position;
 
+            playerTransform = player.GetComponent<Transform>();
             playerCamera = player.GetComponentInChildren<Camera>().gameObject;
             playerComponent = player.GetComponent<PlayerComponent>();
             playerInventory = player.GetComponent<PlayerInventory>();
@@ -922,14 +938,6 @@ namespace TESUnity
 
             return player;
         }
-
-		private GameObject CreateFlyingCamera(Vector3 position)
-		{
-			var camera = GameObjectUtils.CreateMainCamera(position, Quaternion.identity);
-			camera.AddComponent<FlyingCameraComponent>();
-			camera.GetComponent<Camera>().cullingMask = ~(1 << markerLayer);
-            return camera;
-		}
 
 		#endregion
 	}

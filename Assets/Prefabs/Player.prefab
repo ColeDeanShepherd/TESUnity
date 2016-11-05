@@ -180,7 +180,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000014283173620}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -137.94, y: 2.303918, z: -1037.6}
+  m_LocalPosition: {x: 650.5491, y: 414.46445, z: -956.10095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -381,17 +381,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 287f98db0499ceb4cbcc95e7d53a7d21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slowSpeed: 3
-  normalSpeed: 5
-  fastSpeed: 10
-  flightSpeedMultiplier: 3
-  airborneForceMultiplier: 5
-  mouseSensitivity: 3
-  minVerticalAngle: -90
-  maxVerticalAngle: 90
-  camera: {fileID: 1000013405918594}
-  lantern: {fileID: 1000013604504344}
-  inventory: {fileID: 0}
+  slowSpeed: 1
+  normalSpeed: 3
+  fastSpeed: 6
+  flightSpeedMultiplier: 6
+  airborneForceMultiplier: 3
+  mouseSensitivity: 2.5
+  minVerticalAngle: -85
+  maxVerticalAngle: 85
+  lantern: {fileID: 108000011938626344}
   leftHand: {fileID: 4000013377317106}
   rightHand: {fileID: 4000011114332734}
 --- !u!114 &114000012947587150

@@ -34,7 +34,6 @@ namespace TESUnity.Components
             }
             else
                 StartCoroutine(ShowErrorMessage("This path is not valid."));
-
         }
 
         private IEnumerator LoadWorld(string path, bool checkPath = true)

@@ -22,14 +22,6 @@ namespace TESUnity.Components.VR
         private RectTransform _selected = null;
         private Transform _transform = null;
 
-        [Header("Cursor")]
-        [SerializeField]
-        private float _cursorOverScale = 1.5f;
-
-        [Header("Settings")]
-        [SerializeField]
-        private float _animationTime = 0.65f;
-
         void Start()
         {
             if (EventSystem.current == null)
@@ -59,7 +51,7 @@ namespace TESUnity.Components.VR
 
             if (_selected != null)
             {
-                if (Input.GetButtonDown("Use"))
+                if (Input.GetButtonDown("Use") || Input.GetButtonDown("Attack") || Input.GetKeyDown(KeyCode.Return))
                     Click(_selected.gameObject);
                 else if (_eventSystem.currentSelectedGameObject != _selected.gameObject)
                     SelectGameObject(_selected.gameObject);
@@ -120,7 +112,7 @@ namespace TESUnity.Components.VR
         {
             _eventSystem.SetSelectedGameObject(go);
 
-            var targetScale = go == null ? 1.0f : _cursorOverScale;
+            var targetScale = go == null ? 1.0f : 1.5f;
 
             _transform.localScale = new Vector3(targetScale, targetScale, targetScale); 
         }
