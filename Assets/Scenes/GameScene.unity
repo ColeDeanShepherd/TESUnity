@@ -679,6 +679,22 @@ Prefab:
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
+      propertyPath: _bypassINIConfig
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
+      propertyPath: dataPath
+      value: D:\Jeux\Oldies\Morrowind\Data Files
+      objectReference: {fileID: 0}
+    - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
+      propertyPath: materialType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
+      propertyPath: renderLightShadows
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
   m_IsPrefabParent: 0
