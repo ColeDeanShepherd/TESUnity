@@ -49,7 +49,7 @@ namespace TESUnity.UI
 
             _content.text = words;
 
-            gameObject.SetActive(true);
+            _container.SetActive(true);
         }
 
         public void Take()

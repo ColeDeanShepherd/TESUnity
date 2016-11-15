@@ -91,7 +91,7 @@ namespace TESUnity.UI
 
             UpdateBook();
 
-            gameObject.SetActive(true);
+            _container.SetActive(true);
         }
 
         private void UpdateBook()

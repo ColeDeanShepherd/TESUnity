@@ -44,11 +44,11 @@ MonoBehaviour:
   dataPath: 
   useKinematicRigidbodies: 1
   playMusic: 1
-  materialType: 2
+  materialType: 1
   renderPath: 1
   ambientIntensity: 1.5
   renderSunShadows: 1
-  renderLightShadows: 1
+  renderLightShadows: 0
   renderExteriorCellLights: 0
   animateLights: 0
   antiAliasing: 0
