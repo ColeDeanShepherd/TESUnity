@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using TESUnity.UI;
 using UnityEngine;
 
@@ -72,8 +71,6 @@ namespace TESUnity
         private MorrowindEngine MWEngine;
         private MusicPlayer musicPlayer;
 
-        public event EventHandler<EventArgs> LoadingCompleted = null;
-
         public MorrowindEngine Engine
         {
             get { return MWEngine; }
@@ -122,9 +119,6 @@ namespace TESUnity
                 musicPlayer.Play();
             }
 
-            if (LoadingCompleted != null)
-                LoadingCompleted(this, EventArgs.Empty);
-
             // Spawn the player.
             MWEngine.SpawnPlayerInside(playerPrefab, new Vector2i(4537908, 1061158912), new Vector3(0.8f, -0.45f, -1.4f));
         }
@@ -145,6 +139,7 @@ namespace TESUnity
             if (playMusic)
                 musicPlayer.Update();
 
+#if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.P))
             {
                 if (MWEngine.currentCell == null || !MWEngine.currentCell.isInterior)
@@ -152,8 +147,10 @@ namespace TESUnity
                 else
                     Debug.Log(MWEngine.currentCell.NAME.value);
             }
+#endif
         }
 
+#if UNITY_EDITOR
         private void TestAllCells(string resultsFilePath)
         {
             using (StreamWriter writer = new StreamWriter(resultsFilePath))
@@ -186,5 +183,6 @@ namespace TESUnity
                 }
             }
         }
+#endif
     }
 }
