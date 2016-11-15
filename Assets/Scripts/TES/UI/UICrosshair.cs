@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace TESUnity.UI
 {
     [RequireComponent(typeof(Image))]
-    public class UICrosshair : MonoBehaviour, IHUDWidget
+    public class UICrosshair : MonoBehaviour
     {
         private Image _crosshair = null;
 
@@ -19,30 +19,6 @@ namespace TESUnity.UI
         public void SetActive(bool active)
         {
             gameObject.SetActive(active);
-        }
-
-        public void SetParent(Transform transform)
-        {
-            var rectTransform = GetComponent<RectTransform>();
-            rectTransform.SetParent(transform, false);
-
-            var image = GetComponent<Image>();
-            image.enabled = false;
-        }
-
-        public static UICrosshair Create(Transform parent)
-        {
-            var crossGO = new GameObject("Crosshair");
-            var crossRect = crossGO.AddComponent<RectTransform>();
-            crossRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 35);
-            crossRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 35);
-            crossRect.SetParent(parent);
-            crossRect.localPosition = Vector3.zero;
-            crossRect.localRotation = Quaternion.identity;
-            crossRect.localScale = Vector3.one;
-            crossGO.AddComponent<Image>();
-
-            return crossGO.AddComponent<UICrosshair>();
         }
     }
 }

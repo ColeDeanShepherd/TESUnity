@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using TESUnity.UI;
 using UnityEngine;
 
 namespace TESUnity
@@ -48,6 +49,7 @@ namespace TESUnity
         public bool directModePreview = true;
 
         [Header("UI")]
+        public UIManager UIManager;
         public Sprite UIBackgroundImg;
         public Sprite UICheckmarkImg;
         public Sprite UIDropdownArrowImg;
@@ -106,7 +108,7 @@ namespace TESUnity
         private void Start()
         {
             MWDataReader = new MorrowindDataReader(dataPath);
-            MWEngine = new MorrowindEngine(MWDataReader);
+            MWEngine = new MorrowindEngine(MWDataReader, UIManager);
 
             if (playMusic)
             {

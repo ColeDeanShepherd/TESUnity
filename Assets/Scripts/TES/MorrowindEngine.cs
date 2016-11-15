@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using TESUnity.Components;
 using TESUnity.Components.Records;
-using TESUnity.Components.VR;
 using TESUnity.Effects;
 using TESUnity.ESM;
 using TESUnity.UI;
 using UnityEngine;
-using UnityStandardAssets.CinematicEffects;
 
 namespace TESUnity
 {
@@ -42,7 +40,7 @@ namespace TESUnity
         private int detailRadius = 3;
         private int cellRadiusOnLoad = 2;
         private CELLRecord _currentCell;
-        private UIInteractiveText _interactiveText;
+        private UIManager _uiManager;
         private GameObject sunObj;
         private GameObject waterObj;
         private Transform playerTransform;
@@ -62,7 +60,6 @@ namespace TESUnity
 		public MaterialManager materialManager;
 		public NIFManager theNIFManager;
 		public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
-		public GameObject canvasObj;
 
 		public CELLRecord currentCell
 		{
@@ -74,7 +71,7 @@ namespace TESUnity
             get { return LayerMask.NameToLayer("Marker"); }
         }
 
-        public MorrowindEngine(MorrowindDataReader mwDataReader)
+        public MorrowindEngine(MorrowindDataReader mwDataReader, UIManager uiManager)
 		{
 			Debug.Assert(instance == null);
 
@@ -84,11 +81,7 @@ namespace TESUnity
 			materialManager = new MaterialManager(textureManager);
 			theNIFManager = new NIFManager(dataReader, materialManager);
 
-			canvasObj = GUIUtils.CreateCanvas();
-
-            _interactiveText = UIInteractiveText.Create(GUIUtils.MainCanvas.transform);
-
-			RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
 			RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;
 
 			sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
@@ -110,7 +103,12 @@ namespace TESUnity
                 sideMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                 sideMaterial.renderQueue = -1;
             }
-		}
+
+            Cursor.SetCursor(textureManager.LoadTexture("tx_cursor", true), Vector2.zero, CursorMode.Auto);
+
+            _uiManager = uiManager;
+            _uiManager.Active = true;
+        }
 
 		public Vector2i GetExteriorCellIndices(Vector3 point)
 		{
@@ -280,12 +278,12 @@ namespace TESUnity
         public void ShowInteractiveText(GenericObjectComponent component)
         {
             var data = component.objData;
-            _interactiveText.Show(GUIUtils.CreateSprite(data.icon), data.interactionPrefix, data.name, data.value, data.weight);
+            _uiManager.InteractiveText.Show(GUIUtils.CreateSprite(data.icon), data.interactionPrefix, data.name, data.value, data.weight);
         }
 
         public void CloseInteractiveText()
         {
-            _interactiveText.Close();
+            _uiManager.InteractiveText.Close();
         }
 
 		#endregion

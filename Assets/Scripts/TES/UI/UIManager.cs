@@ -6,18 +6,20 @@ namespace TESUnity.UI
     public class UIManager : MonoBehaviour
     {
         private Canvas _canvas = null;
+        private Transform _hudTransform = null;
+        private Transform _uiTransform = null;
 
         [Header("HUD Elements")]
         [SerializeField]
-        private UICrosshair _crosshair;
+        private UICrosshair _crosshair = null;
         [SerializeField]
-        private UIInteractiveText _interactiveText;
+        private UIInteractiveText _interactiveText = null;
 
         [Header("UI Elements")]
         [SerializeField]
-        private UIBook _book;
+        private UIBook _book = null;
         [SerializeField]
-        private UIScroll _scroll;
+        private UIScroll _scroll = null;
 
         #region Public Fields
 
@@ -41,6 +43,16 @@ namespace TESUnity.UI
             get { return _crosshair; }
         }
 
+        public Transform HUD
+        {
+            get { return _hudTransform; }
+        }
+
+        public Transform UI
+        {
+            get { return _uiTransform; }
+        }
+
         public bool Visible
         {
             get { return _canvas.enabled; }
@@ -49,8 +61,12 @@ namespace TESUnity.UI
 
         public bool Active
         {
-            get { return gameObject.activeSelf; }
-            set { gameObject.SetActive(value); }
+            get { return _hudTransform.gameObject.activeSelf; }
+            set
+            {
+                _hudTransform.gameObject.SetActive(value);
+                _uiTransform.gameObject.SetActive(value);
+            }
         }
 
         #endregion
@@ -58,16 +74,8 @@ namespace TESUnity.UI
         void Awake()
         {
             _canvas = GetComponent<Canvas>();
-        }
-
-        public Transform GetHUD()
-        {
-            return transform.Find("HUD");
-        }
-
-        public Transform GetUI()
-        {
-            return transform.Find("UI");
+            _hudTransform = transform.Find("HUD");
+            _uiTransform = transform.Find("UI");
         }
     }
 }

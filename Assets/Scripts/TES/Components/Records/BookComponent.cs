@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using TESUnity.ESM;
+﻿using TESUnity.ESM;
 using TESUnity.UI;
 
 namespace TESUnity.Components.Records
@@ -7,8 +6,7 @@ namespace TESUnity.Components.Records
     public class BookComponent : GenericObjectComponent
     {
         private static PlayerComponent _player = null;
-        private static UIBook _uiBook = null;
-        private static UIScroll _uiScroll = null;
+        private static UIManager _uiManager = null;
 
         public static PlayerComponent Player
         {
@@ -21,17 +19,21 @@ namespace TESUnity.Components.Records
             }
         }
 
+        public static UIManager UIManager
+        {
+            get
+            {
+                if (_uiManager == null)
+                    _uiManager = FindObjectOfType<UIManager>();
+
+                return _uiManager;
+            }
+        }
+
         void Start()
         {
             usable = true;
             pickable = false;
-
-            if (_uiBook == null)
-            {
-                var uiTransform = GUIUtils.MainCanvas.GetComponent<Transform>();
-                _uiBook = UIBook.Create(uiTransform);
-                _uiScroll = UIScroll.Create(uiTransform);
-            }
 
             var BOOK = (BOOKRecord)record;
             objData.interactionPrefix = "Read ";
@@ -48,15 +50,15 @@ namespace TESUnity.Components.Records
 
             if (BOOK.BKDT.scroll == 1)
             {
-                _uiScroll.Show(BOOK);
-                _uiScroll.OnClosed += OnCloseScroll;
-                _uiScroll.OnTake += OnTakeScroll;
+                UIManager.Scroll.Show(BOOK);
+                UIManager.Scroll.OnClosed += OnCloseScroll;
+                UIManager.Scroll.OnTake += OnTakeScroll;
             }
             else
             {
-                _uiBook.Show(BOOK);
-                _uiBook.OnClosed += OnCloseBook;
-                _uiBook.OnTake += OnTakeBook;
+                UIManager.Book.Show(BOOK);
+                UIManager.Book.OnClosed += OnCloseBook;
+                UIManager.Book.OnTake += OnTakeBook;
             }
 
             Player.Pause(true);
@@ -70,8 +72,8 @@ namespace TESUnity.Components.Records
 
         private void OnCloseScroll(BOOKRecord obj)
         {
-            _uiScroll.OnClosed -= OnCloseScroll;
-            _uiScroll.OnTake -= OnTakeScroll;
+            UIManager.Scroll.OnClosed -= OnCloseScroll;
+            UIManager.Scroll.OnTake -= OnTakeScroll;
             Player.Pause(false);
         }
 
@@ -83,8 +85,8 @@ namespace TESUnity.Components.Records
 
         private void OnCloseBook(BOOKRecord obj)
         {
-            _uiBook.OnClosed -= OnCloseBook;
-            _uiBook.OnTake -= OnTakeBook;
+            UIManager.Book.OnClosed -= OnCloseBook;
+            UIManager.Book.OnTake -= OnTakeBook;
             Player.Pause(false);
         }
     }

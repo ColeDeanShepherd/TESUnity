@@ -66,11 +66,7 @@ namespace TESUnity
             // Setup the render path
             Camera.main.renderingPath = TESUnity.instance.renderPath;
 
-            // Add the crosshair and the cursor. TODO: Move that.
-            var textureManager = TESUnity.instance.TextureManager;
-            var cursor = textureManager.LoadTexture("tx_cursor", true);
-            Cursor.SetCursor(cursor, Vector2.zero, CursorMode.Auto);
-            _crosshair = UICrosshair.Create(GUIUtils.MainCanvas.transform);
+            _crosshair = FindObjectOfType<UICrosshair>();
         }
 
         private void Update()

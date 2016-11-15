@@ -8,8 +8,6 @@ namespace TESUnity
 	/// </summary>
 	public class TextureManager
 	{
-        private static TextureManager instance = null;
-
 		public TextureManager(MorrowindDataReader dataReader)
 		{
 			this.dataReader = dataReader;

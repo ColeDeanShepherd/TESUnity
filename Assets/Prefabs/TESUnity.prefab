@@ -57,6 +57,7 @@ MonoBehaviour:
   waterBackSideTransparent: 0
   followHeadDirection: 1
   directModePreview: 1
+  UIManager: {fileID: 0}
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   UIDropdownArrowImg: {fileID: 10915, guid: 0000000000000000f000000000000000, type: 0}

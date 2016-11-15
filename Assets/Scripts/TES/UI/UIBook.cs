@@ -47,6 +47,9 @@ namespace TESUnity.UI
 
         void Update()
         {
+            if (_bookRecord == null)
+                return;
+
             if (Input.GetButtonDown("Use"))
                 Take();
             else if (Input.GetButton("Menu"))
@@ -151,20 +154,10 @@ namespace TESUnity.UI
         public void Close()
         {
             _container.SetActive(false);
+            _bookRecord = null;
 
             if (OnClosed != null)
                 OnClosed(_bookRecord);
-        }
-
-        public static UIBook Create(Transform parent)
-        {
-            var uiBookAsset = Resources.Load<GameObject>("UI/Book");
-            var uiBookGO = (GameObject)GameObject.Instantiate(uiBookAsset, parent);
-            var uiTransform = uiBookGO.GetComponent<RectTransform>();
-            uiTransform.localPosition = Vector3.zero;
-            uiTransform.localRotation = Quaternion.identity;
-            uiTransform.localScale = Vector3.one;
-            return uiBookGO.GetComponent<UIBook>();
         }
     }
 }

@@ -74,8 +74,13 @@ namespace TESUnity.Components.VR
         {
             if (_vrVendor != VRVendor.None)
             {
+                var uiManager = FindObjectOfType<UIManager>();
+
                 if (_mainCanvas == null)
-                    _mainCanvas = FindObjectOfType<Canvas>();
+                    _mainCanvas = uiManager.GetComponent<Canvas>();
+
+                if (_mainCanvas == null)
+                    throw new UnityException("The Main Canvas Is Null");
 
                 _canvas = _mainCanvas.GetComponent<Transform>();
                 _pivotCanvas = _canvas.parent;
@@ -95,19 +100,17 @@ namespace TESUnity.Components.VR
                 // Add the HUD
                 if (!_isSpectator)
                 {
-                    var hud = GUIUtils.CreateCanvas(false);
-                    hud.name = "HUD";
-                    _hud = hud.GetComponent<Transform>();
-                    GUIUtils.SetCanvasToWorldSpace(hud.GetComponent<Canvas>(), _camTransform, 1.0f, 0.002f);
+                    var hudCanvas = GUIUtils.CreateCanvas(false);
+                    hudCanvas.name = "HUD_Canvas";
 
-                    var hudWidgets = _canvas.GetComponentsInChildren<IHUDWidget>(true);
-                    for (int i = 0; i < hudWidgets.Length; i++)
-                        hudWidgets[i].SetParent(_hud);
+                    _hud = hudCanvas.GetComponent<Transform>();
+                    
+                    GUIUtils.SetCanvasToWorldSpace(hudCanvas.GetComponent<Canvas>(), _camTransform, 1.0f, 0.002f);
+
+                    uiManager.HUD.SetParent(_hud);
                 }
                 else
-                {
                     ShowUICursor(true);
-                }
 
                 // Setup the camera
                 Camera.main.nearClipPlane = 0.1f;
