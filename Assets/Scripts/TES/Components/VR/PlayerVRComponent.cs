@@ -6,6 +6,44 @@ using TESUnity.UI;
 using UnityEngine;
 using UnityEngine.VR;
 
+#if UNITY_5_5 && (UNITY_STANDALONE_LINUX || UNITY_STANDALONE_OSX) && !UNITY_EDITOR
+// A quick polyfill for UnityEngine.VR for Linux and Mac because it's disabled in Unity 5.5 beta.
+namespace UnityEngine.VR
+{
+    public enum VRNode
+    {
+        LeftEye = 0,
+        RightEye = 1,
+        CenterEye = 2,
+        Head = 3
+    }
+
+    public static class VRSettings
+    {
+        public static bool enabled { get; set; }
+        public static readonly string loadedDeviceName = "None";
+        public static readonly int eyeTextureHeight = Screen.height;
+        public static readonly int eyeTextureWidth = Screen.width;
+        public static readonly float renderScale = 1.0f;
+    }
+
+    public static class InputTracking
+    {
+        public static Vector3 GetLocalPosition(VRNode node)
+        {
+            return Vector3.zero;
+        }
+
+        public static Quaternion GetLocalRotation(VRNode node)
+        {
+            return Quaternion.identity;
+        }
+
+        public static void Recenter() { }
+    }
+}
+#endif
+
 namespace TESUnity.Components.VR
 {
     /// <summary>
@@ -38,6 +76,7 @@ namespace TESUnity.Components.VR
 
         void Awake()
         {
+            UnityEngine.VR.InputTracking.GetLocalPosition(VRNode.CenterEye);
             if (VRSettings.enabled)
                 _vrVendor = VRVendor.UnityVR;
 #if OSVR
@@ -104,10 +143,14 @@ namespace TESUnity.Components.VR
                     hudCanvas.name = "HUD_Canvas";
 
                     _hud = hudCanvas.GetComponent<Transform>();
-                    
+
                     GUIUtils.SetCanvasToWorldSpace(hudCanvas.GetComponent<Canvas>(), _camTransform, 1.0f, 0.002f);
 
                     uiManager.HUD.SetParent(_hud);
+
+                    var rHUD = uiManager.HUD.GetComponent<RectTransform>();
+                    rHUD.anchorMin = Vector3.zero;
+                    rHUD.anchorMax = Vector3.one;
                 }
                 else
                     ShowUICursor(true);
@@ -116,22 +159,15 @@ namespace TESUnity.Components.VR
                 Camera.main.nearClipPlane = 0.1f;
 
 #if OSVR
-                if (_vrVendor == VRVendor.OSVR)
-                {
-                    // OSVR: Open Source VR Implementation
-                    var displayController = _camTransform.parent.gameObject.AddComponent<DisplayController>();
-                    displayController.showDirectModePreview = TESUnity.instance.directModePreview;
-                    Camera.main.gameObject.AddComponent<VRViewer>();
-                }
+                SetupOSVR();
 #endif
-
 #if OCULUS
-                // Enable Oculus Features...
+                SetupOculus();
+#endif
+#if OPENVR
+                SetupOpenVR();
 #endif
 
-#if STEAMVR
-                // Enable SteamVR Features...
-#endif
                 ResetOrientationAndPosition();
             }
         }
@@ -209,5 +245,138 @@ namespace TESUnity.Components.VR
             if (paused)
                 RecenterUI();
         }
+
+        #region SDK Integration
+
+#if OSVR
+        private void SetupOSVR()
+        {
+
+            if (_vrVendor == VRVendor.OSVR)
+            {
+                // OSVR: Open Source VR Implementation
+                var displayController = _camTransform.parent.gameObject.AddComponent<DisplayController>();
+                displayController.showDirectModePreview = TESUnity.instance.directModePreview;
+                Camera.main.gameObject.AddComponent<VRViewer>();
+            }
+    }
+#endif
+
+#if OCULUS
+        private void SetupOculus()
+        {
+            if (_vrVendor == VRVendor.UnityVR && VRSettings.loadedDeviceName == "Oculus")
+            {
+                _camTransform.name = "CenterEyeAnchor";
+
+                var trackingSpace = _camTransform.parent;
+                trackingSpace.name = "TrackingSpace";
+
+                var head = trackingSpace.parent.gameObject;
+                head.name = "OVRCameraRig";
+                head.AddComponent<OVRCameraRig>();
+                head.AddComponent<OVRManager>();
+
+                CreateNode(head.transform.parent, "ForwardDirection");
+
+                var anchorNames = new string[]
+                {
+                    "LeftEyeAnchor",
+                    "RightEyeAnchor",
+                    "TrackerAnchor",
+                    "LeftHandAnchor",
+                    "RightHandAnchor"
+                };
+
+                for (int i = 0, l = anchorNames.Length; i < l; i++)
+                    CreateNode(trackingSpace, anchorNames[i]);
+            }
+        }
+
+        private void CreateNode(Transform parent, string name)
+        {
+            if (!parent.Find(name))
+            {
+                var node = new GameObject(name);
+                var nodeTransform = node.GetComponent<Transform>();
+                nodeTransform.parent = parent;
+                nodeTransform.localPosition = Vector3.zero;
+                nodeTransform.localRotation = Quaternion.identity;
+            }
+        }
+#endif
+
+#if OPENVR
+        private void SetupOpenVR()
+        {
+
+            if (_vrVendor == VRVendor.UnityVR && VRSettings.loadedDeviceName == "OpenVR")
+            {
+                var player = GetComponent<PlayerComponent>();
+                var mTransform = GetComponent<Transform>();
+                var trackingSpace = _camTransform.parent;
+                var head = trackingSpace != null ? trackingSpace.parent : trackingSpace;
+
+                // Creates the SteamVR's main camera.
+                var steamCamera = _camTransform.gameObject.AddComponent<SteamVR_Camera>();
+
+                // The controllers.
+                var controllerGameObject = new GameObject("SteamVR_Controllers");
+                var controllerTransform = controllerGameObject.transform;
+                controllerTransform.parent = head;
+                controllerTransform.localPosition = Vector3.zero;
+                controllerTransform.localRotation = Quaternion.identity;
+
+                // We need to disable the gameobject because the SteamVR_ControllerManager component
+                // Will check attached controllers in the awake method.
+                // Here we don't have attached controllers yet.
+                controllerGameObject.SetActive(false);
+
+                var controllerManager = controllerGameObject.AddComponent<SteamVR_ControllerManager>();
+                controllerManager.left = CreateController(controllerManager.transform, "Controller (left)");
+                controllerManager.right = CreateController(controllerManager.transform, "Controller (right)");
+
+                // Now that controllers are attached, we can enable the GameObject
+                controllerGameObject.SetActive(true);
+                player.leftHand = controllerManager.left.GetComponent<Transform>();
+                player.rightHand = controllerManager.right.GetComponent<Transform>();
+
+
+                // And finally the play area.
+                var playArea = new GameObject("SteamVR_PlayArea");
+                playArea.transform.parent = mTransform;
+                playArea.AddComponent<MeshRenderer>();
+                playArea.AddComponent<MeshFilter>();
+                playArea.AddComponent<SteamVR_PlayArea>();
+            }
+
+        }
+
+        private GameObject CreateController(Transform parent, string name)
+        {
+
+            if (!parent.Find(name))
+            {
+                var node = new GameObject(name);
+                node.transform.parent = parent;
+
+                var trackedObject = node.AddComponent<SteamVR_TrackedObject>();
+                trackedObject.index = SteamVR_TrackedObject.EIndex.None;
+
+                var model = new GameObject("Model");
+                model.transform.parent = node.transform;
+
+                var renderModel = model.AddComponent<SteamVR_RenderModel>();
+                renderModel.index = SteamVR_TrackedObject.EIndex.None;
+
+                return node;
+            }
+
+
+            return null;
+        }
+#endif
+
+        #endregion
     }
 }

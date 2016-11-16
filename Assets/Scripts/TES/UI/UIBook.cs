@@ -154,10 +154,11 @@ namespace TESUnity.UI
         public void Close()
         {
             _container.SetActive(false);
-            _bookRecord = null;
 
             if (OnClosed != null)
                 OnClosed(_bookRecord);
+
+            _bookRecord = null;
         }
     }
 }
