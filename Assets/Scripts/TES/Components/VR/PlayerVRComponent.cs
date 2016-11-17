@@ -60,9 +60,9 @@ namespace TESUnity.Components.VR
 
         private VRVendor _vrVendor = VRVendor.None;
         private Transform _camTransform = null;
-        private Transform _canvas = null;
+        private RectTransform _canvas = null;
         private Transform _pivotCanvas = null;
-        private Transform _hud = null;
+        private RectTransform _hud = null;
 
         [SerializeField]
         private bool _isSpectator = false;
@@ -121,7 +121,9 @@ namespace TESUnity.Components.VR
                 if (_mainCanvas == null)
                     throw new UnityException("The Main Canvas Is Null");
 
-                _canvas = _mainCanvas.GetComponent<Transform>();
+                uiManager.Crosshair.Enabled = false;
+
+                _canvas = _mainCanvas.GetComponent<RectTransform>();
                 _pivotCanvas = _canvas.parent;
 
                 // Put the Canvas in WorldSpace and Attach it to the camera.
@@ -136,23 +138,8 @@ namespace TESUnity.Components.VR
                 _pivotCanvas.localScale = Vector3.one;
                 GUIUtils.SetCanvasToWorldSpace(_canvas.GetComponent<Canvas>(), _pivotCanvas, 1.0f, 0.002f);
 
-                // Add the HUD
-                if (!_isSpectator)
-                {
-                    var hudCanvas = GUIUtils.CreateCanvas(false);
-                    hudCanvas.name = "HUD_Canvas";
-
-                    _hud = hudCanvas.GetComponent<Transform>();
-
-                    GUIUtils.SetCanvasToWorldSpace(hudCanvas.GetComponent<Canvas>(), _camTransform, 1.0f, 0.002f);
-
-                    uiManager.HUD.SetParent(_hud);
-
-                    var rHUD = uiManager.HUD.GetComponent<RectTransform>();
-                    rHUD.anchorMin = Vector3.zero;
-                    rHUD.anchorMax = Vector3.one;
-                }
-                else
+                // Add the HUD, its fixed to the camera.
+                if (_isSpectator)
                     ShowUICursor(true);
 
                 // Setup the camera
@@ -177,6 +164,8 @@ namespace TESUnity.Components.VR
             // At any time, the user might want to reset the orientation and position.
             if (Input.GetButtonDown("Recenter"))
                 ResetOrientationAndPosition();
+
+            RecenterUI(true);
         }
 
         public void ShowUICursor(bool visible)
@@ -189,13 +178,16 @@ namespace TESUnity.Components.VR
         /// <summary>
         /// Recenter the Main UI.
         /// </summary>
-        private void RecenterUI()
+        private void RecenterUI(bool onlyPosition = false)
         {
             if (_vrVendor != VRVendor.None)
             {
-                var pivotRot = _pivotCanvas.localRotation;
-                pivotRot.y = _camTransform.localRotation.y;
-                _pivotCanvas.localRotation = pivotRot;
+                if (!onlyPosition)
+                {
+                    var pivotRot = _pivotCanvas.localRotation;
+                    pivotRot.y = _camTransform.localRotation.y;
+                    _pivotCanvas.localRotation = pivotRot;
+                }
 
                 var camPosition = _camTransform.position;
                 var targetPosition = _pivotCanvas.position;
@@ -226,6 +218,8 @@ namespace TESUnity.Components.VR
                 }
             }
 #endif
+
+            RecenterUI();
         }
 
         /// <summary>
@@ -259,7 +253,7 @@ namespace TESUnity.Components.VR
                 displayController.showDirectModePreview = TESUnity.instance.directModePreview;
                 Camera.main.gameObject.AddComponent<VRViewer>();
             }
-    }
+        }
 #endif
 
 #if OCULUS
@@ -267,6 +261,8 @@ namespace TESUnity.Components.VR
         {
             if (_vrVendor == VRVendor.UnityVR && VRSettings.loadedDeviceName == "Oculus")
             {
+                var player = GetComponent<PlayerComponent>();
+
                 _camTransform.name = "CenterEyeAnchor";
 
                 var trackingSpace = _camTransform.parent;
@@ -288,12 +284,36 @@ namespace TESUnity.Components.VR
                     "RightHandAnchor"
                 };
 
-                for (int i = 0, l = anchorNames.Length; i < l; i++)
-                    CreateNode(trackingSpace, anchorNames[i]);
+                // If Oculus Touch are connected, using them as hand
+                if (OVRInput.GetActiveController() == OVRInput.Controller.Touch)
+                {
+                    Transform nodeTransform = null;
+                    OculusHand oculusHand = null;
+
+                    for (int i = 0, l = anchorNames.Length; i < l; i++)
+                    {
+                        nodeTransform = CreateNode(trackingSpace, anchorNames[i]);
+
+                        if (i == 0)
+                        {
+                            Destroy(player.leftHand);
+                            player.leftHand = nodeTransform;
+                            oculusHand = nodeTransform.gameObject.AddComponent<OculusHand>();
+                            oculusHand.TouchID = OVRInput.Controller.LTouch;
+                        }
+                        else if (i == 1)
+                        {
+                            Destroy(player.rightHand);
+                            player.rightHand = nodeTransform;
+                            oculusHand = nodeTransform.gameObject.AddComponent<OculusHand>();
+                            oculusHand.TouchID = OVRInput.Controller.RTouch;
+                        }
+                    }
+                }
             }
         }
 
-        private void CreateNode(Transform parent, string name)
+        private Transform CreateNode(Transform parent, string name)
         {
             if (!parent.Find(name))
             {
@@ -302,14 +322,16 @@ namespace TESUnity.Components.VR
                 nodeTransform.parent = parent;
                 nodeTransform.localPosition = Vector3.zero;
                 nodeTransform.localRotation = Quaternion.identity;
+                return nodeTransform;
             }
+
+            return null;
         }
 #endif
 
 #if OPENVR
         private void SetupOpenVR()
         {
-
             if (_vrVendor == VRVendor.UnityVR && VRSettings.loadedDeviceName == "OpenVR")
             {
                 var player = GetComponent<PlayerComponent>();
@@ -338,9 +360,10 @@ namespace TESUnity.Components.VR
 
                 // Now that controllers are attached, we can enable the GameObject
                 controllerGameObject.SetActive(true);
-                player.leftHand = controllerManager.left.GetComponent<Transform>();
-                player.rightHand = controllerManager.right.GetComponent<Transform>();
 
+                // Attach the controllers to the player.
+                SetupVRHand(player, true, controllerManager.left.GetComponent<Transform>());
+                SetupVRHand(player, false, controllerManager.right.GetComponent<Transform>());
 
                 // And finally the play area.
                 var playArea = new GameObject("SteamVR_PlayArea");
@@ -349,12 +372,10 @@ namespace TESUnity.Components.VR
                 playArea.AddComponent<MeshFilter>();
                 playArea.AddComponent<SteamVR_PlayArea>();
             }
-
         }
 
         private GameObject CreateController(Transform parent, string name)
         {
-
             if (!parent.Find(name))
             {
                 var node = new GameObject(name);
@@ -372,10 +393,26 @@ namespace TESUnity.Components.VR
                 return node;
             }
 
-
             return null;
         }
 #endif
+
+        private void SetupVRHand(PlayerComponent player, bool leftHand, Transform target)
+        {
+            target.position = leftHand ? player.leftHand.position : player.rightHand.position;
+            target.rotation = leftHand ? player.leftHand.rotation : player.rightHand.rotation;
+
+            if (leftHand)
+            {
+                Destroy(player.leftHand);
+                player.leftHand = target;
+            }
+            else
+            {
+                Destroy(player.rightHand);
+                player.rightHand = target;
+            }
+        }
 
         #endregion
     }

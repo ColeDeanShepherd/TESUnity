@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using TESUnity.ESM;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,12 +48,12 @@ namespace TESUnity.UI
 
         void Update()
         {
-            if (_bookRecord == null)
+            if (!_container.activeSelf)
                 return;
 
             if (Input.GetButtonDown("Use"))
                 Take();
-            else if (Input.GetButton("Menu"))
+            else if (Input.GetButtonDown("Menu"))
                 Close();
         }
 
@@ -94,7 +95,7 @@ namespace TESUnity.UI
 
             UpdateBook();
 
-            _container.SetActive(true);
+            StartCoroutine(SetBookActive(true));
         }
 
         private void UpdateBook()
@@ -159,6 +160,13 @@ namespace TESUnity.UI
                 OnClosed(_bookRecord);
 
             _bookRecord = null;
+        }
+
+        private IEnumerator SetBookActive(bool active)
+        {
+            yield return new WaitForEndOfFrame();
+
+            _container.SetActive(active);
         }
     }
 }

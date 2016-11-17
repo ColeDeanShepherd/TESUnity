@@ -8,6 +8,12 @@ namespace TESUnity.UI
     {
         private Image _crosshair = null;
 
+        public bool Enabled
+        {
+            get { return _crosshair.enabled; }
+            set { _crosshair.enabled = value; }
+        }
+
         void Start()
         {
             var textureManager = TESUnity.instance.TextureManager;
