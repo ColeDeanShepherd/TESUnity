@@ -48,6 +48,14 @@ namespace TESUnity.Components.Records
         {
             var BOOK = (BOOKRecord)record;
 
+            if (BOOK.TEXT == null)
+            {
+                if (BOOK.BKDT.scroll == 1)
+                    OnTakeScroll(BOOK);
+                else
+                    OnTakeBook(BOOK);
+            }
+
             if (BOOK.BKDT.scroll == 1)
             {
                 UIManager.Scroll.Show(BOOK);
