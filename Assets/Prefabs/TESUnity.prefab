@@ -8,7 +8,6 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 477232}
-  - 114: {fileID: 11482094}
   - 114: {fileID: 11464354}
   m_Layer: 0
   m_Name: TESUnity
@@ -36,27 +35,29 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 156636}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f45c2eae24c43174a92eeaa8e8613dd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _bypassINIConfig: 0
   dataPath: 
   useKinematicRigidbodies: 1
   playMusic: 1
-  materialType: 2
+  materialType: 1
   renderPath: 1
   ambientIntensity: 1.5
-  renderSunShadows: 0
+  renderSunShadows: 1
   renderLightShadows: 0
   renderExteriorCellLights: 0
   animateLights: 0
   antiAliasing: 0
   ambientOcclusion: 0
-  bloom: 0
+  bloom: 1
   waterBackSideTransparent: 0
   followHeadDirection: 1
   directModePreview: 1
+  UIManager: {fileID: 0}
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   UIDropdownArrowImg: {fileID: 10915, guid: 0000000000000000f000000000000000, type: 0}
@@ -65,22 +66,12 @@ MonoBehaviour:
   UIKnobImg: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   UIMaskImg: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
   UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  playerPrefab: {fileID: 1000014283173620, guid: bb4f50960e3bc08459bb6f708eb7d79f,
+    type: 2}
   waterPrefab: {fileID: 1000013936092580, guid: e8e3a26facab0b742b401e1c0da419dc,
     type: 2}
   creaturesEnabled: 1
   npcsEnabled: 0
---- !u!114 &11482094
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 156636}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18f65c96457599848b0d63ff346899ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bypassConfigINI: 0
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

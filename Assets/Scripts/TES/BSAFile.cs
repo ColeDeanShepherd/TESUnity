@@ -16,6 +16,7 @@ namespace TESUnity
 				return unchecked((int)(value1 ^ value2));
 			}
 		}
+
 		public class FileMetadata
 		{
 			public uint size;
@@ -50,14 +51,17 @@ namespace TESUnity
 
 			ReadMetadata();
 		}
+
 		void IDisposable.Dispose()
 		{
 			Close();
 		}
+
 		~BSAFile()
 		{
 			Close();
 		}
+
 		public void Close()
 		{
 			lock(readerLock)
@@ -201,6 +205,7 @@ namespace TESUnity
 			// Skip to the file data section.
 			reader.BaseStream.Position = fileDataSectionPostion;
 		}
+
 		private FileNameHash HashFilePath(string filePath)
 		{
 			filePath = filePath.Replace('/', '\\');

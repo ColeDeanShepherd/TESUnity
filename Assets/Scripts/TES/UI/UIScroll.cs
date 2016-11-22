@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using TESUnity.ESM;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,6 +32,9 @@ namespace TESUnity.UI
 
         void Update()
         {
+            if (!_container.activeSelf)
+                return;
+
             if (Input.GetButtonDown("Use"))
                 Take();
             else if (Input.GetButton("Menu"))
@@ -49,7 +53,7 @@ namespace TESUnity.UI
 
             _content.text = words;
 
-            gameObject.SetActive(true);
+            StartCoroutine(SetScrollActive(true));
         }
 
         public void Take()
@@ -66,17 +70,15 @@ namespace TESUnity.UI
 
             if (OnClosed != null)
                 OnClosed(_bookRecord);
+
+            _bookRecord = null;
         }
 
-        public static UIScroll Create(Transform parent)
+        private IEnumerator SetScrollActive(bool active)
         {
-            var uiScrollAsset = Resources.Load<GameObject>("UI/Scroll");
-            var uiScrollGO = (GameObject)GameObject.Instantiate(uiScrollAsset, parent);
-            var uiTransform = uiScrollGO.GetComponent<RectTransform>();
-            uiTransform.localPosition = Vector3.zero;
-            uiTransform.localRotation = Quaternion.identity;
-            uiTransform.localScale = Vector3.one;
-            return uiScrollGO.GetComponent<UIScroll>();
+            yield return new WaitForEndOfFrame();
+
+            _container.SetActive(active);
         }
     }
 }

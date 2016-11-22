@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using TESUnity.UI;
 using UnityEngine;
 
 namespace TESUnity
@@ -13,6 +14,12 @@ namespace TESUnity
         }
 
         #region Inspector-set Members
+
+#if UNITY_EDITOR
+        [Header("Editor Only")]
+        [SerializeField]
+        private bool _bypassINIConfig = false;
+#endif
 
         [Header("Global")]
         public string dataPath;
@@ -41,6 +48,7 @@ namespace TESUnity
         public bool directModePreview = true;
 
         [Header("UI")]
+        public UIManager UIManager;
         public Sprite UIBackgroundImg;
         public Sprite UICheckmarkImg;
         public Sprite UIDropdownArrowImg;
@@ -50,19 +58,18 @@ namespace TESUnity
         public Sprite UISpriteImg;
 
         [Header("Prefabs")]
+        public GameObject playerPrefab;
         public GameObject waterPrefab;
 
         [Header("Debug")]
         public bool creaturesEnabled = false;
         public bool npcsEnabled = false;
+
         #endregion
 
         private MorrowindDataReader MWDataReader;
         private MorrowindEngine MWEngine;
         private MusicPlayer musicPlayer;
-
-        private GameObject testObj;
-        private string testObjPath;
 
         public MorrowindEngine Engine
         {
@@ -77,12 +84,28 @@ namespace TESUnity
         private void Awake()
         {
             instance = this;
+
+            var path = dataPath;
+#if UNITY_EDITOR
+            if (!_bypassINIConfig)
+                path = GameSettings.CheckSettings(this);
+#else
+            var path = GameSettings.CheckSettings(this);
+#endif
+
+            if (!GameSettings.IsValidPath(path))
+            {
+                GameSettings.SetDataPath(string.Empty);
+                UnityEngine.SceneManagement.SceneManager.LoadScene("AskPathScene");
+            }
+            else
+                dataPath = path;
         }
 
         private void Start()
         {
             MWDataReader = new MorrowindDataReader(dataPath);
-            MWEngine = new MorrowindEngine(MWDataReader);
+            MWEngine = new MorrowindEngine(MWDataReader, UIManager);
 
             if (playMusic)
             {
@@ -90,18 +113,16 @@ namespace TESUnity
                 musicPlayer = new MusicPlayer();
 
                 foreach (var songFilePath in Directory.GetFiles(dataPath + "/Music/Explore"))
-                {
                     if (!songFilePath.Contains("Morrowind Title"))
-                    {
                         musicPlayer.AddSong(songFilePath);
-                    }
-                }
+
                 musicPlayer.Play();
             }
 
             // Spawn the player.
-            //MWEngine.SpawnPlayerInside("Imperial Prison Ship", new Vector3(0.8f, -0.25f, -1.4f));
-            MWEngine.SpawnPlayerOutside(new Vector2i(-2, -9), new Vector3(-137.94f, 2.30f, -1037.6f));
+            //MWEngine.SpawnPlayerInside(playerPrefab, new Vector2i(4537908, 1061158912), new Vector3(0.8f, -0.45f, -1.4f));
+
+            MWEngine.SpawnPlayerOutside(playerPrefab, new Vector2i(-2, -9), new Vector3(-137.94f, 2.30f, -1037.6f));
         }
 
         private void OnDestroy()
@@ -116,24 +137,22 @@ namespace TESUnity
         private void Update()
         {
             MWEngine.Update();
-            if (playMusic)
-            {
-                musicPlayer.Update();
-            }
 
+            if (playMusic)
+                musicPlayer.Update();
+
+#if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.P))
             {
                 if (MWEngine.currentCell == null || !MWEngine.currentCell.isInterior)
-                {
                     Debug.Log(MWEngine.GetExteriorCellIndices(Camera.main.transform.position));
-                }
                 else
-                {
                     Debug.Log(MWEngine.currentCell.NAME.value);
-                }
             }
+#endif
         }
 
+#if UNITY_EDITOR
         private void TestAllCells(string resultsFilePath)
         {
             using (StreamWriter writer = new StreamWriter(resultsFilePath))
@@ -166,5 +185,6 @@ namespace TESUnity
                 }
             }
         }
+#endif
     }
 }

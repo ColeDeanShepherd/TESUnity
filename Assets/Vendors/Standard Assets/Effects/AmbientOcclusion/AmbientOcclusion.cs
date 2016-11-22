@@ -57,9 +57,9 @@ namespace UnityStandardAssets.CinematicEffects
                 switch (settings.sampleCount)
                 {
                     case SampleCount.Lowest: return 3;
-                    case SampleCount.Low:    return 6;
+                    case SampleCount.Low: return 6;
                     case SampleCount.Medium: return 12;
-                    case SampleCount.High:   return 20;
+                    case SampleCount.High: return 20;
                 }
                 return Mathf.Clamp(settings.sampleCountValue, 1, 256);
             }
@@ -157,7 +157,7 @@ namespace UnityStandardAssets.CinematicEffects
             get { return _quadMesh; }
         }
 
-        [SerializeField] Mesh _quadMesh;
+        [SerializeField] Mesh _quadMesh = null;
 
         #endregion
 
