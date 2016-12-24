@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace TESUnity.UI
 {
-    public class UIInteractiveText : MonoBehaviour, IHUDWidget
+    public class UIInteractiveText : MonoBehaviour
     {
         private const int WidgetWidth = 200;
         private const int WidgetHeight = 100;
@@ -27,7 +27,6 @@ namespace TESUnity.UI
 
         void Start()
         {
-            transform.localPosition = Vector3.zero;
             _opened = false;
             _container.SetActive(false);
         }
@@ -51,7 +50,6 @@ namespace TESUnity.UI
                 _value.text = "Value: " + value;
             }
 
-            transform.SetAsLastSibling();
             _container.SetActive(true);
             _opened = true;
         }
@@ -63,22 +61,6 @@ namespace TESUnity.UI
                 _container.SetActive(false);
                 _opened = false;
             }
-        }
-
-        public static UIInteractiveText Create(Transform parent)
-        {
-            var interactiveTextAsset = Resources.Load<GameObject>("UI/InteractiveText");
-            var interactiveTextGO = (GameObject)GameObject.Instantiate(interactiveTextAsset, parent);
-            return interactiveTextGO.GetComponent<UIInteractiveText>();
-        }
-
-        public void SetParent(Transform transform)
-        {
-            var rectTransform = GetComponent<RectTransform>();
-            rectTransform.SetParent(transform, false);
-            rectTransform.localPosition = Vector3.zero;
-            rectTransform.localRotation = Quaternion.identity;
-            rectTransform.localScale = Vector3.one;
         }
     }
 }

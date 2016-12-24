@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using TESUnity.ESM;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,9 +48,12 @@ namespace TESUnity.UI
 
         void Update()
         {
+            if (!_container.activeSelf)
+                return;
+
             if (Input.GetButtonDown("Use"))
                 Take();
-            else if (Input.GetButton("Menu"))
+            else if (Input.GetButtonDown("Menu"))
                 Close();
         }
 
@@ -91,7 +95,7 @@ namespace TESUnity.UI
 
             UpdateBook();
 
-            gameObject.SetActive(true);
+            StartCoroutine(SetBookActive(true));
         }
 
         private void UpdateBook()
@@ -154,17 +158,15 @@ namespace TESUnity.UI
 
             if (OnClosed != null)
                 OnClosed(_bookRecord);
+
+            _bookRecord = null;
         }
 
-        public static UIBook Create(Transform parent)
+        private IEnumerator SetBookActive(bool active)
         {
-            var uiBookAsset = Resources.Load<GameObject>("UI/Book");
-            var uiBookGO = (GameObject)GameObject.Instantiate(uiBookAsset, parent);
-            var uiTransform = uiBookGO.GetComponent<RectTransform>();
-            uiTransform.localPosition = Vector3.zero;
-            uiTransform.localRotation = Quaternion.identity;
-            uiTransform.localScale = Vector3.one;
-            return uiBookGO.GetComponent<UIBook>();
+            yield return new WaitForEndOfFrame();
+
+            _container.SetActive(active);
         }
     }
 }
