@@ -1,5 +1,15 @@
 #TESUnity Changelog
 
+## Version 0.5 - 02/20/2017
+
+### Added
+Basic HUD UI to the project.
+Basic health script.
+
+### Changes
+-  Replaced Unitys built in post effects with Unitys new post processing effects.
+
+
 ## Version 0.5 - 10/21/2016
 ### Added
 - OSVR Support

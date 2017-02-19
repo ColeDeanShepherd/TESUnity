@@ -1,5 +1,7 @@
 # TESUnity
 
+Hi my name is ReignOfDave and i have decided to extend the open source world view by @ColeDeanShepherd by trying to recreate Morrowind in unity!
+
 World viewers for Elder Scrolls games in the Unity game engine with VR support supporting Oculus, OSVR and OpenVR. For advanced VR support, please read the README.md located into the `Vendors` folder.
 
 ## Getting Started
@@ -45,10 +47,10 @@ The first step is to rename the `config.ini.dist` file to `config.ini`.
 | Move | W, A, S, D* | Left thumbstick |
 | Sprint | Left Shift | Left thumbstick button | 
 | Walk | Left Ctrl | Right thumstick button |
-| Use / Open / Attack | Space | Button A |
+| Use / Open / Attack | E | Button A |
 | Cancel / Menu | Left click | Button B | 
 | Take (book mode) | Nothing | Button X |
-| Jump | E | button Y |
+| Jump | Space | button Y |
 | Toggle Flight Mode | Tab | Nothing |
 | Toggle Lantern | L | Nothing |
 | Free Cursor Lock | Backquote | Nothing |
