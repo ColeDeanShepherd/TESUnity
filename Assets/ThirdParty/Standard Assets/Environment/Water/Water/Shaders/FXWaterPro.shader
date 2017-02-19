@@ -86,7 +86,7 @@ v2f vert(appdata v)
 	o.viewDir.xzy = WorldSpaceViewDir(v.vertex);
 	
 	#if defined(HAS_REFLECTION) || defined(HAS_REFRACTION)
-	o.ref = ComputeScreenPos(o.pos);
+	o.ref = ComputeNonStereoScreenPos(o.pos);
 	#endif
 
 	UNITY_TRANSFER_FOG(o,o.pos);

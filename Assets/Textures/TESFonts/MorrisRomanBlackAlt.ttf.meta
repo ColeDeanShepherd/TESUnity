@@ -1,14 +1,20 @@
 fileFormatVersion: 2
-guid: 04c8fd0278dfb124bbcfa49878fd257e
+guid: d0452066c5c4ced489d60e39bb9a8daa
 TrueTypeFontImporter:
-  serializedVersion: 2
+  serializedVersion: 4
   fontSize: 16
   forceTextureCase: -2
-  characterSpacing: 1
-  characterPadding: 0
+  characterSpacing: 0
+  characterPadding: 1
   includeFontData: 1
-  use2xBehaviour: 0
-  fontNames: []
+  fontName: Morris Roman Alternate
+  fontNames:
+  - Morris Roman Alternate
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 04c8fd0278dfb124bbcfa49878fd257e, type: 3}
   customCharacters: 
   fontRenderingMode: 0
+  ascentCalculationMode: 1
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

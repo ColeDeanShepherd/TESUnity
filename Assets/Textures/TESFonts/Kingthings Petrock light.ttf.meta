@@ -1,14 +1,20 @@
 fileFormatVersion: 2
-guid: 58619f879fd4b6b4eafd50f12bdefd6f
+guid: 604fb97f1990d844c9bca1c3590330de
 TrueTypeFontImporter:
-  serializedVersion: 2
+  serializedVersion: 4
   fontSize: 16
   forceTextureCase: -2
-  characterSpacing: 1
-  characterPadding: 0
+  characterSpacing: 0
+  characterPadding: 1
   includeFontData: 1
-  use2xBehaviour: 0
-  fontNames: []
+  fontName: Kingthings Petrock Light
+  fontNames:
+  - Kingthings Petrock Light
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 58619f879fd4b6b4eafd50f12bdefd6f, type: 3}
   customCharacters: 
   fontRenderingMode: 0
+  ascentCalculationMode: 1
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

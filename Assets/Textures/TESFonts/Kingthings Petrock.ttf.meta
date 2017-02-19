@@ -1,14 +1,20 @@
 fileFormatVersion: 2
-guid: c6bf5a37a181225488809a487565e7cc
+guid: 7070d216b5f532440a0174b9a8afaae9
 TrueTypeFontImporter:
-  serializedVersion: 2
+  serializedVersion: 4
   fontSize: 16
   forceTextureCase: -2
-  characterSpacing: 1
-  characterPadding: 0
+  characterSpacing: 0
+  characterPadding: 1
   includeFontData: 1
-  use2xBehaviour: 0
-  fontNames: []
+  fontName: Kingthings Petrock
+  fontNames:
+  - Kingthings Petrock
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: c6bf5a37a181225488809a487565e7cc, type: 3}
   customCharacters: 
   fontRenderingMode: 0
+  ascentCalculationMode: 1
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 
