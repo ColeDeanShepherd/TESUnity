@@ -1,14 +1,20 @@
 fileFormatVersion: 2
-guid: 22607200cdf6a8e45a9c8f3a1f651ff0
+guid: 3cf1d8fe04a8e5f409b135df9e74cdcd
 TrueTypeFontImporter:
-  serializedVersion: 2
+  serializedVersion: 4
   fontSize: 16
   forceTextureCase: -2
-  characterSpacing: 1
-  characterPadding: 0
+  characterSpacing: 0
+  characterPadding: 1
   includeFontData: 1
-  use2xBehaviour: 0
-  fontNames: []
+  fontName: Planewalker
+  fontNames:
+  - Planewalker
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 22607200cdf6a8e45a9c8f3a1f651ff0, type: 3}
   customCharacters: 
   fontRenderingMode: 0
+  ascentCalculationMode: 1
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,14 +1,20 @@
 fileFormatVersion: 2
-guid: 027fd2eb8eb11174eb3dee5f867a8916
+guid: f41a212dfa404194985e738d2cf52be0
 TrueTypeFontImporter:
-  serializedVersion: 2
+  serializedVersion: 4
   fontSize: 16
   forceTextureCase: -2
-  characterSpacing: 1
-  characterPadding: 0
+  characterSpacing: 0
+  characterPadding: 1
   includeFontData: 1
-  use2xBehaviour: 0
-  fontNames: []
+  fontName: OblivionFont
+  fontNames:
+  - OblivionFont
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 027fd2eb8eb11174eb3dee5f867a8916, type: 3}
   customCharacters: 
   fontRenderingMode: 0
+  ascentCalculationMode: 1
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,14 +1,20 @@
 fileFormatVersion: 2
-guid: b36fd84c78cb2c34a898027547a00378
+guid: 68dc18d8a315f8045b9ab4773d8d98a5
 TrueTypeFontImporter:
-  serializedVersion: 2
+  serializedVersion: 4
   fontSize: 16
   forceTextureCase: -2
-  characterSpacing: 1
-  characterPadding: 0
+  characterSpacing: 0
+  characterPadding: 1
   includeFontData: 1
-  use2xBehaviour: 0
-  fontNames: []
+  fontName: Kingthings Exeter
+  fontNames:
+  - Kingthings Exeter
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: b36fd84c78cb2c34a898027547a00378, type: 3}
   customCharacters: 
   fontRenderingMode: 0
+  ascentCalculationMode: 1
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 
