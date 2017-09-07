@@ -87,19 +87,23 @@ namespace TESUnity
 
             var path = dataPath;
 #if UNITY_EDITOR
-            if (!_bypassINIConfig)
+            if(!_bypassINIConfig)
+            {
                 path = GameSettings.CheckSettings(this);
+            }
 #else
             var path = GameSettings.CheckSettings(this);
 #endif
 
-            if (!GameSettings.IsValidPath(path))
+            if(!GameSettings.IsValidPath(path))
             {
                 GameSettings.SetDataPath(string.Empty);
                 UnityEngine.SceneManagement.SceneManager.LoadScene("AskPathScene");
             }
             else
+            {
                 dataPath = path;
+            }
         }
 
         private void Start()
@@ -107,13 +111,13 @@ namespace TESUnity
             MWDataReader = new MorrowindDataReader(dataPath);
             MWEngine = new MorrowindEngine(MWDataReader, UIManager);
 
-            if (playMusic)
+            if(playMusic)
             {
                 // Start the music.
                 musicPlayer = new MusicPlayer();
 
-                foreach (var songFilePath in Directory.GetFiles(dataPath + "/Music/Explore"))
-                    if (!songFilePath.Contains("Morrowind Title"))
+                foreach(var songFilePath in Directory.GetFiles(dataPath + "/Music/Explore"))
+                    if(!songFilePath.Contains("Morrowind Title"))
                         musicPlayer.AddSong(songFilePath);
 
                 musicPlayer.Play();
@@ -127,7 +131,7 @@ namespace TESUnity
 
         private void OnDestroy()
         {
-            if (MWDataReader != null)
+            if(MWDataReader != null)
             {
                 MWDataReader.Close();
                 MWDataReader = null;
@@ -138,26 +142,17 @@ namespace TESUnity
         {
             MWEngine.Update();
 
-            if (playMusic)
-                musicPlayer.Update();
-
-#if UNITY_EDITOR
-            if (Input.GetKeyDown(KeyCode.P))
+            if(playMusic)
             {
-                if (MWEngine.currentCell == null || !MWEngine.currentCell.isInterior)
-                    Debug.Log(MWEngine.GetExteriorCellIndices(Camera.main.transform.position));
-                else
-                    Debug.Log(MWEngine.currentCell.NAME.value);
+                musicPlayer.Update();
             }
-#endif
         }
-
-#if UNITY_EDITOR
+        
         private void TestAllCells(string resultsFilePath)
         {
-            using (StreamWriter writer = new StreamWriter(resultsFilePath))
+            using(StreamWriter writer = new StreamWriter(resultsFilePath))
             {
-                foreach (var record in MWDataReader.MorrowindESMFile.GetRecordsOfType<ESM.CELLRecord>())
+                foreach(var record in MWDataReader.MorrowindESMFile.GetRecordsOfType<ESM.CELLRecord>())
                 {
                     var CELL = (ESM.CELLRecord)record;
 
@@ -174,7 +169,7 @@ namespace TESUnity
                         writer.Write("Fail: ");
                     }
 
-                    if (!CELL.isInterior)
+                    if(!CELL.isInterior)
                     {
                         writer.WriteLine(CELL.gridCoords.ToString());
                     }
@@ -185,6 +180,5 @@ namespace TESUnity
                 }
             }
         }
-#endif
     }
 }
