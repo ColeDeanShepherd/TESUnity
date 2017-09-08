@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using TESUnity.UI;
 using UnityEngine;
 
@@ -167,6 +168,10 @@ namespace TESUnity
                         DestroyImmediate(cellInfo.gameObject);
 
                         writer.Write("Pass: ");
+                    }
+                    catch(Exception exception)
+                    {
+                        writer.Write("Fail: ");
                     }
                     catch
                     {

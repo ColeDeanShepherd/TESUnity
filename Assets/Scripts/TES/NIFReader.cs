@@ -433,9 +433,25 @@ namespace TESUnity
 
                     return data;
                 }
+                else if(StringUtils.Equals(nodeTypeBytes, "NiBillboardNode"))
+                {
+                    var data = new NiBillboardNode();
+                    data.Deserialize(reader);
+
+                    return data;
+                }
+                else if(StringUtils.Equals(nodeTypeBytes, "NiShadeProperty"))
+                {
+                    var property = new NiShadeProperty();
+                    property.Deserialize(reader);
+
+                    return property;
+                }
 				else
-				{
-					throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
+
+                {
+					Debug.Log("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
+                    return null;
 				}
 			}
 			public static Matrix4x4 Read3x3RotationMatrix(UnityBinaryReader reader)
@@ -1252,14 +1268,25 @@ namespace TESUnity
 			{
 				base.Deserialize(reader);
 
-				flags = reader.ReadLEUInt16();
+				flags = NiReaderUtils.ReadFlags(reader);
 				vertexMode = (VertMode)reader.ReadLEUInt32();
 				lightingMode = (LightMode)reader.ReadLEUInt32();
 			}
 		}
+        public class NiShadeProperty : NiProperty
+        {
+            public ushort flags;
 
-		// Data
-		public class NiUVData : NiObject
+            public override void Deserialize(UnityBinaryReader reader)
+            {
+                base.Deserialize(reader);
+
+                flags = NiReaderUtils.ReadFlags(reader);
+            }
+        }
+
+        // Data
+        public class NiUVData : NiObject
 		{
 			public KeyGroup<float>[] UVGroups;
 
