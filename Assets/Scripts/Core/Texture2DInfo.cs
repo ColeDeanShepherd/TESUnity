@@ -2,7 +2,6 @@
 
 /// <summary>
 /// Stores information about a 2D texture.
-/// Used when loading textures on background threads because Texture2D can't be used on any thread but the main thread.
 /// </summary>
 public class Texture2DInfo
 {
@@ -21,7 +20,7 @@ public class Texture2DInfo
 	}
 
 	/// <summary>
-	/// Creates a Unity Texture2D from this Texture2DInfo. Can only be called from the main thread.
+	/// Creates a Unity Texture2D from this Texture2DInfo.
 	/// </summary>
 	public Texture2D ToTexture2D()
 	{

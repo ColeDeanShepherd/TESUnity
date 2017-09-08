@@ -117,8 +117,12 @@ namespace TESUnity
                 musicPlayer = new MusicPlayer();
 
                 foreach(var songFilePath in Directory.GetFiles(dataPath + "/Music/Explore"))
+                {
                     if(!songFilePath.Contains("Morrowind Title"))
+                    {
                         musicPlayer.AddSong(songFilePath);
+                    }
+                }
 
                 musicPlayer.Play();
             }
@@ -177,6 +181,8 @@ namespace TESUnity
                     {
                         writer.WriteLine(CELL.NAME.value);
                     }
+
+                    writer.Flush();
                 }
             }
         }

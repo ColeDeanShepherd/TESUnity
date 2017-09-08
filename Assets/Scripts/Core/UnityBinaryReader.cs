@@ -6,7 +6,6 @@ using UnityEngine;
 /// <summary>
 /// An improved BinaryReader for Unity.
 /// </summary>
-/// <remarks>Not thread safe.</remarks>
 public class UnityBinaryReader : IDisposable
 {
     public Stream BaseStream

@@ -353,7 +353,7 @@ namespace TESUnity
 
             yield return null;
 
-            // Start loading all required assets in background threads.
+            // Start loading all required assets.
             foreach (var refCellObjInfo in refCellObjInfos)
             {
                 if (refCellObjInfo.modelFilePath != null)

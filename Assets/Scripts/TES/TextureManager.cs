@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TESUnity
 {
 	/// <summary>
-	/// Manages loading and instantiation of Morrowind textures. Thread safe.
+	/// Manages loading and instantiation of Morrowind textures.
 	/// </summary>
 	public class TextureManager
 	{
@@ -14,30 +14,24 @@ namespace TESUnity
 		}
 
 		/// <summary>
-		/// Loads a texture and caches it. Thread safe.
+		/// Loads a texture and caches it.
 		/// </summary>
 		public void PreLoadTexture(string texturePath)
 		{
 			// If the texture is already loaded, return.
-			lock(dictionariesLock)
+			if(cachedTextureInfos.ContainsKey(texturePath) || cachedTextures.ContainsKey(texturePath))
 			{
-				if(cachedTextureInfos.ContainsKey(texturePath) || cachedTextures.ContainsKey(texturePath))
-				{
-					return;
-				}
+				return;
 			}
 
 			// The texture hasn't been loaded yet, so load it.
 			var textureInfo = dataReader.LoadTexture(texturePath);
 
-			lock(dictionariesLock)
-			{
-				cachedTextureInfos[texturePath] = textureInfo;
-			}
+			cachedTextureInfos[texturePath] = textureInfo;
 		}
 
         /// <summary>
-        /// Loads a texture. Can only be called from the main thread.
+        /// Loads a texture.
         /// </summary>
         /// <param name="texturePath">The texture's path</param>
         /// <param name="flip">Indicates if the texture must be vertically flipped. Default is False.</param>
@@ -47,10 +41,7 @@ namespace TESUnity
 			// Try to get the cached Texture2D.
 			Texture2D texture;
 
-			lock(dictionariesLock)
-			{
-				cachedTextures.TryGetValue(texturePath, out texture);
-			}
+			cachedTextures.TryGetValue(texturePath, out texture);
 
 			// If there is no cached Texture2D.
 			if(texture == null)
@@ -60,10 +51,7 @@ namespace TESUnity
 
 				texture = textureInfo.ToTexture2D();
 
-				lock(dictionariesLock)
-				{
-					cachedTextures[texturePath] = texture;
-				}
+				cachedTextures[texturePath] = texture;
 			}
 
             if (texture != null && flip)
@@ -73,8 +61,7 @@ namespace TESUnity
 		}
 
         private MorrowindDataReader dataReader;
-
-		private object dictionariesLock = new object();
+        
 		private Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();
 		private Dictionary<string, Texture2DInfo> cachedTextureInfos = new Dictionary<string, Texture2DInfo>();
 
@@ -83,10 +70,7 @@ namespace TESUnity
 			// Try to get the cached Texture2DInfo.
 			Texture2DInfo textureInfo;
 
-			lock(dictionariesLock)
-			{
-				cachedTextureInfos.TryGetValue(texturePath, out textureInfo);
-			}
+			cachedTextureInfos.TryGetValue(texturePath, out textureInfo);
 
 			// If there is no cached Texture2DInfo.
 			if(textureInfo == null)
@@ -95,10 +79,7 @@ namespace TESUnity
 			}
 			else
 			{
-				lock(dictionariesLock)
-				{
-					cachedTextureInfos.Remove(texturePath);
-				}
+				cachedTextureInfos.Remove(texturePath);
 			}
 
 			return textureInfo;
