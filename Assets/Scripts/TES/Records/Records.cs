@@ -47,6 +47,8 @@ namespace TESUnity.ESM
 
             while (reader.BaseStream.Position < dataEndPos)
             {
+                var subRecordStartStreamPosition = reader.BaseStream.Position;
+
                 var subRecordHeader = new SubRecordHeader();
                 subRecordHeader.Deserialize(reader);
 
@@ -56,7 +58,14 @@ namespace TESUnity.ESM
                 if (subRecord != null)
                 {
                     subRecord.header = subRecordHeader;
+
+                    var subRecordDataStreamPosition = reader.BaseStream.Position;
                     subRecord.DeserializeData(reader, subRecordHeader.dataSize);
+                    
+                    if(reader.BaseStream.Position != (subRecordDataStreamPosition + subRecord.header.dataSize))
+                    {
+                        throw new FormatException("Failed reading " + subRecord.header.name + " subrecord at offset " + subRecordStartStreamPosition);
+                    }
                 }
                 else
                 {
@@ -240,6 +249,13 @@ namespace TESUnity.ESM
                 thunder = reader.ReadByte();
                 ash = reader.ReadByte();
                 blight = reader.ReadByte();
+
+                // v1.3 ESM files add 2 bytes to WEAT subrecords.
+                if(dataSize == 10)
+                {
+                    reader.ReadByte();
+                    reader.ReadByte();
+                }
             }
         }
         public class CNAMSubRecord : SubRecord

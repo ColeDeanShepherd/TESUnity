@@ -59,7 +59,9 @@ namespace TESUnity
                 return DDS.DDSReader.LoadDDSTexture(new MemoryStream(fileData));
             }
             else
+            {
                 throw new FileNotFoundException("Could not find file \"" + texturePath + "\" in a BSA file.");
+            }
         }
 
         public NIF.NiFile LoadNIF(string filePath)

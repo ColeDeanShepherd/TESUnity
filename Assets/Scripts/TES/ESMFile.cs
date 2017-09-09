@@ -187,6 +187,7 @@ namespace TESUnity
                     case "NPC_":
                         return TESUnity.instance.npcsEnabled ? new NPC_Record() : null;
 					default:
+                        Debug.Log("Unsupported ESM record type: " + recordName);
 						return null;
 				}
 			}
@@ -196,8 +197,10 @@ namespace TESUnity
 				var recordList = new List<Record>();
 
 				while(reader.BaseStream.Position < reader.BaseStream.Length)
-				{
-					var recordHeader = new RecordHeader();
+                {
+                    var recordStartStreamPosition = reader.BaseStream.Position;
+
+                    var recordHeader = new RecordHeader();
 					recordHeader.Deserialize(reader);
 
 					var recordName = recordHeader.name;
@@ -207,7 +210,14 @@ namespace TESUnity
 					if(record != null)
 					{
 						record.header = recordHeader;
+
+                        var recordDataStreamPosition = reader.BaseStream.Position;
 						record.DeserializeData(reader);
+
+                        if(reader.BaseStream.Position != (recordDataStreamPosition + record.header.dataSize))
+                        {
+                            throw new FormatException("Failed reading " + recordName + " record at offset " + recordStartStreamPosition + " in " + filePath);
+                        }
 
 						recordList.Add(record);
 					}
