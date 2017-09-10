@@ -32,7 +32,6 @@ namespace TESUnity
         {
             Close();
         }
-
         ~MorrowindDataReader()
         {
             Close();

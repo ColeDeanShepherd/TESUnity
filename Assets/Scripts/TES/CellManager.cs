@@ -24,8 +24,6 @@ namespace TESUnity
         public CELLRecord.RefObjDataGroup refObjDataGroup;
         public Record referencedRecord;
         public string modelFilePath;
-        public bool isDonePreLoading;
-        public bool isInstantiated;
     }
 
     public class CellManager
@@ -169,13 +167,15 @@ namespace TESUnity
             string cellObjName = null;
             LANDRecord LAND = null;
 
-            if(!CELL.isInterior)
+            if (!CELL.isInterior)
             {
                 cellObjName = "cell " + CELL.gridCoords.ToString();
                 LAND = dataReader.FindLANDRecord(CELL.gridCoords);
             }
             else
+            {
                 cellObjName = CELL.NAME.value;
+            }
 
             var cellObj = new GameObject(cellObjName);
             cellObj.tag = "Cell";
@@ -242,53 +242,10 @@ namespace TESUnity
                 refCellObjInfos[i] = refObjInfo;
             }
 
-            // Start loading all required assets.
+            // Instantiate objects.
             foreach(var refCellObjInfo in refCellObjInfos)
             {
-                if(refCellObjInfo.modelFilePath != null)
-                {
-                    nifManager.PreLoadNIFAsync(refCellObjInfo.modelFilePath);
-                }
-            }
-
-            // Instantiate objects when they are done loading, or if they don't need to load.
-            int instantiatedObjectCount = 0;
-
-            while(instantiatedObjectCount < refCellObjInfos.Length)
-            {
-                foreach(var refCellObjInfo in refCellObjInfos)
-                {
-                    // Ignore objects that have already been instantiated.
-                    if(refCellObjInfo.isInstantiated)
-                    {
-                        continue;
-                    }
-
-                    // If the referenced object has a model and it has just finished pre-loading, instantiate the model.
-                    if(refCellObjInfo.modelFilePath != null)
-                    {
-                        Debug.Assert(!refCellObjInfo.isDonePreLoading);
-
-                        // Update isDonePreloading.
-                        refCellObjInfo.isDonePreLoading = nifManager.IsDonePreLoading(refCellObjInfo.modelFilePath);
-
-                        // If the model just finished pre-loading, instantiate it.
-                        if(refCellObjInfo.isDonePreLoading)
-                        {
-                            InstantiatePreLoadedCellObject(CELL, cellObjectsContainer, refCellObjInfo);
-                            refCellObjInfo.isInstantiated = true;
-
-                            instantiatedObjectCount++;
-                        }
-                    }
-                    else // If the referenced object doesn't have a model, there is no loading to be done, so try to instantiate it.
-                    {
-                        InstantiatePreLoadedCellObject(CELL, cellObjectsContainer, refCellObjInfo);
-                        refCellObjInfo.isInstantiated = true;
-
-                        instantiatedObjectCount++;
-                    }
-                }
+                InstantiatePreLoadedCellObject(CELL, cellObjectsContainer, refCellObjInfo);
             }
         }
 
@@ -349,10 +306,10 @@ namespace TESUnity
                     }
                 }
             }
-            /*else
+            else
 			{
 				Debug.Log("Unknown Object: " + refCellObjInfo.refObjDataGroup.NAME.value);
-			}*/
+			}
         }
 
         private GameObject InstantiateLight(LIGHRecord LIGH, bool indoors)

@@ -9,10 +9,9 @@ namespace TESUnity
 	// TODO: Investigate merging collision nodes with visual nodes.
 	public class NIFObjectBuilder
 	{
-		public NIFObjectBuilder(NiFile file, MorrowindDataReader dataReader, MaterialManager materialManager)
+		public NIFObjectBuilder(NiFile file, MaterialManager materialManager)
 		{
 			this.file = file;
-			this.dataReader = dataReader;
 			this.materialManager = materialManager;
 		}
 		public GameObject BuildObject()
@@ -22,7 +21,6 @@ namespace TESUnity
 			// NIF files can have any number of root NiObjects.
 			// If there is only one root, instantiate that directly.
 			// If there are multiple roots, create a container GameObject and parent it to the roots.
-
 			if(file.footer.roots.Length == 1)
 			{
 				var rootNiObject = file.blocks[file.footer.roots[0]];
@@ -67,7 +65,6 @@ namespace TESUnity
 		}
 
 		private NiFile file;
-		private MorrowindDataReader dataReader;
 		private MaterialManager materialManager;
 
 		private GameObject InstantiateRootNiObject(NiObject obj)
