@@ -25,7 +25,8 @@ namespace TESUnity
         [Header("Global")]
         public string dataPath;
         public bool useKinematicRigidbodies = true;
-        public bool playMusic = true;
+        public bool playMusic = false;
+        public bool enableLog = false;
 
         [Header("Rendering")]
         public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
@@ -84,9 +85,12 @@ namespace TESUnity
 
         private void Awake()
         {
+            Debug.unityLogger.logEnabled = enableLog;
+
             instance = this;
 
             var path = dataPath;
+
 #if UNITY_EDITOR
             if(!_bypassINIConfig)
             {

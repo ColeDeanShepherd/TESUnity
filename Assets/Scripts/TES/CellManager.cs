@@ -204,7 +204,6 @@ namespace TESUnity
         private TextureManager textureManager;
         private NIFManager nifManager;
         private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
-        private Dictionary<Vector2i, IEnumerator> cellCreationCoroutines = new Dictionary<Vector2i, IEnumerator>();
 
         /// <summary>
         /// A coroutine that instantiates the terrain for, and all objects in, a cell.
@@ -219,7 +218,6 @@ namespace TESUnity
 
             // Extract information about referenced objects. Do this all at once because it's fast.
             RefCellObjInfo[] refCellObjInfos = new RefCellObjInfo[CELL.refObjDataGroups.Count];
-
             for(int i = 0; i < CELL.refObjDataGroups.Count; i++)
             {
                 var refObjInfo = new RefCellObjInfo();
@@ -233,7 +231,7 @@ namespace TESUnity
                     var modelFileName = ESM.RecordUtils.GetModelFileName(refObjInfo.referencedRecord);
 
                     // If the model file name is valid, store the model file path.
-                    if((modelFileName != null) && (modelFileName != ""))
+                    if(!string.IsNullOrEmpty(modelFileName))
                     {
                         refObjInfo.modelFilePath = "meshes\\" + modelFileName;
                     }
@@ -245,14 +243,14 @@ namespace TESUnity
             // Instantiate objects.
             foreach(var refCellObjInfo in refCellObjInfos)
             {
-                InstantiatePreLoadedCellObject(CELL, cellObjectsContainer, refCellObjInfo);
+                InstantiateCellObject(CELL, cellObjectsContainer, refCellObjInfo);
             }
         }
 
         /// <summary>
         /// Instantiates an object in a cell. Called by InstantiateCellObjectsCoroutine after the object's assets have been pre-loaded.
         /// </summary>
-        private void InstantiatePreLoadedCellObject(CELLRecord CELL, GameObject parent, RefCellObjInfo refCellObjInfo)
+        private void InstantiateCellObject(CELLRecord CELL, GameObject parent, RefCellObjInfo refCellObjInfo)
         {
             if(refCellObjInfo.referencedRecord != null)
             {
@@ -311,7 +309,6 @@ namespace TESUnity
 				Debug.Log("Unknown Object: " + refCellObjInfo.refObjDataGroup.NAME.value);
 			}
         }
-
         private GameObject InstantiateLight(LIGHRecord LIGH, bool indoors)
         {
             var lightObj = new GameObject("Light");
@@ -369,6 +366,24 @@ namespace TESUnity
             ProcessObjectType<MISCRecord>(tagTarget, refCellObjInfo, "MiscObj");
             ProcessObjectType<CREARecord>(tagTarget, refCellObjInfo, "Creature");
             ProcessObjectType<NPC_Record>(tagTarget, refCellObjInfo, "NPC");
+        }
+        private void ProcessObjectType<RecordType>(GameObject gameObject, RefCellObjInfo info, string tag) where RecordType : Record
+        {
+            var record = info.referencedRecord;
+            if(record is RecordType)
+            {
+                var obj = GameObjectUtils.FindTopLevelObject(gameObject);
+                if(obj == null)
+                { return; }
+
+                var component = GenericObjectComponent.Create(obj, record, tag);
+
+                //only door records need access to the cell object data group so far
+                if(record is DOORRecord)
+                {
+                    ((DoorComponent)component).refObjDataGroup = info.refObjDataGroup;
+                }
+            }
         }
 
         /// <summary>
@@ -500,23 +515,6 @@ namespace TESUnity
             terrain.GetComponent<Terrain>().materialType = Terrain.MaterialType.BuiltInLegacyDiffuse;
 
             terrain.transform.parent = parent.transform;
-        }
-
-        private void ProcessObjectType<RecordType>(GameObject gameObject, RefCellObjInfo info, string tag) where RecordType : Record
-        {
-            var record = info.referencedRecord;
-            if(record is RecordType)
-            {
-                var obj = GameObjectUtils.FindTopLevelObject(gameObject);
-                if(obj == null)
-                    return;
-
-                var component = GenericObjectComponent.Create(obj, record, tag);
-
-                //only door records need access to the cell object data group so far
-                if(record is DOORRecord)
-                    ((DoorComponent)component).refObjDataGroup = info.refObjDataGroup;
-            }
         }
 
         private void DestroyExteriorCell(Vector2i indices)
