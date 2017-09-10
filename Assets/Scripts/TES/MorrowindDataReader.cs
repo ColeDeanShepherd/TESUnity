@@ -5,6 +5,7 @@ using System.IO;
 namespace TESUnity
 {
     using ESM;
+    using System.Threading.Tasks;
     using UnityEngine;
 
     public class MorrowindDataReader : IDisposable
@@ -32,7 +33,6 @@ namespace TESUnity
         {
             Close();
         }
-
         ~MorrowindDataReader()
         {
             Close();
@@ -50,30 +50,31 @@ namespace TESUnity
             MorrowindESMFile.Close();
         }
 
-        public Texture2DInfo LoadTexture(string texturePath)
+        public Task<Texture2DInfo> LoadTextureAsync(string texturePath)
         {
             var filePath = FindTexture(texturePath);
 
             if (filePath != null)
             {
                 var fileData = MorrowindBSAFile.LoadFileData(filePath);
-                return DDS.DDSReader.LoadDDSTexture(new MemoryStream(fileData));
+                return Task.Run(() => DDS.DDSReader.LoadDDSTexture(new MemoryStream(fileData)));
             }
             else
             {
                 Debug.LogWarning("Could not find file \"" + texturePath + "\" in a BSA file.");
-                return null;
+                return Task.FromResult<Texture2DInfo>(null);
             }
         }
-
-        public NIF.NiFile LoadNIF(string filePath)
+        public Task<NIF.NiFile> LoadNifAsync(string filePath)
         {
             var fileData = MorrowindBSAFile.LoadFileData(filePath);
+            
+            return Task.Run(() => {
+                var file = new NIF.NiFile(Path.GetFileNameWithoutExtension(filePath));
+                file.Deserialize(new UnityBinaryReader(new MemoryStream(fileData)));
 
-            var file = new NIF.NiFile(Path.GetFileNameWithoutExtension(filePath));
-            file.Deserialize(new UnityBinaryReader(new MemoryStream(fileData)));
-
-            return file;
+                return file;
+            });
         }
 
         public LTEXRecord FindLTEXRecord(int index)
@@ -106,7 +107,6 @@ namespace TESUnity
 
             return CELL;
         }
-
         public CELLRecord FindInteriorCellRecord(string cellName)
         {
             List<Record> records = MorrowindESMFile.GetRecordsOfType<CELLRecord>();
@@ -122,7 +122,6 @@ namespace TESUnity
 
             return null;
         }
-
         public CELLRecord FindInteriorCellRecord(Vector2i gridCoords)
         {
             List<Record> records = MorrowindESMFile.GetRecordsOfType<CELLRecord>();
