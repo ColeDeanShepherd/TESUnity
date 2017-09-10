@@ -11,12 +11,14 @@ namespace TESUnity
         public GameObject gameObject;
         public GameObject objectsContainerGameObject;
         public CELLRecord cellRecord;
+        public IEnumerator objectsCreationCoroutine;
 
-        public InRangeCellInfo(GameObject gameObject, GameObject objectsContainerGameObject, CELLRecord cellRecord)
+        public InRangeCellInfo(GameObject gameObject, GameObject objectsContainerGameObject, CELLRecord cellRecord, IEnumerator objectsCreationCoroutine)
         {
             this.gameObject = gameObject;
             this.objectsContainerGameObject = objectsContainerGameObject;
             this.cellRecord = cellRecord;
+            this.objectsCreationCoroutine = objectsCreationCoroutine;
         }
     }
     public class RefCellObjInfo
@@ -28,23 +30,24 @@ namespace TESUnity
 
     public class CellManager
     {
-        public CellManager(MorrowindDataReader dataReader, TextureManager textureManager, NIFManager nifManager)
+        public CellManager(MorrowindDataReader dataReader, TextureManager textureManager, NIFManager nifManager, TemporalLoadBalancer temporalLoadBalancer)
         {
             this.dataReader = dataReader;
             this.textureManager = textureManager;
             this.nifManager = nifManager;
+            this.temporalLoadBalancer = temporalLoadBalancer;
         }
         public Vector2i GetExteriorCellIndices(Vector3 point)
         {
             return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
         }
-        public InRangeCellInfo CreateExteriorCell(Vector2i cellIndices)
+        public InRangeCellInfo StartCreatingExteriorCell(Vector2i cellIndices)
         {
             var CELL = dataReader.FindExteriorCellRecord(cellIndices);
 
             if(CELL != null)
             {
-                var cellInfo = InstantiateCell(CELL);
+                var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[cellIndices] = cellInfo;
 
                 return cellInfo;
@@ -95,11 +98,11 @@ namespace TESUnity
 
                         if((cellDistance == r) && !cellObjects.ContainsKey(cellIndices))
                         {
-                            var cellInfo = CreateExteriorCell(cellIndices);
+                            var cellInfo = StartCreatingExteriorCell(cellIndices);
 
                             if((cellInfo != null) && immediate)
                             {
-                                //temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+                                temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
                             }
                         }
                     }
@@ -128,13 +131,13 @@ namespace TESUnity
                 }
             }
         }
-        public InRangeCellInfo CreateInteriorCell(string cellName)
+        public InRangeCellInfo StartCreatingInteriorCell(string cellName)
         {
             var CELL = dataReader.FindInteriorCellRecord(cellName);
 
             if(CELL != null)
             {
-                var cellInfo = InstantiateCell(CELL);
+                var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[Vector2i.zero] = cellInfo;
 
                 return cellInfo;
@@ -144,13 +147,13 @@ namespace TESUnity
                 return null;
             }
         }
-        public InRangeCellInfo CreateInteriorCell(Vector2i gridCoords)
+        public InRangeCellInfo StartCreatingInteriorCell(Vector2i gridCoords)
         {
             var CELL = dataReader.FindInteriorCellRecord(gridCoords);
 
             if(CELL != null)
             {
-                var cellInfo = InstantiateCell(CELL);
+                var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[Vector2i.zero] = cellInfo;
 
                 return cellInfo;
@@ -160,7 +163,7 @@ namespace TESUnity
                 return null;
             }
         }
-        public InRangeCellInfo InstantiateCell(CELLRecord CELL)
+        public InRangeCellInfo StartInstantiatingCell(CELLRecord CELL)
         {
             Debug.Assert(CELL != null);
 
@@ -183,14 +186,16 @@ namespace TESUnity
             var cellObjectsContainer = new GameObject("objects");
             cellObjectsContainer.transform.parent = cellObj.transform;
 
-            InstantiateCellObjects(CELL, LAND, cellObj, cellObjectsContainer);
+            var cellObjectsCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, LAND, cellObj, cellObjectsContainer);
+            temporalLoadBalancer.AddTask(cellObjectsCreationCoroutine);
 
-            return new InRangeCellInfo(cellObj, cellObjectsContainer, CELL);
+            return new InRangeCellInfo(cellObj, cellObjectsContainer, CELL, cellObjectsCreationCoroutine);
         }
         public void DestroyAllCells()
         {
             foreach(var keyValuePair in cellObjects)
             {
+                temporalLoadBalancer.CancelTask(keyValuePair.Value.objectsCreationCoroutine);
                 GameObject.Destroy(keyValuePair.Value.gameObject);
             }
 
@@ -203,20 +208,45 @@ namespace TESUnity
         private MorrowindDataReader dataReader;
         private TextureManager textureManager;
         private NIFManager nifManager;
+        private TemporalLoadBalancer temporalLoadBalancer;
         private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 
         /// <summary>
         /// A coroutine that instantiates the terrain for, and all objects in, a cell.
         /// </summary>
-        private void InstantiateCellObjects(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
+        private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
         {
             // Instantiate terrain.
             if(LAND != null)
             {
                 InstantiateLAND(LAND, cellObj);
+                yield return null;
             }
 
-            // Extract information about referenced objects. Do this all at once because it's fast.
+            // Extract information about referenced objects.
+            var refCellObjInfos = GetRefCellObjInfos(CELL);
+            yield return null;
+
+            // Start pre-loading all required files. The NIF manager will load the textures as well.
+            foreach(var refCellObjInfo in refCellObjInfos)
+            {
+                if(refCellObjInfo.modelFilePath != null)
+                {
+                    nifManager.PreloadNifFileAsync(refCellObjInfo.modelFilePath);
+                }
+            }
+            yield return null;
+
+            // Instantiate objects.
+            foreach(var refCellObjInfo in refCellObjInfos)
+            {
+                InstantiateCellObject(CELL, cellObjectsContainer, refCellObjInfo);
+                yield return null;
+            }
+        }
+
+        private RefCellObjInfo[] GetRefCellObjInfos(CELLRecord CELL)
+        {
             RefCellObjInfo[] refCellObjInfos = new RefCellObjInfo[CELL.refObjDataGroups.Count];
             for(int i = 0; i < CELL.refObjDataGroups.Count; i++)
             {
@@ -240,20 +270,7 @@ namespace TESUnity
                 refCellObjInfos[i] = refObjInfo;
             }
 
-            // Start pre-loading all required files. The NIF manager will load the textures as well.
-            foreach(var refCellObjInfo in refCellObjInfos)
-            {
-                if(refCellObjInfo.modelFilePath != null)
-                {
-                    nifManager.PreloadNifFileAsync(refCellObjInfo.modelFilePath);
-                }
-            }
-
-            // Instantiate objects.
-            foreach(var refCellObjInfo in refCellObjInfos)
-            {
-                InstantiateCellObject(CELL, cellObjectsContainer, refCellObjInfo);
-            }
+            return refCellObjInfos;
         }
 
         /// <summary>
@@ -532,6 +549,7 @@ namespace TESUnity
 
             if(cellObjects.TryGetValue(indices, out cellInfo))
             {
+                temporalLoadBalancer.CancelTask(cellInfo.objectsCreationCoroutine);
                 GameObject.Destroy(cellInfo.gameObject);
                 cellObjects.Remove(indices);
             }

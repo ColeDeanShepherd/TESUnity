@@ -167,7 +167,9 @@ namespace TESUnity
 
                     try
                     {
-                        var cellInfo = MWEngine.cellManager.InstantiateCell(CELL);
+                        var cellInfo = MWEngine.cellManager.StartInstantiatingCell(CELL);
+                        MWEngine.temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
+
                         DestroyImmediate(cellInfo.gameObject);
 
                         writer.Write("Pass: ");
