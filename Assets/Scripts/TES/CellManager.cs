@@ -240,6 +240,15 @@ namespace TESUnity
                 refCellObjInfos[i] = refObjInfo;
             }
 
+            // Start pre-loading all required files. The NIF manager will load the textures as well.
+            foreach(var refCellObjInfo in refCellObjInfos)
+            {
+                if(refCellObjInfo.modelFilePath != null)
+                {
+                    nifManager.PreloadNifFileAsync(refCellObjInfo.modelFilePath);
+                }
+            }
+
             // Instantiate objects.
             foreach(var refCellObjInfo in refCellObjInfos)
             {
