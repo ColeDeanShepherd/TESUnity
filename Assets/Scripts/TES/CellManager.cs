@@ -219,7 +219,16 @@ namespace TESUnity
             // Instantiate terrain.
             if(LAND != null)
             {
-                InstantiateLAND(LAND, cellObj);
+                var instantiateLANDTaskEnumerator = InstantiateLANDCoroutine(LAND, cellObj);
+
+                // Run the LAND instantiation coroutine.
+                while(instantiateLANDTaskEnumerator.MoveNext())
+                {
+                    // Yield every time InstantiateLANDCoroutine does to avoid doing too much work in one frame.
+                    yield return null;
+                }
+
+                // Yield after InstantiateLANDCoroutine has finished to avoid doing too much work in one frame.
                 yield return null;
             }
 
@@ -415,15 +424,18 @@ namespace TESUnity
         /// <summary>
         /// Creates terrain representing a LAND record.
         /// </summary>
-        private void InstantiateLAND(LANDRecord LAND, GameObject parent)
+        private IEnumerator InstantiateLANDCoroutine(LANDRecord LAND, GameObject parent)
         {
             Debug.Assert(LAND != null);
 
             // Don't create anything if the LAND doesn't have height data.
             if(LAND.VHGT == null)
             {
-                return;
+                yield break;
             }
+
+            // Return before doing any work to provide an IEnumerator handle to the coroutine.
+            yield return null;
 
             int LAND_SIDE_LENGTH_IN_SAMPLES = 65;
             var heights = new float[LAND_SIDE_LENGTH_IN_SAMPLES, LAND_SIDE_LENGTH_IN_SAMPLES];
@@ -484,6 +496,9 @@ namespace TESUnity
                         var textureFilePath = LTEX.DATA.value;
                         var texture = textureManager.LoadTexture(textureFilePath);
 
+                        // Yield after loading each texture to avoid doing too much work on one frame.
+                        yield return null;
+
                         // Create the splat prototype.
                         var splat = new SplatPrototype();
                         splat.texture = texture;
@@ -530,6 +545,9 @@ namespace TESUnity
                     }
                 }
             }
+
+            // Yield before creating the terrain GameObject because it takes a while.
+            yield return null;
 
             // Create the terrain.
             var heightRange = maxHeight - minHeight;
