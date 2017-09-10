@@ -130,8 +130,7 @@ namespace TESUnity.ESM
             }
         }
     }
-
-
+    
     public class GMSTRecord : Record
     {
         public NAMESubRecord NAME;
@@ -540,6 +539,200 @@ namespace TESUnity.ESM
         }
     }
 
+    public class CREARecord : Record
+    {
+        #region SubRecord Implementation
+
+        public class NPDTSubRecord : SubRecord
+        {
+            public int type;
+            public int level;
+            public int strength;
+            public int intelligence;
+            public int willpower;
+            public int agility;
+            public int speed;
+            public int endurance;
+            public int personality;
+            public int luck;
+            public int health;
+            public int spellPts;
+            public int fatigue;
+            public int soul;
+            public int combat;
+            public int magic;
+            public int stealth;
+            public int attackMin1;
+            public int attackMax1;
+            public int attackMin2;
+            public int attackMax2;
+            public int attackMin3;
+            public int attackMax3;
+            public int gold;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                type = reader.ReadLEInt32();
+                level = reader.ReadLEInt32();
+                strength = reader.ReadLEInt32();
+                intelligence = reader.ReadLEInt32();
+                willpower = reader.ReadLEInt32();
+                agility = reader.ReadLEInt32();
+                speed = reader.ReadLEInt32();
+                endurance = reader.ReadLEInt32();
+                personality = reader.ReadLEInt32();
+                luck = reader.ReadLEInt32();
+                health = reader.ReadLEInt32();
+                spellPts = reader.ReadLEInt32();
+                fatigue = reader.ReadLEInt32();
+                soul = reader.ReadLEInt32();
+                combat = reader.ReadLEInt32();
+                magic = reader.ReadLEInt32();
+                stealth = reader.ReadLEInt32();
+                attackMin1 = reader.ReadLEInt32();
+                attackMax1 = reader.ReadLEInt32();
+                attackMin2 = reader.ReadLEInt32();
+                attackMax2 = reader.ReadLEInt32();
+                attackMin3 = reader.ReadLEInt32();
+                attackMax3 = reader.ReadLEInt32();
+                gold = reader.ReadLEInt32();
+            }
+        }
+
+        public class FLAGSubRecord : Int32SubRecord { }
+
+        public class NPCOSubRecord : SubRecord
+        {
+            public int count;
+            public char[] name;
+
+            public NPCOSubRecord()
+            {
+                name = new char[32];
+            }
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                count = reader.ReadLEInt32();
+                var bytes = reader.ReadBytes(32);
+
+                for(int i = 0; i < 32; i++)
+                    name[i] = System.Convert.ToChar(bytes[i]);
+            }
+        }
+
+        public class AI_WSubRecord : SubRecord
+        {
+            public short distance;
+            public byte duration;
+            public byte timeOfDay;
+            public byte[] idle;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                distance = reader.ReadLEInt16();
+                duration = reader.ReadByte();
+                timeOfDay = reader.ReadByte();
+                idle = reader.ReadBytes(10);
+            }
+        }
+
+        public class AIDTSubRecord : SubRecord
+        {
+            public byte[] value1;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                value1 = reader.ReadBytes(12);
+            }
+        }
+
+        public class XSCLSubRecord : FLTVSubRecord { }
+
+        #endregion
+
+        public enum Flags
+        {
+            Biped = 0x0001,
+            Respawn = 0x0002,
+            WeaponAndShield = 0x0004,
+            None = 0x0008,
+            Swims = 0x0010,
+            Flies = 0x0020,
+            Walks = 0x0040,
+            DefaultFlags = 0x0048,
+            Essential = 0x0080,
+            SkeletonBlood = 0x0400,
+            MetalBlood = 0x0800
+        }
+
+        public NAMESubRecord NAME;
+        public MODLSubRecord MODL;
+        public FNAMSubRecord FNAM;
+        public NPDTSubRecord NPDT;
+        public FLAGSubRecord FLAG;
+        public SCRISubRecord SCRI;
+        public NPCOSubRecord NPCO;
+        public AIDTSubRecord AIDT;
+        public AI_WSubRecord AI_W;
+        public NPC_Record.AI_TSubRecord AI_T;
+        public NPC_Record.AI_FSubRecord AI_F;
+        public NPC_Record.AI_ESubRecord AI_E;
+        public NPC_Record.AI_ASubRecord AI_A;
+        public XSCLSubRecord XSCL;
+
+        public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+        {
+            switch(subRecordName)
+            {
+                case "NAME":
+                    NAME = new NAMESubRecord();
+                    return NAME;
+                case "MODL":
+                    MODL = new MODLSubRecord();
+                    return MODL;
+                case "FNAM":
+                    FNAM = new FNAMSubRecord();
+                    return FNAM;
+                case "NPDT":
+                    NPDT = new NPDTSubRecord();
+                    return NPDT;
+                case "FLAG":
+                    FLAG = new FLAGSubRecord();
+                    return FLAG;
+                case "SCRI":
+                    SCRI = new SCRISubRecord();
+                    return SCRI;
+                case "NPCO":
+                    NPCO = new NPCOSubRecord();
+                    return NPCO;
+                case "AIDT":
+                    AIDT = new AIDTSubRecord();
+                    return AIDT;
+                case "AI_W":
+                    AI_W = new AI_WSubRecord();
+                    return AI_W;
+                /* case "AI_T":
+                     AI_T = new NPC_Record.AI_TSubRecord();
+                     return AI_T;
+                 case "AI_F":
+                     AI_F = new NPC_Record.AI_FSubRecord();
+                     return AI_F;
+                 case "AI_E":
+                     AI_E = new NPC_Record.AI_ESubRecord();
+                     return AI_E;
+                 case "AI_A":
+                     AI_A = new NPC_Record.AI_ASubRecord();
+                     return AI_A;*/
+                case "XSCL":
+                    XSCL = new XSCLSubRecord();
+                    return XSCL;
+                default:
+                    return null;
+            }
+        }
+    }
+
     public class CONTRecord : Record
     {
         public class CNDTSubRecord : FLTVSubRecord { }
@@ -591,6 +784,67 @@ namespace TESUnity.ESM
                 default:
                     return null;
             }
+        }
+    }
+
+    public class BYDTSubRecord : SubRecord
+    {
+        public enum BodyPart
+        {
+            Head = 0,
+            Hair = 1,
+            Neck = 2,
+            Chest = 3,
+            Groin = 4,
+            Hand = 5,
+            Wrist = 6,
+            Forearm = 7,
+            Upperarm = 8,
+            Foot = 9,
+            Ankle = 10,
+            Knee = 11,
+            Upperleg = 12,
+            Clavicle = 13,
+            Tail = 14
+        }
+
+        public enum Flag
+        {
+            Female = 1, Playabe = 2
+        }
+
+        public enum BodyPartType
+        {
+            Skin = 0, Clothing = 1, Armor = 2
+        }
+
+        public byte part;
+        public byte vampire;
+        public byte flags;
+        public byte partType;
+
+        public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+        {
+            part = reader.ReadByte();
+            vampire = reader.ReadByte();
+            flags = reader.ReadByte();
+            partType = reader.ReadByte();
+        }
+    }
+    public class BODYRecord : Record
+    {
+        public BYDTSubRecord BYDT;
+
+        public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+        {
+            switch(subRecordName)
+            {
+                case "BYDT":
+                    BYDT = new BYDTSubRecord();
+                    return BYDT;
+            }
+
+            return null;
         }
     }
 
@@ -661,6 +915,385 @@ namespace TESUnity.ESM
         }
     }
 
+    public class NPC_Record : Record
+    {
+        #region SubRecord Implementation
+
+        public class RNAMSubRecord : STRVSubRecord { }
+        public class KNAMSubRecord : STRVSubRecord { }
+
+        public class NPDTSubRecord : SubRecord
+        {
+            public short level;
+            public byte strength;
+            public byte intelligence;
+            public byte willpower;
+            public byte agility;
+            public byte speed;
+            public byte endurance;
+            public byte personality;
+            public byte luck;
+            public byte[] skills;//[27];
+            public byte reputation;
+            public short health;
+            public short spellPts;
+            public short fatigue;
+            public byte disposition;
+            public byte factionID;
+            public byte rank;
+            public byte unknown1;
+            public int gold;
+            public byte version;
+
+            // 12 byte version
+            //public short level;
+            //public byte disposition;
+            //public byte factionID;
+            //public byte rank;
+            //public byte unknown1;
+            public byte unknown2;
+            public byte unknown3;
+            //public long gold;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                if(dataSize == 52)
+                {
+                    level = reader.ReadLEInt16();
+                    strength = reader.ReadByte();
+                    intelligence = reader.ReadByte();
+                    willpower = reader.ReadByte();
+                    agility = reader.ReadByte();
+                    speed = reader.ReadByte();
+                    endurance = reader.ReadByte();
+                    personality = reader.ReadByte();
+                    luck = reader.ReadByte();
+                    skills = reader.ReadBytes(26);
+                    reputation = reader.ReadByte();
+                    health = reader.ReadLEInt16();
+                    spellPts = reader.ReadLEInt16();
+                    fatigue = reader.ReadLEInt16();
+                    disposition = reader.ReadByte();
+                    factionID = reader.ReadByte();
+                    rank = reader.ReadByte();
+                    unknown1 = reader.ReadByte();
+                    gold = reader.ReadLEInt32();
+                    version = reader.ReadByte();
+                }
+                else
+                {
+                    level = reader.ReadLEInt16();
+                    disposition = reader.ReadByte();
+                    factionID = reader.ReadByte();
+                    rank = reader.ReadByte();
+                    unknown1 = reader.ReadByte();
+                    unknown2 = reader.ReadByte();
+                    unknown3 = reader.ReadByte();
+                    gold = reader.ReadLEInt32();
+                }
+            }
+        }
+
+        public class FLAGSubRecord : INTVSubRecord { }
+
+        public class NPCOSubRecord : SubRecord
+        {
+            public int count;
+            public char[] name;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                count = reader.ReadLEInt32();
+
+                var bytes = reader.ReadBytes(count);
+                name = new char[32];
+
+                for(int i = 0; i < 32; i++)
+                    name[i] = System.Convert.ToChar(bytes[i]);
+            }
+        }
+
+        public class NPCSSubRecord : SubRecord
+        {
+            public char[] name;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                var bytes = reader.ReadBytes(32);
+                name = new char[32];
+
+                for(int i = 0; i < 32; i++)
+                    name[i] = System.Convert.ToChar(bytes[i]);
+            }
+        }
+
+        public class AIDTSubRecord : SubRecord
+        {
+            public enum FlagsType
+            {
+                Weapon = 0x00001,
+                Armor = 0x00002,
+                Clothing = 0x00004,
+                Books = 0x00008,
+                Ingrediant = 0x00010,
+                Picks = 0x00020,
+                Probes = 0x00040,
+                Lights = 0x00080,
+                Apparatus = 0x00100,
+                Repair = 0x00200,
+                Misc = 0x00400,
+                Spells = 0x00800,
+                MagicItems = 0x01000,
+                Potions = 0x02000,
+                Training = 0x04000,
+                Spellmaking = 0x08000,
+                Enchanting = 0x10000,
+                RepairItem = 0x20000
+            }
+
+            public byte hello;
+            public byte unknown1;
+            public byte fight;
+            public byte flee;
+            public byte alarm;
+            public byte unknown2;
+            public byte unknown3;
+            public byte unknown4;
+            public int flags;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                hello = reader.ReadByte();
+                unknown1 = reader.ReadByte();
+                fight = reader.ReadByte();
+                flee = reader.ReadByte();
+                alarm = reader.ReadByte();
+                unknown2 = reader.ReadByte();
+                unknown3 = reader.ReadByte();
+                unknown4 = reader.ReadByte();
+                flags = reader.ReadLEInt32();
+            }
+        }
+
+        public class AI_WSubRecord : SubRecord
+        {
+            public short distance;
+            public short duration;
+            public byte timeOfDay;
+            public byte[] idle;
+            public byte unknow;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                distance = reader.ReadLEInt16();
+                duration = reader.ReadLEInt16();
+                timeOfDay = reader.ReadByte();
+                idle = reader.ReadBytes(8);
+                unknow = reader.ReadByte();
+            }
+        }
+
+        public class AI_TSubRecord : SubRecord
+        {
+            public float x;
+            public float y;
+            public float z;
+            public float unknown;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                x = reader.ReadLESingle();
+                y = reader.ReadLESingle();
+                z = reader.ReadLESingle();
+                unknown = reader.ReadLESingle();
+            }
+        }
+
+        public class AI_FSubRecord : SubRecord
+        {
+            public float x;
+            public float y;
+            public float z;
+            public short duration;
+            public char[] id;
+            public float unknown;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                x = reader.ReadLESingle();
+                y = reader.ReadLESingle();
+                z = reader.ReadLESingle();
+                duration = reader.ReadLEInt16();
+
+                var bytes = reader.ReadBytes(32);
+                id = new char[32];
+
+                for(int i = 0; i < 32; i++)
+                    id[i] = System.Convert.ToChar(bytes[i]);
+
+                unknown = reader.ReadLESingle();
+            }
+        }
+
+        public class AI_ESubRecord : SubRecord
+        {
+            public float x;
+            public float y;
+            public float z;
+            public short duration;
+            public char[] id;
+            public float unknown;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                x = reader.ReadLESingle();
+                y = reader.ReadLESingle();
+                z = reader.ReadLESingle();
+                duration = reader.ReadLEInt16();
+
+                var bytes = reader.ReadBytes(32);
+                id = new char[32];
+
+                for(int i = 0; i < 32; i++)
+                    id[i] = System.Convert.ToChar(bytes[i]);
+
+                unknown = reader.ReadLESingle();
+            }
+        }
+
+        public class CNDTSubRecord : STRVSubRecord { }
+
+        public class AI_ASubRecord : SubRecord
+        {
+            public char[] name;
+            public byte unknown;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+            }
+        }
+
+        public class DODTSubRecord : SubRecord
+        {
+            public float xPos;
+            public float yPos;
+            public float zPos;
+            public float xRot;
+            public float yRot;
+            public float zRot;
+
+            public override void DeserializeData(UnityBinaryReader reader, uint dataSize)
+            {
+                xPos = reader.ReadLESingle();
+                yPos = reader.ReadLESingle();
+                zPos = reader.ReadLESingle();
+                xRot = reader.ReadLESingle();
+                yRot = reader.ReadLESingle();
+                zRot = reader.ReadLESingle();
+            }
+        }
+
+        public class DNAMSubRecord : STRVSubRecord { }
+
+        public class XSCLSubRecord : FLTVSubRecord { }
+
+        #endregion
+
+        public NAMESubRecord NAME;
+        public FNAMSubRecord FNAM;
+        public MODLSubRecord MODL;
+        public RNAMSubRecord RNAM;
+        public ANAMSubRecord ANAM;
+        public BNAMSubRecord BNAM;
+        public CNAMSubRecord CNAM;
+        public KNAMSubRecord KNAM;
+        public NPDTSubRecord NPDT;
+        public FLAGSubRecord FLAG;
+        public NPCOSubRecord NPCO;
+        public AIDTSubRecord AIDT;
+        public AI_WSubRecord AI_W;
+        public AI_TSubRecord AI_T;
+        public AI_FSubRecord AI_F;
+        public AI_ESubRecord AI_E;
+        public CNDTSubRecord CNDT;
+        public AI_ASubRecord AI_A;
+        public DODTSubRecord DODT;
+        public DNAMSubRecord DNAM;
+        public XSCLSubRecord XSCL;
+
+        public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+        {
+            switch(subRecordName)
+            {
+                case "NAME":
+                    NAME = new NAMESubRecord();
+                    return NAME;
+                case "FNAM":
+                    FNAM = new FNAMSubRecord();
+                    return FNAM;
+                case "MODL":
+                    MODL = new MODLSubRecord();
+                    return MODL;
+                case "RNAM":
+                    RNAM = new RNAMSubRecord();
+                    return RNAM;
+                case "ANAM":
+                    ANAM = new ANAMSubRecord();
+                    return ANAM;
+                case "BNAM":
+                    BNAM = new BNAMSubRecord();
+                    return BNAM;
+                case "CNAM":
+                    CNAM = new CNAMSubRecord();
+                    return CNAM;
+                case "KNAM":
+                    KNAM = new KNAMSubRecord();
+                    return KNAM;
+                case "NPDT":
+                    NPDT = new NPDTSubRecord();
+                    return NPDT;
+                case "FLAG":
+                    FLAG = new FLAGSubRecord();
+                    return FLAG;
+                //case "NPCO":
+                //NPCO = new NPCOSubRecord();
+                //return NPCO;
+                case "AIDT":
+                    AIDT = new AIDTSubRecord();
+                    return AIDT;
+                case "AI_W":
+                    AI_W = new AI_WSubRecord();
+                    return AI_W;
+                //case "AI_T":
+                //AI_T = new AI_TSubRecord();
+                //return AI_T;
+                //case "AI_F":
+                //AI_F = new AI_FSubRecord();
+                //return AI_F;
+                case "AI_E":
+                    AI_E = new AI_ESubRecord();
+                    return AI_E;
+                case "CNDT":
+                    CNDT = new CNDTSubRecord();
+                    return CNDT;
+                case "AI_A":
+                    AI_A = new AI_ASubRecord();
+                    return AI_A;
+                case "DODT":
+                    DODT = new DODTSubRecord();
+                    return DODT;
+                case "DNAM":
+                    DNAM = new DNAMSubRecord();
+                    return DNAM;
+                case "XSCL":
+                    XSCL = new XSCLSubRecord();
+                    return XSCL;
+            }
+
+            return null;
+        }
+    }
+
     public class ARMORecord : Record
     {
         public class AODTSubRecord : SubRecord
@@ -725,13 +1358,13 @@ namespace TESUnity.ESM
                 case "BNAM":
                     var BNAM = new BNAMSubRecord();
 
-                    Utils.Last(INDXBNAMCNAMGroups).BNAM = BNAM;
+                    ArrayUtils.Last(INDXBNAMCNAMGroups).BNAM = BNAM;
 
                     return BNAM;
                 case "CNAM":
                     var CNAM = new CNAMSubRecord();
 
-                    Utils.Last(INDXBNAMCNAMGroups).CNAM = CNAM;
+                    ArrayUtils.Last(INDXBNAMCNAMGroups).CNAM = CNAM;
 
                     return CNAM;
                 case "SCRI":
@@ -806,13 +1439,13 @@ namespace TESUnity.ESM
                 case "BNAM":
                     var BNAM = new BNAMSubRecord();
 
-                    Utils.Last(INDXBNAMCNAMGroups).BNAM = BNAM;
+                    ArrayUtils.Last(INDXBNAMCNAMGroups).BNAM = BNAM;
 
                     return BNAM;
                 case "CNAM":
                     var CNAM = new CNAMSubRecord();
 
-                    Utils.Last(INDXBNAMCNAMGroups).CNAM = CNAM;
+                    ArrayUtils.Last(INDXBNAMCNAMGroups).CNAM = CNAM;
 
                     return CNAM;
                 case "ENAM":
@@ -1275,6 +1908,48 @@ namespace TESUnity.ESM
         }
     }
 
+    public class LEVCRecord : Record
+    {
+        public class DATASubRecord : INTVSubRecord { }
+        public class NNAMSubRecord : ByteSubRecord { }
+        public class INDXSubRecord : INTVSubRecord { }
+        public class CNAMSubRecord : STRVSubRecord { }
+
+        public NAMESubRecord NAME;
+        public DATASubRecord DATA;
+        public NNAMSubRecord NNAM;
+        public INDXSubRecord INDX;
+        public CNAMSubRecord CNAM;
+        public INTVSubRecord INTV;
+
+        public override SubRecord CreateUninitializedSubRecord(string subRecordName)
+        {
+            switch(subRecordName)
+            {
+                case "NAME":
+                    NAME = new NAMESubRecord();
+                    return NAME;
+                case "DATA":
+                    DATA = new DATASubRecord();
+                    return DATA;
+                case "NNAM":
+                    NNAM = new NNAMSubRecord();
+                    break;
+                case "INDX":
+                    INDX = new INDXSubRecord();
+                    break;
+                case "CNAM":
+                    CNAM = new CNAMSubRecord();
+                    break;
+                case "INTV":
+                    INTV = new INTVSubRecord();
+                    break;
+            }
+
+            return null;
+        }
+    }
+
     // TODO: add support for strange INTV before object data?
     public class CELLRecord : Record
     {
@@ -1438,50 +2113,50 @@ namespace TESUnity.ESM
                     case "FRMR":
                         refObjDataGroups.Add(new RefObjDataGroup());
 
-                        Utils.Last(refObjDataGroups).FRMR = new RefObjDataGroup.FRMRSubRecord();
-                        return Utils.Last(refObjDataGroups).FRMR;
+                        ArrayUtils.Last(refObjDataGroups).FRMR = new RefObjDataGroup.FRMRSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).FRMR;
                     case "NAME":
-                        Utils.Last(refObjDataGroups).NAME = new NAMESubRecord();
-                        return Utils.Last(refObjDataGroups).NAME;
+                        ArrayUtils.Last(refObjDataGroups).NAME = new NAMESubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).NAME;
                     case "XSCL":
-                        Utils.Last(refObjDataGroups).XSCL = new RefObjDataGroup.XSCLSubRecord();
-                        return Utils.Last(refObjDataGroups).XSCL;
+                        ArrayUtils.Last(refObjDataGroups).XSCL = new RefObjDataGroup.XSCLSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).XSCL;
                     case "DODT":
-                        Utils.Last(refObjDataGroups).DODT = new RefObjDataGroup.DODTSubRecord();
-                        return Utils.Last(refObjDataGroups).DODT;
+                        ArrayUtils.Last(refObjDataGroups).DODT = new RefObjDataGroup.DODTSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).DODT;
                     case "DNAM":
-                        Utils.Last(refObjDataGroups).DNAM = new RefObjDataGroup.DNAMSubRecord();
-                        return Utils.Last(refObjDataGroups).DNAM;
+                        ArrayUtils.Last(refObjDataGroups).DNAM = new RefObjDataGroup.DNAMSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).DNAM;
                     case "FLTV":
-                        Utils.Last(refObjDataGroups).FLTV = new FLTVSubRecord();
-                        return Utils.Last(refObjDataGroups).FLTV;
+                        ArrayUtils.Last(refObjDataGroups).FLTV = new FLTVSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).FLTV;
                     case "KNAM":
-                        Utils.Last(refObjDataGroups).KNAM = new RefObjDataGroup.KNAMSubRecord();
-                        return Utils.Last(refObjDataGroups).KNAM;
+                        ArrayUtils.Last(refObjDataGroups).KNAM = new RefObjDataGroup.KNAMSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).KNAM;
                     case "TNAM":
-                        Utils.Last(refObjDataGroups).TNAM = new RefObjDataGroup.TNAMSubRecord();
-                        return Utils.Last(refObjDataGroups).TNAM;
+                        ArrayUtils.Last(refObjDataGroups).TNAM = new RefObjDataGroup.TNAMSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).TNAM;
                     case "UNAM":
-                        Utils.Last(refObjDataGroups).UNAM = new RefObjDataGroup.UNAMSubRecord();
-                        return Utils.Last(refObjDataGroups).UNAM;
+                        ArrayUtils.Last(refObjDataGroups).UNAM = new RefObjDataGroup.UNAMSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).UNAM;
                     case "ANAM":
-                        Utils.Last(refObjDataGroups).ANAM = new RefObjDataGroup.ANAMSubRecord();
-                        return Utils.Last(refObjDataGroups).ANAM;
+                        ArrayUtils.Last(refObjDataGroups).ANAM = new RefObjDataGroup.ANAMSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).ANAM;
                     case "BNAM":
-                        Utils.Last(refObjDataGroups).BNAM = new RefObjDataGroup.BNAMSubRecord();
-                        return Utils.Last(refObjDataGroups).BNAM;
+                        ArrayUtils.Last(refObjDataGroups).BNAM = new RefObjDataGroup.BNAMSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).BNAM;
                     case "INTV":
-                        Utils.Last(refObjDataGroups).INTV = new INTVSubRecord();
-                        return Utils.Last(refObjDataGroups).INTV;
+                        ArrayUtils.Last(refObjDataGroups).INTV = new INTVSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).INTV;
                     case "NAM9":
-                        Utils.Last(refObjDataGroups).NAM9 = new RefObjDataGroup.NAM9SubRecord();
-                        return Utils.Last(refObjDataGroups).NAM9;
+                        ArrayUtils.Last(refObjDataGroups).NAM9 = new RefObjDataGroup.NAM9SubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).NAM9;
                     case "XSOL":
-                        Utils.Last(refObjDataGroups).XSOL = new RefObjDataGroup.XSOLSubRecord();
-                        return Utils.Last(refObjDataGroups).XSOL;
+                        ArrayUtils.Last(refObjDataGroups).XSOL = new RefObjDataGroup.XSOLSubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).XSOL;
                     case "DATA":
-                        Utils.Last(refObjDataGroups).DATA = new RefObjDataGroup.DATASubRecord();
-                        return Utils.Last(refObjDataGroups).DATA;
+                        ArrayUtils.Last(refObjDataGroups).DATA = new RefObjDataGroup.DATASubRecord();
+                        return ArrayUtils.Last(refObjDataGroups).DATA;
                     default:
                         return null;
                 }

@@ -45,14 +45,14 @@ namespace TESUnity.Components.Records
 
             if (doorData.leadsToAnotherCell && !doorData.leadsToInteriorCell)
             {
-                var doorExitCell = MorrowindEngine.instance.dataReader.FindExteriorCellRecord(MorrowindEngine.instance.GetExteriorCellIndices(doorData.doorExitPos));
+                var doorExitCell = MorrowindEngine.instance.dataReader.FindExteriorCellRecord(MorrowindEngine.instance.cellManager.GetExteriorCellIndices(doorData.doorExitPos));
                 doorData.doorExitName = (doorExitCell != null) ? doorExitCell.RGNN.value : doorData.doorName;
             }
 
             if (refObjDataGroup.DODT != null)
             {
-                doorData.doorExitPos = Convert.NifPointToUnityPoint(refObjDataGroup.DODT.position);
-                doorData.doorExitOrientation = Convert.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
+                doorData.doorExitPos = NIFUtils.NifPointToUnityPoint(refObjDataGroup.DODT.position);
+                doorData.doorExitOrientation = NIFUtils.NifEulerAnglesToUnityQuaternion(refObjDataGroup.DODT.eulerAngles);
             }
 
             objData.name = doorData.leadsToAnotherCell ? doorData.doorExitName : "Use " + doorData.doorName;

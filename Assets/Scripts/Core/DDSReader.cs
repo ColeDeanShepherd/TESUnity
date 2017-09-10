@@ -580,7 +580,7 @@ namespace DDS
 				// If the DDS file contains the current mipmap level, flip it vertically if necessary.
 				if(flipVertically && (mipMapLevelIndex < DDSMipmapLevelCount))
 				{
-					Utils.Flip2DSubArrayVertically(data, mipMapLevelDataOffset, mipMapLevelHeight, mipMapLevelWidth * bytesPerPixel);
+					ArrayUtils.Flip2DSubArrayVertically(data, mipMapLevelDataOffset, mipMapLevelHeight, mipMapLevelWidth * bytesPerPixel);
 				}
 
 				// Break after optionally flipping the first mipmap level if the DDS texture doesn't have mipmaps.

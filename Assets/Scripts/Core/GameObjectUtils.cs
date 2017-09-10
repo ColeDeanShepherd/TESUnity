@@ -215,10 +215,24 @@ public static class GameObjectUtils
 		return null;
 	}
 
-	/// <summary>
-	/// Set the layer of an object and all of it's descendants.
-	/// </summary>
-	public static void SetLayerRecursively(GameObject gameObject, int layer)
+    public static GameObject FindTopLevelObject(GameObject baseObject)
+    {
+        if(baseObject.transform.parent == null)
+            return baseObject;
+        var p = baseObject.transform;
+        while(p.parent != null)
+        {
+            if(p.parent.gameObject.name == "objects")
+                break;
+            p = p.parent;
+        }
+        return p.gameObject;
+    }
+
+    /// <summary>
+    /// Set the layer of an object and all of it's descendants.
+    /// </summary>
+    public static void SetLayerRecursively(GameObject gameObject, int layer)
 	{
 		gameObject.layer = layer;
 
