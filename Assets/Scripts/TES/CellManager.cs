@@ -11,12 +11,14 @@ namespace TESUnity
         public GameObject gameObject;
         public GameObject objectsContainerGameObject;
         public CELLRecord cellRecord;
+        public IEnumerator objectsCreationCoroutine;
 
-        public InRangeCellInfo(GameObject gameObject, GameObject objectsContainerGameObject, CELLRecord cellRecord)
+        public InRangeCellInfo(GameObject gameObject, GameObject objectsContainerGameObject, CELLRecord cellRecord, IEnumerator objectsCreationCoroutine)
         {
             this.gameObject = gameObject;
             this.objectsContainerGameObject = objectsContainerGameObject;
             this.cellRecord = cellRecord;
+            this.objectsCreationCoroutine = objectsCreationCoroutine;
         }
     }
     public class RefCellObjInfo
@@ -28,23 +30,24 @@ namespace TESUnity
 
     public class CellManager
     {
-        public CellManager(MorrowindDataReader dataReader, TextureManager textureManager, NIFManager nifManager)
+        public CellManager(MorrowindDataReader dataReader, TextureManager textureManager, NIFManager nifManager, TemporalLoadBalancer temporalLoadBalancer)
         {
             this.dataReader = dataReader;
             this.textureManager = textureManager;
             this.nifManager = nifManager;
+            this.temporalLoadBalancer = temporalLoadBalancer;
         }
         public Vector2i GetExteriorCellIndices(Vector3 point)
         {
             return new Vector2i(Mathf.FloorToInt(point.x / Convert.exteriorCellSideLengthInMeters), Mathf.FloorToInt(point.z / Convert.exteriorCellSideLengthInMeters));
         }
-        public InRangeCellInfo CreateExteriorCell(Vector2i cellIndices)
+        public InRangeCellInfo StartCreatingExteriorCell(Vector2i cellIndices)
         {
             var CELL = dataReader.FindExteriorCellRecord(cellIndices);
 
             if(CELL != null)
             {
-                var cellInfo = InstantiateCell(CELL);
+                var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[cellIndices] = cellInfo;
 
                 return cellInfo;
@@ -95,11 +98,11 @@ namespace TESUnity
 
                         if((cellDistance == r) && !cellObjects.ContainsKey(cellIndices))
                         {
-                            var cellInfo = CreateExteriorCell(cellIndices);
+                            var cellInfo = StartCreatingExteriorCell(cellIndices);
 
                             if((cellInfo != null) && immediate)
                             {
-                                //temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+                                temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
                             }
                         }
                     }
@@ -128,13 +131,13 @@ namespace TESUnity
                 }
             }
         }
-        public InRangeCellInfo CreateInteriorCell(string cellName)
+        public InRangeCellInfo StartCreatingInteriorCell(string cellName)
         {
             var CELL = dataReader.FindInteriorCellRecord(cellName);
 
             if(CELL != null)
             {
-                var cellInfo = InstantiateCell(CELL);
+                var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[Vector2i.zero] = cellInfo;
 
                 return cellInfo;
@@ -144,13 +147,13 @@ namespace TESUnity
                 return null;
             }
         }
-        public InRangeCellInfo CreateInteriorCell(Vector2i gridCoords)
+        public InRangeCellInfo StartCreatingInteriorCell(Vector2i gridCoords)
         {
             var CELL = dataReader.FindInteriorCellRecord(gridCoords);
 
             if(CELL != null)
             {
-                var cellInfo = InstantiateCell(CELL);
+                var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[Vector2i.zero] = cellInfo;
 
                 return cellInfo;
@@ -160,7 +163,7 @@ namespace TESUnity
                 return null;
             }
         }
-        public InRangeCellInfo InstantiateCell(CELLRecord CELL)
+        public InRangeCellInfo StartInstantiatingCell(CELLRecord CELL)
         {
             Debug.Assert(CELL != null);
 
@@ -183,14 +186,16 @@ namespace TESUnity
             var cellObjectsContainer = new GameObject("objects");
             cellObjectsContainer.transform.parent = cellObj.transform;
 
-            InstantiateCellObjects(CELL, LAND, cellObj, cellObjectsContainer);
+            var cellObjectsCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, LAND, cellObj, cellObjectsContainer);
+            temporalLoadBalancer.AddTask(cellObjectsCreationCoroutine);
 
-            return new InRangeCellInfo(cellObj, cellObjectsContainer, CELL);
+            return new InRangeCellInfo(cellObj, cellObjectsContainer, CELL, cellObjectsCreationCoroutine);
         }
         public void DestroyAllCells()
         {
             foreach(var keyValuePair in cellObjects)
             {
+                temporalLoadBalancer.CancelTask(keyValuePair.Value.objectsCreationCoroutine);
                 GameObject.Destroy(keyValuePair.Value.gameObject);
             }
 
@@ -203,20 +208,70 @@ namespace TESUnity
         private MorrowindDataReader dataReader;
         private TextureManager textureManager;
         private NIFManager nifManager;
+        private TemporalLoadBalancer temporalLoadBalancer;
         private Dictionary<Vector2i, InRangeCellInfo> cellObjects = new Dictionary<Vector2i, InRangeCellInfo>();
 
         /// <summary>
         /// A coroutine that instantiates the terrain for, and all objects in, a cell.
         /// </summary>
-        private void InstantiateCellObjects(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
+        private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
         {
+            // Start pre-loading all required textures for the terrain.
+            if(LAND != null)
+            {
+                var landTextureFilePaths = GetLANDTextureFilePaths(LAND);
+
+                if(landTextureFilePaths != null)
+                {
+                    foreach(var landTextureFilePath in landTextureFilePaths)
+                    {
+                        textureManager.PreloadTextureFileAsync(landTextureFilePath);
+                    }
+                }
+                
+                yield return null;
+            }
+
+            // Extract information about referenced objects.
+            var refCellObjInfos = GetRefCellObjInfos(CELL);
+            yield return null;
+
+            // Start pre-loading all required files for referenced objects. The NIF manager will load the textures as well.
+            foreach(var refCellObjInfo in refCellObjInfos)
+            {
+                if(refCellObjInfo.modelFilePath != null)
+                {
+                    nifManager.PreloadNifFileAsync(refCellObjInfo.modelFilePath);
+                }
+            }
+            yield return null;
+
             // Instantiate terrain.
             if(LAND != null)
             {
-                InstantiateLAND(LAND, cellObj);
+                var instantiateLANDTaskEnumerator = InstantiateLANDCoroutine(LAND, cellObj);
+
+                // Run the LAND instantiation coroutine.
+                while(instantiateLANDTaskEnumerator.MoveNext())
+                {
+                    // Yield every time InstantiateLANDCoroutine does to avoid doing too much work in one frame.
+                    yield return null;
+                }
+
+                // Yield after InstantiateLANDCoroutine has finished to avoid doing too much work in one frame.
+                yield return null;
             }
 
-            // Extract information about referenced objects. Do this all at once because it's fast.
+            // Instantiate objects.
+            foreach(var refCellObjInfo in refCellObjInfos)
+            {
+                InstantiateCellObject(CELL, cellObjectsContainer, refCellObjInfo);
+                yield return null;
+            }
+        }
+
+        private RefCellObjInfo[] GetRefCellObjInfos(CELLRecord CELL)
+        {
             RefCellObjInfo[] refCellObjInfos = new RefCellObjInfo[CELL.refObjDataGroups.Count];
             for(int i = 0; i < CELL.refObjDataGroups.Count; i++)
             {
@@ -240,11 +295,7 @@ namespace TESUnity
                 refCellObjInfos[i] = refObjInfo;
             }
 
-            // Instantiate objects.
-            foreach(var refCellObjInfo in refCellObjInfos)
-            {
-                InstantiateCellObject(CELL, cellObjectsContainer, refCellObjInfo);
-            }
+            return refCellObjInfos;
         }
 
         /// <summary>
@@ -386,18 +437,43 @@ namespace TESUnity
             }
         }
 
+        private List<string> GetLANDTextureFilePaths(LANDRecord LAND)
+        {
+            // Don't return anything if the LAND doesn't have height data or texture data.
+            if((LAND.VHGT == null) || (LAND.VTEX == null)) { return null; }
+
+            var textureFilePaths = new List<string>();
+            for(int i = 0; i < LAND.VTEX.textureIndices.Length; i++)
+            {
+                short textureIndex = (short)((short)LAND.VTEX.textureIndices[i] - 1);
+
+                if(textureIndex < 0)
+                {
+                    continue;
+                }
+                
+                var LTEX = dataReader.FindLTEXRecord(textureIndex);
+                var textureFilePath = LTEX.DATA.value;
+                textureFilePaths.Add(textureFilePath);
+            }
+
+            return textureFilePaths;
+        }
         /// <summary>
         /// Creates terrain representing a LAND record.
         /// </summary>
-        private void InstantiateLAND(LANDRecord LAND, GameObject parent)
+        private IEnumerator InstantiateLANDCoroutine(LANDRecord LAND, GameObject parent)
         {
             Debug.Assert(LAND != null);
 
             // Don't create anything if the LAND doesn't have height data.
             if(LAND.VHGT == null)
             {
-                return;
+                yield break;
             }
+
+            // Return before doing any work to provide an IEnumerator handle to the coroutine.
+            yield return null;
 
             int LAND_SIDE_LENGTH_IN_SAMPLES = 65;
             var heights = new float[LAND_SIDE_LENGTH_IN_SAMPLES, LAND_SIDE_LENGTH_IN_SAMPLES];
@@ -458,6 +534,9 @@ namespace TESUnity
                         var textureFilePath = LTEX.DATA.value;
                         var texture = textureManager.LoadTexture(textureFilePath);
 
+                        // Yield after loading each texture to avoid doing too much work on one frame.
+                        yield return null;
+
                         // Create the splat prototype.
                         var splat = new SplatPrototype();
                         splat.texture = texture;
@@ -505,6 +584,9 @@ namespace TESUnity
                 }
             }
 
+            // Yield before creating the terrain GameObject because it takes a while.
+            yield return null;
+
             // Create the terrain.
             var heightRange = maxHeight - minHeight;
             var terrainPosition = new Vector3(Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.x, minHeight / Convert.meterInMWUnits, Convert.exteriorCellSideLengthInMeters * LAND.gridCoords.y);
@@ -523,6 +605,7 @@ namespace TESUnity
 
             if(cellObjects.TryGetValue(indices, out cellInfo))
             {
+                temporalLoadBalancer.CancelTask(cellInfo.objectsCreationCoroutine);
                 GameObject.Destroy(cellInfo.gameObject);
                 cellObjects.Remove(indices);
             }

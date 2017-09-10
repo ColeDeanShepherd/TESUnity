@@ -19,7 +19,7 @@ namespace TESUnity
 
         private const float playerHeight = 2;
         private const float playerRadius = 0.4f;
-        private const float desiredWorkTimePerFrame = 1.0f / 160;
+        private const float desiredWorkTimePerFrame = 1.0f / 200;
         private const int cellRadiusOnLoad = 2;
         private CELLRecord _currentCell;
         private UIManager _uiManager;
@@ -42,6 +42,8 @@ namespace TESUnity
         public MaterialManager materialManager;
         public NIFManager nifManager;
         public CellManager cellManager;
+        public TemporalLoadBalancer temporalLoadBalancer;
+
         public CELLRecord currentCell
         {
             get { return _currentCell; }
@@ -63,7 +65,8 @@ namespace TESUnity
             textureManager = new TextureManager(dataReader);
             materialManager = new MaterialManager(textureManager);
             nifManager = new NIFManager(dataReader, materialManager);
-            cellManager = new CellManager(dataReader, textureManager, nifManager);
+            temporalLoadBalancer = new TemporalLoadBalancer();
+            cellManager = new CellManager(dataReader, textureManager, nifManager, temporalLoadBalancer);
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientIntensity = TESUnity.instance.ambientIntensity;
@@ -110,7 +113,9 @@ namespace TESUnity
             Debug.Assert(_currentCell != null);
 
             CreatePlayer(playerPrefab, position, out playerCameraObj);
-            var cellInfo = cellManager.CreateInteriorCell(interiorCellName);
+
+            var cellInfo = cellManager.StartCreatingInteriorCell(interiorCellName);
+            temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
 
             OnInteriorCell(_currentCell);
         }
@@ -128,7 +133,9 @@ namespace TESUnity
             Debug.Assert(_currentCell != null);
 
             CreatePlayer(playerPrefab, position, out playerCameraObj);
-            var cellInfo = cellManager.CreateInteriorCell(gridCoords);
+
+            var cellInfo = cellManager.StartCreatingInteriorCell(gridCoords);
+            temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
 
             OnInteriorCell(_currentCell);
         }
@@ -146,7 +153,9 @@ namespace TESUnity
             Debug.Assert(_currentCell != null);
 
             CreatePlayer(playerPrefab, position, out playerCameraObj);
-            var cellInfo = cellManager.CreateExteriorCell(gridCoords);
+
+            var cellInfo = cellManager.StartCreatingExteriorCell(gridCoords);
+            temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
 
             OnExteriorCell(_currentCell);
         }
@@ -175,6 +184,8 @@ namespace TESUnity
             {
                 cellManager.UpdateExteriorCells(playerCameraObj.transform.position);
             }
+
+            temporalLoadBalancer.RunTasks(desiredWorkTimePerFrame);
 
             CastInteractRay();
         }
@@ -248,7 +259,9 @@ namespace TESUnity
         private void OnInteriorCell(CELLRecord CELL)
         {
             if (CELL.AMBI != null)
+            {
                 RenderSettings.ambientLight = ColorUtils.B8G8R8ToColor32(CELL.AMBI.ambientColor);
+            }
 
             sunObj.SetActive(false);
 
@@ -287,7 +300,9 @@ namespace TESUnity
 
                 if (component.doorData.leadsToInteriorCell)
                 {
-                    var cellInfo = cellManager.CreateInteriorCell(component.doorData.doorExitName);
+                    var cellInfo = cellManager.StartCreatingInteriorCell(component.doorData.doorExitName);
+                    temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
+
                     newCell = cellInfo.cellRecord;
 
                     OnInteriorCell(cellInfo.cellRecord);
