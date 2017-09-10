@@ -13,13 +13,11 @@ namespace TESUnity
     {
         public GameObject gameObject;
         public GameObject objectsContainerGameObject;
-        public IEnumerator creationCoroutine;
 
-        public InRangeCellInfo(GameObject gameObject, GameObject objectsContainerGameObject, IEnumerator creationCoroutine)
+        public InRangeCellInfo(GameObject gameObject, GameObject objectsContainerGameObject)
         {
             this.gameObject = gameObject;
             this.objectsContainerGameObject = objectsContainerGameObject;
-            this.creationCoroutine = creationCoroutine;
         }
     }
 
@@ -69,7 +67,6 @@ namespace TESUnity
         public TextureManager textureManager;
         public MaterialManager materialManager;
         public NIFManager theNIFManager;
-        public TemporalLoadBalancer temporalLoadBalancer = new TemporalLoadBalancer();
 
         public CELLRecord currentCell
         {
@@ -148,10 +145,9 @@ namespace TESUnity
             var cellObjectsContainer = new GameObject("objects");
             cellObjectsContainer.transform.parent = cellObj.transform;
 
-            var cellCreationCoroutine = InstantiateCellObjectsCoroutine(CELL, LAND, cellObj, cellObjectsContainer);
-            temporalLoadBalancer.AddTask(cellCreationCoroutine);
+            InstantiateCellObjects(CELL, LAND, cellObj, cellObjectsContainer);
 
-            return new InRangeCellInfo(cellObj, cellObjectsContainer, cellCreationCoroutine);
+            return new InRangeCellInfo(cellObj, cellObjectsContainer);
         }
 
         #region Player Spawn
@@ -172,7 +168,6 @@ namespace TESUnity
             CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             var cellInfo = CreateInteriorCell(interiorCellName);
-            temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 
             OnInteriorCell(_currentCell);
         }
@@ -192,7 +187,6 @@ namespace TESUnity
             CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             var cellInfo = CreateInteriorCell(gridCoords);
-            temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 
             OnInteriorCell(_currentCell);
         }
@@ -212,7 +206,6 @@ namespace TESUnity
             CreatePlayer(playerPrefab, position, out playerCameraObj);
 
             var cellInfo = CreateExteriorCell(gridCoords);
-            temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 
             OnExteriorCell(_currentCell);
         }
@@ -242,8 +235,6 @@ namespace TESUnity
             {
                 UpdateExteriorCells();
             }
-
-            temporalLoadBalancer.RunTasks(desiredWorkTimePerFrame);
 
             CastInteractRay();
         }
@@ -305,11 +296,8 @@ namespace TESUnity
         /// <summary>
         /// A coroutine that instantiates the terrain for, and all objects in, a cell.
         /// </summary>
-        private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
+        private void InstantiateCellObjects(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
         {
-            // Return before doing any work to provide an IEnumerator handle to the coroutine.
-            yield return null;
-
             // Instantiate terrain.
             if (LAND != null)
             {
@@ -318,12 +306,7 @@ namespace TESUnity
                 // Run the LAND instantiation coroutine.
                 while (instantiateLANDTaskEnumerator.MoveNext())
                 {
-                    // Yield every time InstantiateLANDCoroutine does to avoid doing too much work in one frame.
-                    yield return null;
                 }
-
-                // Yield after InstantiateLANDCoroutine has finished to avoid doing too much work in one frame.
-                yield return null;
             }
 
             // Extract information about referenced objects. Do this all at once because it's fast.
@@ -351,20 +334,14 @@ namespace TESUnity
                 refCellObjInfos[i] = refObjInfo;
             }
 
-            yield return null;
-
             // Start loading all required assets.
             foreach (var refCellObjInfo in refCellObjInfos)
             {
                 if (refCellObjInfo.modelFilePath != null)
                 {
                     theNIFManager.PreLoadNIFAsync(refCellObjInfo.modelFilePath);
-
-                    yield return null;
                 }
             }
-
-            yield return null;
 
             // Instantiate objects when they are done loading, or if they don't need to load.
             int instantiatedObjectCount = 0;
@@ -394,8 +371,6 @@ namespace TESUnity
                             refCellObjInfo.isInstantiated = true;
 
                             instantiatedObjectCount++;
-
-                            yield return null;
                         }
                     }
                     else // If the referenced object doesn't have a model, there is no loading to be done, so try to instantiate it.
@@ -404,13 +379,8 @@ namespace TESUnity
                         refCellObjInfo.isInstantiated = true;
 
                         instantiatedObjectCount++;
-
-                        yield return null;
                     }
                 }
-
-                // Yield after every foreach to prevent spinning if all models are loading.
-                yield return null;
             }
         }
 
@@ -575,7 +545,7 @@ namespace TESUnity
 
             // Change the heights to percentages.
             float minHeight, maxHeight;
-            Utils.GetExtrema(heights, out minHeight, out maxHeight);
+            ArrayUtils.GetExtrema(heights, out minHeight, out maxHeight);
 
             for (int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
             {
@@ -753,7 +723,7 @@ namespace TESUnity
 
                             if ((cellInfo != null) && immediate)
                             {
-                                temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
+                                //temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
                             }
                         }
                     }
@@ -806,7 +776,6 @@ namespace TESUnity
 
             if (cellObjects.TryGetValue(indices, out cellInfo))
             {
-                temporalLoadBalancer.CancelTask(cellInfo.creationCoroutine);
                 GameObject.Destroy(cellInfo.gameObject);
                 cellObjects.Remove(indices);
             }
@@ -854,7 +823,6 @@ namespace TESUnity
         {
             foreach (var keyValuePair in cellObjects)
             {
-                temporalLoadBalancer.CancelTask(keyValuePair.Value.creationCoroutine);
                 GameObject.Destroy(keyValuePair.Value.gameObject);
             }
 
@@ -918,7 +886,6 @@ namespace TESUnity
                     newCell = dataReader.FindInteriorCellRecord(component.doorData.doorExitName);
 
                     var cellInfo = InstantiateCell(newCell);
-                    temporalLoadBalancer.WaitForTask(cellInfo.creationCoroutine);
 
                     cellObjects[Vector2i.zero] = cellInfo;
 

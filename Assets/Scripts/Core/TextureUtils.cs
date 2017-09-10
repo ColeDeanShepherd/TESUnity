@@ -6,7 +6,7 @@ public static class TextureUtils
 	{
 		var pixels = texture2D.GetPixels32();
 
-		Utils.Flip2DArrayVertically(pixels, texture2D.height, texture2D.width);
+        ArrayUtils.Flip2DArrayVertically(pixels, texture2D.height, texture2D.width);
 
 		texture2D.SetPixels32(pixels);
 		texture2D.Apply();

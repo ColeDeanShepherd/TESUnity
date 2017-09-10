@@ -26,24 +26,6 @@ public static class AudioUtils
     {
         return byteCount / (bitDepth / 8) / channelCount;
     }
-
-    public static GameObject Play2DAudioClip(AudioClip audioClip)
-    {
-        GameObject gameObject = new GameObject("tmp2DAudioClip");
-
-        var audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.clip = audioClip;
-
-        gameObject.AddComponent<OneShotAudioSourceComponent>();
-
-        return gameObject;
-    }
-    public static GameObject Play2DAudioClip(PCMAudioBuffer audioBuffer)
-    {
-        var audioClip = CreateAudioClip("tmp2DAudioClip", audioBuffer);
-
-        return Play2DAudioClip(audioClip);
-    }
     public static GameObject Play2DAudioStream(MP3StreamReader audioStream)
     {
         GameObject gameObject = new GameObject("tmp2DAudioStream");
