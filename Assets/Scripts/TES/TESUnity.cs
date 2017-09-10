@@ -163,7 +163,7 @@ namespace TESUnity
 
                     try
                     {
-                        var cellInfo = MWEngine.InstantiateCell(CELL);
+                        var cellInfo = MWEngine.cellManager.InstantiateCell(CELL);
                         DestroyImmediate(cellInfo.gameObject);
 
                         writer.Write("Pass: ");
