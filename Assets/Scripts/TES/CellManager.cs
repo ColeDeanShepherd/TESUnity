@@ -216,6 +216,36 @@ namespace TESUnity
         /// </summary>
         private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
         {
+            // Start pre-loading all required textures for the terrain.
+            if(LAND != null)
+            {
+                var landTextureFilePaths = GetLANDTextureFilePaths(LAND);
+
+                if(landTextureFilePaths != null)
+                {
+                    foreach(var landTextureFilePath in landTextureFilePaths)
+                    {
+                        textureManager.PreloadTextureFileAsync(landTextureFilePath);
+                    }
+                }
+                
+                yield return null;
+            }
+
+            // Extract information about referenced objects.
+            var refCellObjInfos = GetRefCellObjInfos(CELL);
+            yield return null;
+
+            // Start pre-loading all required files for referenced objects. The NIF manager will load the textures as well.
+            foreach(var refCellObjInfo in refCellObjInfos)
+            {
+                if(refCellObjInfo.modelFilePath != null)
+                {
+                    nifManager.PreloadNifFileAsync(refCellObjInfo.modelFilePath);
+                }
+            }
+            yield return null;
+
             // Instantiate terrain.
             if(LAND != null)
             {
@@ -231,20 +261,6 @@ namespace TESUnity
                 // Yield after InstantiateLANDCoroutine has finished to avoid doing too much work in one frame.
                 yield return null;
             }
-
-            // Extract information about referenced objects.
-            var refCellObjInfos = GetRefCellObjInfos(CELL);
-            yield return null;
-
-            // Start pre-loading all required files. The NIF manager will load the textures as well.
-            foreach(var refCellObjInfo in refCellObjInfos)
-            {
-                if(refCellObjInfo.modelFilePath != null)
-                {
-                    nifManager.PreloadNifFileAsync(refCellObjInfo.modelFilePath);
-                }
-            }
-            yield return null;
 
             // Instantiate objects.
             foreach(var refCellObjInfo in refCellObjInfos)
@@ -421,6 +437,28 @@ namespace TESUnity
             }
         }
 
+        private List<string> GetLANDTextureFilePaths(LANDRecord LAND)
+        {
+            // Don't return anything if the LAND doesn't have height data or texture data.
+            if((LAND.VHGT == null) || (LAND.VTEX == null)) { return null; }
+
+            var textureFilePaths = new List<string>();
+            for(int i = 0; i < LAND.VTEX.textureIndices.Length; i++)
+            {
+                short textureIndex = (short)((short)LAND.VTEX.textureIndices[i] - 1);
+
+                if(textureIndex < 0)
+                {
+                    continue;
+                }
+                
+                var LTEX = dataReader.FindLTEXRecord(textureIndex);
+                var textureFilePath = LTEX.DATA.value;
+                textureFilePaths.Add(textureFilePath);
+            }
+
+            return textureFilePaths;
+        }
         /// <summary>
         /// Creates terrain representing a LAND record.
         /// </summary>
