@@ -5,6 +5,7 @@ using System.IO;
 namespace TESUnity
 {
     using ESM;
+    using UnityEngine;
 
     public class MorrowindDataReader : IDisposable
     {
@@ -60,7 +61,8 @@ namespace TESUnity
             }
             else
             {
-                throw new FileNotFoundException("Could not find file \"" + texturePath + "\" in a BSA file.");
+                Debug.LogWarning("Could not find file \"" + texturePath + "\" in a BSA file.");
+                return null;
             }
         }
 

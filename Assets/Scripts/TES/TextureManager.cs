@@ -48,14 +48,16 @@ namespace TESUnity
 			{
 				// Load the Texture2DInfo.
 				Texture2DInfo textureInfo = LoadTextureInfoAndRemoveFromCache(texturePath);
-
+                if(textureInfo == null) { return new Texture2D(1, 1); }
 				texture = textureInfo.ToTexture2D();
 
 				cachedTextures[texturePath] = texture;
 			}
 
             if (texture != null && flip)
+            {
                 TextureUtils.FlipTexture2DVertically(texture);
+            }
 
 			return texture;
 		}
