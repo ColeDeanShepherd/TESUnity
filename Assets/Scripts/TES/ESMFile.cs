@@ -187,7 +187,7 @@ namespace TESUnity
                     case "NPC_":
                         return TESUnity.instance.npcsEnabled ? new NPC_Record() : null;
 					default:
-                        Debug.Log("Unsupported ESM record type: " + recordName);
+                        Debug.LogWarning("Unsupported ESM record type: " + recordName);
 						return null;
 				}
 			}
