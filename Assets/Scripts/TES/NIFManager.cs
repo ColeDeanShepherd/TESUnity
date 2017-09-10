@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 
 namespace TESUnity
@@ -21,47 +20,37 @@ namespace TESUnity
 		/// </summary>
 		public void PreLoadNIFAsync(string filePath)
 		{
-			lock(dictionariesLock)
+			// If the NIF is already loading or has already loaded, return.
+			if(preLoadedNIFFiles.ContainsKey(filePath) || NIFPrefabs.ContainsKey(filePath))
 			{
-				// If the NIF is already loading or has already loaded, return.
-				if(preLoadedNIFFiles.ContainsKey(filePath) || NIFPrefabs.ContainsKey(filePath))
-				{
-					return;
-				}
-
-				// Ensure filePath is a key in the dictionary so that the NIF isn't loaded multiple times.
-				preLoadedNIFFiles[filePath] = null;
+				return;
 			}
 
-			var waitCallback = new WaitCallback(PreLoadNIFThreadFunc);
-			if(!ThreadPool.QueueUserWorkItem(waitCallback, filePath))
-			{
-				throw new Exception("Failed adding the NIF preloading task for the file " + filePath + " to the thread pool.");
-			}
+			// Ensure filePath is a key in the dictionary so that the NIF isn't loaded multiple times.
+			preLoadedNIFFiles[filePath] = null;
+
+            PreLoadNIFThreadFunc(filePath);
 		}
 
 		/// <summary>
-		/// Determines if a NIF file is done pre-loading. Also returns true for cached models that weren't explicitly pre-loaded. Thread-safe.
+		/// Determines if a NIF file is done pre-loading. Also returns true for cached models that weren't explicitly pre-loaded.
 		/// </summary>
 		public bool IsDonePreLoading(string filePath)
 		{
 			NIF.NiFile preLoadedFile;
-
-			lock(dictionariesLock)
+            
+			if(preLoadedNIFFiles.TryGetValue(filePath, out preLoadedFile))
 			{
-				if(preLoadedNIFFiles.TryGetValue(filePath, out preLoadedFile))
-				{
-					return preLoadedFile != null;
-				}
-				else
-				{
-					return NIFPrefabs.ContainsKey(filePath);
-				}
+				return preLoadedFile != null;
+			}
+			else
+			{
+				return NIFPrefabs.ContainsKey(filePath);
 			}
 		}
 
 		/// <summary>
-		/// Instantiates a NIF file. Must be called from the main thread.
+		/// Instantiates a NIF file.
 		/// </summary>
 		public GameObject InstantiateNIF(string filePath)
 		{
@@ -74,11 +63,8 @@ namespace TESUnity
 
 			// Find an existing prefab for the NIF file, or create a new prefab object.
 			GameObject prefab;
-
-			lock(dictionariesLock)
-			{
-				NIFPrefabs.TryGetValue(filePath, out prefab);
-			}
+            
+			NIFPrefabs.TryGetValue(filePath, out prefab);
 
 			if(prefab == null)
 			{
@@ -101,10 +87,7 @@ namespace TESUnity
 				LODComponent.SetLODs(LODs);
 
 				// Cache the prefab.
-				lock(dictionariesLock)
-				{
-					NIFPrefabs[filePath] = prefab;
-				}
+				NIFPrefabs[filePath] = prefab;
 			}
 
 			return GameObject.Instantiate(prefab);
@@ -114,8 +97,7 @@ namespace TESUnity
 		private MaterialManager materialManager;
 
 		private GameObject prefabContainerObj;
-
-		private object dictionariesLock = new object(); // A lock for NIFPrefabs and preLoadedNIFFiles.
+        
 		private Dictionary<string, GameObject> NIFPrefabs = new Dictionary<string, GameObject>();
 		private Dictionary<string, NIF.NiFile> preLoadedNIFFiles = new Dictionary<string, NIF.NiFile>();
 
@@ -123,6 +105,8 @@ namespace TESUnity
 		{
 			// Load the NIF file without loading textures.
 			var filePath = (string)filePathObj;
+
+            Debug.Log("Loading " + filePath);
 			NIF.NiFile file = dataReader.LoadNIF(filePath);
 
 			// Pre-load the NIF file's textures.
@@ -138,27 +122,22 @@ namespace TESUnity
 					}
 				}
 			}
-
-			lock(dictionariesLock)
-			{
-				preLoadedNIFFiles[filePath] = file;
-			}
-		}
+            
+			preLoadedNIFFiles[filePath] = file;
+            
+            Debug.Log("Done loading " + filePath);
+        }
 
 		/// <summary>
 		/// Loads a NIF file and removes it from the cache if necessary.
 		/// Used when instantiating NIF files to take advantage of asynchronously loaded files.
-		/// Thread safe.
 		/// </summary>
 		private NIF.NiFile LoadNIFAndRemoveFromCache(string filePath)
 		{
 			// Try to get the cached NiFile.
 			NIF.NiFile file;
 
-			lock(dictionariesLock)
-			{
-				preLoadedNIFFiles.TryGetValue(filePath, out file);
-			}
+			preLoadedNIFFiles.TryGetValue(filePath, out file);
 
 			// If there is no cached NiFile.
 			if(file == null)
@@ -167,10 +146,7 @@ namespace TESUnity
 			}
 			else
 			{
-				lock(dictionariesLock)
-				{
-					preLoadedNIFFiles.Remove(filePath);
-				}
+				preLoadedNIFFiles.Remove(filePath);
 			}
 
 			return file;

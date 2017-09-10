@@ -27,7 +27,7 @@ namespace TESUnity
     }
 
     /// <summary>
-    /// Manages loading and instantiation of Morrowind materials. Not thread safe.
+    /// Manages loading and instantiation of Morrowind materials.
     /// </summary>
     public class MaterialManager
     {

@@ -178,6 +178,10 @@ namespace TESUnity
 			{
 				return null;
 			}
+            else if(obj.GetType() == typeof(NiBillboardNode))
+            {
+                return null;
+            }
 			else
 			{
 				throw new NotImplementedException("Tried to instantiate an unsupported NiObject (" + obj.GetType().Name + ").");

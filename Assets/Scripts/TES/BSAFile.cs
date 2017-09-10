@@ -28,8 +28,7 @@ namespace TESUnity
 		/* Public */
 		public byte[] version; // 4 bytes
 		public FileMetadata[] fileMetadatas;
-
-		// Not modified after constructor, so thread safe to read.
+        
 		public Dictionary<FileNameHash, FileMetadata> fileMetadataHashTable;
 		
 		public VirtualFileSystem.Directory rootDir;
@@ -38,10 +37,7 @@ namespace TESUnity
 		{
 			get
 			{
-				lock(readerLock)
-				{
-					return reader.BaseStream.Position >= reader.BaseStream.Length;
-				}
+                return reader.BaseStream.Position >= reader.BaseStream.Length;
 			}
 		}
 
@@ -64,18 +60,15 @@ namespace TESUnity
 
 		public void Close()
 		{
-			lock(readerLock)
+			if(reader != null)
 			{
-				if(reader != null)
-				{
-					reader.Close();
-					reader = null;
-				}
+				reader.Close();
+				reader = null;
 			}
 		}
 
 		/// <summary>
-		/// Determines whether the BSA archive contains a file. Thread safe.
+		/// Determines whether the BSA archive contains a file.
 		/// </summary>
 		public bool ContainsFile(string filePath)
 		{
@@ -83,7 +76,7 @@ namespace TESUnity
 		}
 
 		/// <summary>
-		/// Loads an archived file's data. Thread safe.
+		/// Loads an archived file's data.
 		/// </summary>
 		public byte[] LoadFileData(string filePath)
 		{
@@ -101,28 +94,21 @@ namespace TESUnity
 		}
 
 		/// <summary>
-		/// Loads an archived file's data. Thread safe.
+		/// Loads an archived file's data.
 		/// </summary>
 		public byte[] LoadFileData(FileMetadata fileMetadata)
 		{
-			lock(readerLock)
-			{
-				reader.BaseStream.Position = fileDataSectionPostion + fileMetadata.offsetInDataSection;
+			reader.BaseStream.Position = fileDataSectionPostion + fileMetadata.offsetInDataSection;
 
-				return reader.ReadBytes((int)fileMetadata.size);
-			}
+			return reader.ReadBytes((int)fileMetadata.size);
 		}
 
 		/* Private */
-		private object readerLock = new object();
 		private UnityBinaryReader reader;
 
 		private long hashTablePosition;
 		private long fileDataSectionPostion;
-
-		/// <summary>
-		/// Only called in the constructor. Not thread safe, but doesn't need to be.
-		/// </summary>
+        
 		private void ReadMetadata()
 		{
 			// Read the header.

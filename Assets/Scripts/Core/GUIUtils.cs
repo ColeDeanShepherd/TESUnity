@@ -358,7 +358,7 @@ public static class GUIUtils
     }
     public static GameObject GetScrollViewContent(GameObject scrollView)
     {
-        return scrollView.transform.FindChild("Viewport/Content").gameObject;
+        return scrollView.transform.Find("Viewport/Content").gameObject;
     }
 
     public static GameObject CreateDropdown(GameObject parent)
@@ -436,7 +436,7 @@ public static class GUIUtils
         // Link everything together.
         dropdownComponent.template = scrollView.GetComponent<RectTransform>();
         dropdownComponent.captionText = label.GetComponent<Text>();
-        dropdownComponent.itemText = item.transform.FindChild("Item Label").gameObject.GetComponent<Text>();
+        dropdownComponent.itemText = item.transform.Find("Item Label").gameObject.GetComponent<Text>();
 
         return dropdown;
     }

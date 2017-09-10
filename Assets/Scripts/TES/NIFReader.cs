@@ -146,6 +146,13 @@ namespace TESUnity
 
 					return prop;
 				}
+                else if(StringUtils.Equals(nodeTypeBytes, "NiMaterialColorController"))
+                {
+                    var controller = new NiMaterialColorController();
+                    controller.Deserialize(reader);
+
+                    return controller;
+                }
 				else if(StringUtils.Equals(nodeTypeBytes, "NiTriShapeData"))
 				{
 					var data = new NiTriShapeData();
@@ -286,6 +293,13 @@ namespace TESUnity
 
 					return data;
 				}
+                else if(StringUtils.Equals(nodeTypeBytes, "NiVertWeightsExtraData"))
+                {
+                    var data = new NiVertWeightsExtraData();
+                    data.Deserialize(reader);
+
+                    return data;
+                }
 				else if(StringUtils.Equals(nodeTypeBytes, "NiParticleSystemController"))
 				{
 					var controller = new NiParticleSystemController();
@@ -293,6 +307,13 @@ namespace TESUnity
 
 					return controller;
 				}
+                else if(StringUtils.Equals(nodeTypeBytes, "NiBSPArrayController"))
+                {
+                    var controller = new NiBSPArrayController();
+                    controller.Deserialize(reader);
+
+                    return controller;
+                }
 				else if(StringUtils.Equals(nodeTypeBytes, "NiGravity"))
 				{
 					var obj = new NiGravity();
@@ -405,9 +426,32 @@ namespace TESUnity
 
 					return data;
 				}
+                else if(StringUtils.Equals(nodeTypeBytes, "NiPosData"))
+                {
+                    var data = new NiPosData();
+                    data.Deserialize(reader);
+
+                    return data;
+                }
+                else if(StringUtils.Equals(nodeTypeBytes, "NiBillboardNode"))
+                {
+                    var data = new NiBillboardNode();
+                    data.Deserialize(reader);
+
+                    return data;
+                }
+                else if(StringUtils.Equals(nodeTypeBytes, "NiShadeProperty"))
+                {
+                    var property = new NiShadeProperty();
+                    property.Deserialize(reader);
+
+                    return property;
+                }
 				else
-				{
-					throw new NotImplementedException("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
+
+                {
+					Debug.Log("Tried to read an unsupported NiObject type (" + System.Text.Encoding.ASCII.GetString(nodeTypeBytes) + ").");
+                    return null;
 				}
 			}
 			public static Matrix4x4 Read3x3RotationMatrix(UnityBinaryReader reader)
@@ -539,10 +583,10 @@ namespace TESUnity
 			DECAY_LINEAR = 1,
 			DECAY_EXPONENTIAL = 2
 		}
-		#endregion // Enums
+        #endregion // Enums
 
-		#region Misc Classes
-		public class BoundingBox
+        #region Misc Classes
+        public class BoundingBox
 		{
 			public uint unknownInt;
 			public Vector3 translation;
@@ -866,10 +910,17 @@ namespace TESUnity
 			}
 		}
 
+        /// <summary>
+        /// These are the main units of data that NIF files are arranged in.
+        /// </summary>
 		public abstract class NiObject
 		{
 			public virtual void Deserialize(UnityBinaryReader reader) {}
 		}
+
+        /// <summary>
+        /// An object that can be controlled by a controller.
+        /// </summary>
 		public abstract class NiObjectNET : NiObject
 		{
 			public string name;
@@ -941,7 +992,8 @@ namespace TESUnity
 		public class RootCollisionNode : NiNode { }
 		public class NiBSAnimationNode : NiNode { }
 		public class NiBSParticleNode : NiNode { }
-		public class AvoidNode : NiNode { }
+        public class NiBillboardNode : NiNode { }
+        public class AvoidNode : NiNode { }
 
 		// Geometry
 		public abstract class NiGeometry : NiAVObject
@@ -1216,14 +1268,25 @@ namespace TESUnity
 			{
 				base.Deserialize(reader);
 
-				flags = reader.ReadLEUInt16();
+				flags = NiReaderUtils.ReadFlags(reader);
 				vertexMode = (VertMode)reader.ReadLEUInt32();
 				lightingMode = (LightMode)reader.ReadLEUInt32();
 			}
 		}
+        public class NiShadeProperty : NiProperty
+        {
+            public ushort flags;
 
-		// Data
-		public class NiUVData : NiObject
+            public override void Deserialize(UnityBinaryReader reader)
+            {
+                base.Deserialize(reader);
+
+                flags = NiReaderUtils.ReadFlags(reader);
+            }
+        }
+
+        // Data
+        public class NiUVData : NiObject
 		{
 			public KeyGroup<float>[] UVGroups;
 
@@ -1355,8 +1418,20 @@ namespace TESUnity
 				data.Deserialize(reader);
 			}
 		}
+        public class NiPosData : NiObject
+        {
+            public KeyGroup<Vector3> data;
 
-		public class NiExtraData : NiObject
+            public override void Deserialize(UnityBinaryReader reader)
+            {
+                base.Deserialize(reader);
+
+                data = new KeyGroup<Vector3>();
+                data.Deserialize(reader);
+            }
+        }
+
+        public class NiExtraData : NiObject
 		{
 			public Ref<NiExtraData> nextExtraData;
 
@@ -1382,9 +1457,9 @@ namespace TESUnity
 		}
 		public class NiTextKeyExtraData : NiExtraData
 		{
-			uint unknownInt1;
-			uint numTextKeys;
-			Key<string>[] textKeys;
+			public uint unknownInt1;
+            public uint numTextKeys;
+            public Key<string>[] textKeys;
 
 			public override void Deserialize(UnityBinaryReader reader)
 			{
@@ -1401,9 +1476,29 @@ namespace TESUnity
 				}
 			}
 		}
+        public class NiVertWeightsExtraData : NiExtraData
+        {
+            public uint numBytes;
+            public ushort numVertices;
+            public float[] weights;
 
-		// Particles
-		public class NiParticles : NiGeometry { }
+            public override void Deserialize(UnityBinaryReader reader)
+            {
+                base.Deserialize(reader);
+
+                numBytes = reader.ReadLEUInt32();
+                numVertices = reader.ReadLEUInt16();
+
+                weights = new float[numVertices];
+                for(var i = 0; i < weights.Length; i++)
+                {
+                    weights[i] = reader.ReadLESingle();
+                }
+            }
+        }
+
+        // Particles
+        public class NiParticles : NiGeometry { }
 		public class NiParticlesData : NiGeometryData
 		{
 			public ushort numParticles;
@@ -1536,8 +1631,10 @@ namespace TESUnity
 			}
 		}
 
-		// Particle Modifiers
-		public abstract class NiParticleModifier : NiObject
+        public class NiBSPArrayController : NiParticleSystemController {}
+
+        // Particle Modifiers
+        public abstract class NiParticleModifier : NiObject
 		{
 			public Ref<NiParticleModifier> nextModifier;
 			public Ptr<NiParticleSystemController> controller;
@@ -1819,7 +1916,19 @@ namespace TESUnity
 			}
 		}
 
-		public class NiMaterialProperty : NiProperty
+        public abstract class NiPoint3InterpController : NiSingleInterpController
+        {
+            public Ref<NiPosData> data;
+
+            public override void Deserialize(UnityBinaryReader reader)
+            {
+                base.Deserialize(reader);
+
+                data = NiReaderUtils.ReadRef<NiPosData>(reader);
+            }
+        }
+
+        public class NiMaterialProperty : NiProperty
 		{
 			public ushort flags;
 			public Color3 ambientColor;
@@ -1852,7 +1961,10 @@ namespace TESUnity
 			}
 		}
 
-		public abstract class NiDynamicEffect : NiAVObject
+        public class NiMaterialColorController : NiPoint3InterpController {}
+
+
+        public abstract class NiDynamicEffect : NiAVObject
 		{
 			uint numAffectedNodeListPointers;
 			uint[] affectedNodeListPointers;
