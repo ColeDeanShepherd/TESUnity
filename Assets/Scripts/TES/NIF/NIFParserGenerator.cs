@@ -32,6 +32,28 @@ namespace TESUnity
         private StringBuilder strBuilder;
         private int indentLevel;
 
+        private int GetArrayDimensions(XElement addElement)
+        {
+            int arrayDimensions = 0;
+
+            while(addElement.Attribute($"arr{arrayDimensions + 1}") != null)
+            {
+                arrayDimensions++;
+            }
+
+            return arrayDimensions;
+        }
+        private string GetArraySuffix(int arrayDimensions)
+        {
+            if(arrayDimensions == 0) { return ""; }
+
+            return $"[{new String(',', arrayDimensions - 1)}]";
+        }
+
+        private string GetConvertedAddName(XElement addElement)
+        {
+            return addElement.Attribute("name").Value.Replace(" ", "");
+        }
         private string GetConvertedOptionName(XElement enumElement, XElement optionElement)
         {
             var optionNamePrefix = enumElement.Attribute("prefix")?.Value;
@@ -41,18 +63,23 @@ namespace TESUnity
 
             return optionNamePrefix + optionNameTail;
         }
+        private string GetConvertedAddTypeName(XElement addElement)
+        {
+            var typeName = addElement.Attribute("type").Value;
+
+            var templateAttributeValue = addElement.Attribute("template")?.Value;
+            var typeParameterSuffix = (templateAttributeValue != null) ? $"<{ConvertTypeName(templateAttributeValue)}>" : "";
+
+            var arraySuffix = GetArraySuffix(GetArrayDimensions(addElement));
+
+            return typeName + typeParameterSuffix + arraySuffix;
+        }
         private string ConvertTypeName(string typeName)
         {
             switch(typeName)
             {
-                case "uint":
-                    return "uint";
-                case "ushort":
-                    return "ushort";
-                case "byte":
-                    return "byte";
                 default:
-                    throw new NotSupportedException($"Unsupported type: \"{typeName}\".");
+                    return typeName;
             }
         }
         private string CleanDescription(string description)
@@ -122,6 +149,7 @@ namespace TESUnity
                 GenerateLine($"public enum {enumName} : {enumElementType}");
                 GenerateLine("{", 1);
                 GenerateEnumValues(enumElement);
+                EndLine(-1);
                 GenerateLine("}");
                 GenerateLine("");
             }
@@ -142,7 +170,46 @@ namespace TESUnity
                 Generate($"{optionName} = {optionValue}");
                 if(i < lastOptionElementIndex) { Generate(','); }
                 if(!string.IsNullOrWhiteSpace(optionDescription)) { Generate($" // {optionDescription}"); }
-                EndLine((i < lastOptionElementIndex) ? 0 : -1);
+                EndLine();
+            }
+        }
+
+        private void GenerateNiObjects()
+        {
+            foreach(var niObjectElement in nifXmlDoc.Descendants("niobject").Where(IsElementInVersion))
+            {
+                var name = niObjectElement.Attribute("name").Value;
+                var description = CleanDescription(niObjectElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
+                var isAbstract = niObjectElement.Attribute("abstract")?.Value == "1";
+                var baseClassName = niObjectElement.Attribute("inherit")?.Value;
+
+                if(!string.IsNullOrWhiteSpace(description)) { GenerateLine($"// {description}"); }
+
+                Generate("public ");
+                if(isAbstract) { Generate("abstract "); }
+                Generate($"class {name}");
+                if(baseClassName != null) { Generate($" : {baseClassName}"); }
+                EndLine();
+                GenerateLine("{", 1);
+
+                GenerateNiObjectFields(niObjectElement);
+                EndLine(-1);
+
+                GenerateLine("}");
+                GenerateLine("");
+            }
+        }
+        private void GenerateNiObjectFields(XElement niObjectElement)
+        {
+            foreach(var addElement in niObjectElement.Descendants("add").Where(IsElementInVersion))
+            {
+                var fieldName = GetConvertedAddName(addElement);
+                var fieldType = GetConvertedAddTypeName(addElement);
+                var fieldDescription = CleanDescription(addElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
+
+                Generate($"public {fieldType} {fieldName};");
+                if(!string.IsNullOrWhiteSpace(fieldDescription)) { Generate($" // {fieldDescription}"); }
+                EndLine();
             }
         }
     }
