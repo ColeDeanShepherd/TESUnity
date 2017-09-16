@@ -57,7 +57,18 @@ namespace TESUnity
             if (filePath != null)
             {
                 var fileData = MorrowindBSAFile.LoadFileData(filePath);
-                return Task.Run(() => DDS.DDSReader.LoadDDSTexture(new MemoryStream(fileData)));
+                return Task.Run(() => {
+                    var fileExtension = Path.GetExtension(filePath);
+
+                    if(fileExtension?.ToLower() == ".dds")
+                    {
+                        return DDS.DDSReader.LoadDDSTexture(new MemoryStream(fileData));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException($"Unsupported texture type: {fileExtension}");
+                    }
+                });
             }
             else
             {

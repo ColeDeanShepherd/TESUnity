@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TESUnity.Components.Records;
 using TESUnity.ESM;
 using UnityEngine;
@@ -204,6 +205,7 @@ namespace TESUnity
 
         private const int cellRadius = 4;
         private const int detailRadius = 3;
+        private const string defaultLandTextureFilePath = "textures/_land_default.dds";
 
         private MorrowindDataReader dataReader;
         private TextureManager textureManager;
@@ -443,18 +445,22 @@ namespace TESUnity
             if((LAND.VHGT == null) || (LAND.VTEX == null)) { return null; }
 
             var textureFilePaths = new List<string>();
-            for(int i = 0; i < LAND.VTEX.textureIndices.Length; i++)
+            var distinctTextureIndices = LAND.VTEX.textureIndices.Distinct().ToList();
+            for(int i = 0; i < distinctTextureIndices.Count; i++)
             {
-                short textureIndex = (short)((short)LAND.VTEX.textureIndices[i] - 1);
+                short textureIndex = (short)((short)distinctTextureIndices[i] - 1);
 
                 if(textureIndex < 0)
                 {
+                    textureFilePaths.Add(defaultLandTextureFilePath);
                     continue;
                 }
-                
-                var LTEX = dataReader.FindLTEXRecord(textureIndex);
-                var textureFilePath = LTEX.DATA.value;
-                textureFilePaths.Add(textureFilePath);
+                else
+                {
+                    var LTEX = dataReader.FindLTEXRecord(textureIndex);
+                    var textureFilePath = LTEX.DATA.value;
+                    textureFilePaths.Add(textureFilePath);
+                }
             }
 
             return textureFilePaths;
@@ -475,7 +481,7 @@ namespace TESUnity
             // Return before doing any work to provide an IEnumerator handle to the coroutine.
             yield return null;
 
-            int LAND_SIDE_LENGTH_IN_SAMPLES = 65;
+            const int LAND_SIDE_LENGTH_IN_SAMPLES = 65;
             var heights = new float[LAND_SIDE_LENGTH_IN_SAMPLES, LAND_SIDE_LENGTH_IN_SAMPLES];
 
             // Read in the heights in Morrowind units.
@@ -512,74 +518,79 @@ namespace TESUnity
             SplatPrototype[] splatPrototypes = null;
             float[,,] alphaMap = null;
 
-            if(LAND.VTEX != null)
-            {
-                // Create splat prototypes.
-                var splatPrototypeList = new List<SplatPrototype>();
-                var texInd2splatInd = new Dictionary<ushort, int>();
+            const int LAND_TEXTURE_INDICES_COUNT = 256;
+            var textureIndices = (LAND.VTEX != null) ? LAND.VTEX.textureIndices : new ushort[LAND_TEXTURE_INDICES_COUNT];
 
-                for(int i = 0; i < LAND.VTEX.textureIndices.Length; i++)
+            // Create splat prototypes.
+            var splatPrototypeList = new List<SplatPrototype>();
+            var texInd2splatInd = new Dictionary<ushort, int>();
+
+            for(int i = 0; i < textureIndices.Length; i++)
+            {
+                short textureIndex = (short)((short)textureIndices[i] - 1);
+
+                if(!texInd2splatInd.ContainsKey((ushort)textureIndex))
                 {
-                    short textureIndex = (short)((short)LAND.VTEX.textureIndices[i] - 1);
+                    // Load terrain texture.
+                    string textureFilePath;
 
                     if(textureIndex < 0)
                     {
-                        continue;
+                        textureFilePath = defaultLandTextureFilePath;
                     }
-
-                    if(!texInd2splatInd.ContainsKey((ushort)textureIndex))
+                    else
                     {
-                        // Load terrain texture.
                         var LTEX = dataReader.FindLTEXRecord(textureIndex);
-                        var textureFilePath = LTEX.DATA.value;
-                        var texture = textureManager.LoadTexture(textureFilePath);
-
-                        // Yield after loading each texture to avoid doing too much work on one frame.
-                        yield return null;
-
-                        // Create the splat prototype.
-                        var splat = new SplatPrototype();
-                        splat.texture = texture;
-                        splat.smoothness = 0;
-                        splat.metallic = 0;
-                        splat.tileSize = new Vector2(6, 6);
-
-                        // Update collections.
-                        var splatIndex = splatPrototypeList.Count;
-                        splatPrototypeList.Add(splat);
-                        texInd2splatInd.Add((ushort)textureIndex, splatIndex);
+                        textureFilePath = LTEX.DATA.value;
                     }
+                    
+                    var texture = textureManager.LoadTexture(textureFilePath);
+
+                    // Yield after loading each texture to avoid doing too much work on one frame.
+                    yield return null;
+
+                    // Create the splat prototype.
+                    var splat = new SplatPrototype();
+                    splat.texture = texture;
+                    splat.smoothness = 0;
+                    splat.metallic = 0;
+                    splat.tileSize = new Vector2(6, 6);
+
+                    // Update collections.
+                    var splatIndex = splatPrototypeList.Count;
+                    splatPrototypeList.Add(splat);
+                    texInd2splatInd.Add((ushort)textureIndex, splatIndex);
                 }
+            }
 
-                splatPrototypes = splatPrototypeList.ToArray();
+            splatPrototypes = splatPrototypeList.ToArray();
 
-                // Create the alpha map.
-                int VTEX_ROWS = 16;
-                int VTEX_COLUMNS = VTEX_ROWS;
-                alphaMap = new float[VTEX_ROWS, VTEX_COLUMNS, splatPrototypes.Length];
+            // Create the alpha map.
+            int VTEX_ROWS = 16;
+            int VTEX_COLUMNS = VTEX_ROWS;
+            alphaMap = new float[VTEX_ROWS, VTEX_COLUMNS, splatPrototypes.Length];
 
-                for(int y = 0; y < VTEX_ROWS; y++)
+            for(int y = 0; y < VTEX_ROWS; y++)
+            {
+                var yMajor = y / 4;
+                var yMinor = y - (yMajor * 4);
+
+                for(int x = 0; x < VTEX_COLUMNS; x++)
                 {
-                    var yMajor = y / 4;
-                    var yMinor = y - (yMajor * 4);
+                    var xMajor = x / 4;
+                    var xMinor = x - (xMajor * 4);
 
-                    for(int x = 0; x < VTEX_COLUMNS; x++)
+                    var texIndex = (short)((short)textureIndices[(yMajor * 64) + (xMajor * 16) + (yMinor * 4) + xMinor] - 1);
+
+                    if(texIndex >= 0)
                     {
-                        var xMajor = x / 4;
-                        var xMinor = x - (xMajor * 4);
+                        var splatIndex = texInd2splatInd[(ushort)texIndex];
 
-                        var texIndex = (short)((short)LAND.VTEX.textureIndices[(yMajor * 64) + (xMajor * 16) + (yMinor * 4) + xMinor] - 1);
-
-                        if(texIndex >= 0)
-                        {
-                            var splatIndex = texInd2splatInd[(ushort)texIndex];
-
-                            alphaMap[y, x, splatIndex] = 1;
-                        }
-                        else
-                        {
-                            alphaMap[y, x, 0] = 1;
-                        }
+                        alphaMap[y, x, splatIndex] = 1;
+                    }
+                    else
+                    {
+                        alphaMap[y, x, 0] = 1;
                     }
                 }
             }
