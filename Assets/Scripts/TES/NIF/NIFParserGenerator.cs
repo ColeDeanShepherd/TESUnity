@@ -20,7 +20,9 @@ namespace TESUnity
             strBuilder = new StringBuilder();
             indentLevel = 0;
 
-            GenerateEnums();
+            //GenerateEnums();
+            GenerateCompounds();
+            //GenerateNiObjects();
 
             File.WriteAllBytes(generatedParserFilePath, Encoding.UTF8.GetBytes(strBuilder.ToString()));
         }
@@ -139,8 +141,14 @@ namespace TESUnity
 
         private void GenerateEnums()
         {
-            foreach(var enumElement in nifXmlDoc.Descendants("enum").Where(IsElementInVersion))
+            GenerateLine("#region Enums");
+
+            var enumElements = nifXmlDoc.Descendants("enum").Where(IsElementInVersion).ToArray();
+            var lastEnumElementIndex = enumElements.Length - 1;
+            for(var i = 0; i < enumElements.Length; i++)
             {
+                var enumElement = enumElements[i];
+
                 var enumName = enumElement.Attribute("name").Value;
                 var enumElementType = ConvertTypeName(enumElement.Attribute("storage").Value);
                 var enumDescription = CleanDescription(enumElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
@@ -151,8 +159,10 @@ namespace TESUnity
                 GenerateEnumValues(enumElement);
                 EndLine(-1);
                 GenerateLine("}");
-                GenerateLine("");
+                if(i < lastEnumElementIndex) { GenerateLine(""); }
             }
+
+            GenerateLine("#endregion");
         }
         private void GenerateEnumValues(XElement enumElement)
         {
@@ -170,14 +180,55 @@ namespace TESUnity
                 Generate($"{optionName} = {optionValue}");
                 if(i < lastOptionElementIndex) { Generate(','); }
                 if(!string.IsNullOrWhiteSpace(optionDescription)) { Generate($" // {optionDescription}"); }
-                EndLine();
+                if(i < lastOptionElementIndex) { EndLine(); }
+            }
+        }
+
+        private void GenerateCompounds()
+        {
+            GenerateLine("#region Compounds");
+
+            var compoundElements = nifXmlDoc.Descendants("compound").Where(IsElementInVersion).ToArray();
+            var lastCompoundElementIndex = compoundElements.Length - 1;
+            for(var i = 0; i < compoundElements.Length; i++)
+            {
+                var compoundElement = compoundElements[i];
+
+                var name = compoundElement.Attribute("name").Value;
+                var description = CleanDescription(compoundElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
+
+                if(!string.IsNullOrWhiteSpace(description)) { GenerateLine($"// {description}"); }
+                
+                GenerateLine($"public struct {name}");
+                GenerateLine("{", 1);
+
+                GenerateCompoundFields(compoundElement);
+                EndLine(-1);
+
+                GenerateLine("}");
+                if(i < lastCompoundElementIndex) { GenerateLine(""); }
+            }
+
+            GenerateLine("#endregion");
+        }
+        private void GenerateCompoundFields(XElement compoundElement)
+        {
+            foreach(var addElement in compoundElement.Descendants("add").Where(IsElementInVersion))
+            {
+                GenerateAddElement(addElement);
             }
         }
 
         private void GenerateNiObjects()
         {
-            foreach(var niObjectElement in nifXmlDoc.Descendants("niobject").Where(IsElementInVersion))
+            GenerateLine("#region NiObjects");
+
+            var niObjectElements = nifXmlDoc.Descendants("niobject").Where(IsElementInVersion).ToArray();
+            var lastNiObjectElementIndex = niObjectElements.Length - 1;
+            for(var i = 0; i < niObjectElements.Length; i++)
             {
+                var niObjectElement = niObjectElements[i];
+
                 var name = niObjectElement.Attribute("name").Value;
                 var description = CleanDescription(niObjectElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
                 var isAbstract = niObjectElement.Attribute("abstract")?.Value == "1";
@@ -196,21 +247,29 @@ namespace TESUnity
                 EndLine(-1);
 
                 GenerateLine("}");
-                GenerateLine("");
+                if(i < lastNiObjectElementIndex) { GenerateLine(""); }
             }
+
+            GenerateLine("#endregion");
         }
         private void GenerateNiObjectFields(XElement niObjectElement)
         {
             foreach(var addElement in niObjectElement.Descendants("add").Where(IsElementInVersion))
             {
-                var fieldName = GetConvertedAddName(addElement);
-                var fieldType = GetConvertedAddTypeName(addElement);
-                var fieldDescription = CleanDescription(addElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
-
-                Generate($"public {fieldType} {fieldName};");
-                if(!string.IsNullOrWhiteSpace(fieldDescription)) { Generate($" // {fieldDescription}"); }
-                EndLine();
+                GenerateAddElement(addElement);
             }
+        }
+
+        private void GenerateAddElement(XElement addElement)
+        {
+            var fieldName = GetConvertedAddName(addElement);
+            var fieldType = GetConvertedAddTypeName(addElement);
+            var fieldDescription = CleanDescription(addElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
+
+            Generate($"public {fieldType} {fieldName};");
+            if(!string.IsNullOrWhiteSpace(fieldDescription))
+            { Generate($" // {fieldDescription}"); }
+            EndLine();
         }
     }
 
