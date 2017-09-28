@@ -1,27 +1,156 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 using UnityEngine;
 
 namespace TESUnity
 {
-	// TODO: enum duplicates
-	// TODO: conditionals (cond, vercond)
-	// TODO: default?
-	// TODO: arrays (sizes)
-	// TODO: default values
-	// TODO: reading
-	public class NIFParserGenerator
-	{
-		public const uint NIFVersion = 0x04000002;
+    public class NifParserGenerator
+    {
+        public const uint MORROWIND_NIF_VERSION = 0x04000002;
 
+        public void GenerateParser(string nifXmlFilePath, uint nifVersion, string generatedParserFilePath)
+        {
+            nifXmlDoc = XDocument.Load(nifXmlFilePath);
+            this.nifVersion = nifVersion;
+            strBuilder = new StringBuilder();
+            indentLevel = 0;
+
+            GenerateEnums();
+
+            File.WriteAllBytes(generatedParserFilePath, Encoding.UTF8.GetBytes(strBuilder.ToString()));
+        }
+
+        private const int SPACES_PER_INDENT = 4;
+
+        uint nifVersion;
+        private XDocument nifXmlDoc;
+        private StringBuilder strBuilder;
+        private int indentLevel;
+
+        private string GetConvertedOptionName(XElement enumElement, XElement optionElement)
+        {
+            var optionNamePrefix = enumElement.Attribute("prefix")?.Value;
+            optionNamePrefix = (optionNamePrefix != null) ? (optionNamePrefix + '_') : "";
+
+            var optionNameTail = optionElement.Attribute("name").Value.Replace(' ', '_').ToUpper();
+
+            return optionNamePrefix + optionNameTail;
+        }
+        private string ConvertTypeName(string typeName)
+        {
+            switch(typeName)
+            {
+                case "uint":
+                    return "uint";
+                case "ushort":
+                    return "ushort";
+                case "byte":
+                    return "byte";
+                default:
+                    throw new NotSupportedException($"Unsupported type: \"{typeName}\".");
+            }
+        }
+        private string CleanDescription(string description)
+        {
+            if(description == null) { return description; }
+
+            return Regex.Replace(description.Trim(), "\r?\n", "");
+        }
+
+        private uint VersionStringToInt(string versionString)
+        {
+            Debug.Assert(versionString != null);
+
+            var versionNumberStrings = versionString.Split('.');
+            Debug.Assert((versionNumberStrings.Length >= 1) && (versionNumberStrings.Length <= 4));
+
+            uint versionInt = 0;
+
+            for(int i = 0; i < versionNumberStrings.Length; i++)
+            {
+                versionInt |= uint.Parse(versionNumberStrings[i]) << (32 - (8 * (i + 1)));
+            }
+
+            return versionInt;
+        }
+        private bool IsElementInVersion(XElement element)
+        {
+            var minVersionStr = element.Attribute("ver1")?.Value;
+            var minVersion = (minVersionStr != null) ? VersionStringToInt(minVersionStr) : 0;
+
+            var maxVersionStr = element.Attribute("ver2")?.Value;
+            var maxVersion = (maxVersionStr != null) ? VersionStringToInt(maxVersionStr) : uint.MaxValue;
+
+            return ((nifVersion >= minVersion) && (nifVersion <= maxVersion));
+        }
+
+        private void Generate(char aChar)
+        {
+            strBuilder.Append(aChar);
+        }
+        private void Generate(string str)
+        {
+            strBuilder.Append(str);
+        }
+        private void GenerateLine(string line, int deltaIndentLevel = 0)
+        {
+            strBuilder.Append(line);
+            EndLine(deltaIndentLevel);
+        }
+        private void EndLine(int deltaIndentLevel = 0)
+        {
+            indentLevel += deltaIndentLevel;
+
+            strBuilder.AppendLine();
+            strBuilder.Append(' ', SPACES_PER_INDENT * indentLevel);
+        }
+
+        private void GenerateEnums()
+        {
+            foreach(var enumElement in nifXmlDoc.Descendants("enum").Where(IsElementInVersion))
+            {
+                var enumName = enumElement.Attribute("name").Value;
+                var enumElementType = ConvertTypeName(enumElement.Attribute("storage").Value);
+                var enumDescription = CleanDescription(enumElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
+
+                if(!string.IsNullOrWhiteSpace(enumDescription)) { GenerateLine($"// {enumDescription}"); }
+                GenerateLine($"public enum {enumName} : {enumElementType}");
+                GenerateLine("{", 1);
+                GenerateEnumValues(enumElement);
+                GenerateLine("}");
+                GenerateLine("");
+            }
+        }
+        private void GenerateEnumValues(XElement enumElement)
+        {
+            var optionElements = enumElement.Descendants("option").Where(IsElementInVersion).ToArray();
+            var lastOptionElementIndex = optionElements.Length - 1;
+
+            for(var i = 0; i < optionElements.Length; i++)
+            {
+                var optionElement = optionElements[i];
+                
+                var optionName = GetConvertedOptionName(enumElement, optionElement);
+                var optionValue = optionElement.Attribute("value").Value;
+                var optionDescription = CleanDescription(optionElement.Nodes().OfType<XText>().FirstOrDefault()?.Value);
+
+                Generate($"{optionName} = {optionValue}");
+                if(i < lastOptionElementIndex) { Generate(','); }
+                if(!string.IsNullOrWhiteSpace(optionDescription)) { Generate($" // {optionDescription}"); }
+                EndLine((i < lastOptionElementIndex) ? 0 : -1);
+            }
+        }
+    }
+
+	/*public class NIFParserGenerator
+	{
 		public void GenerateParser(string NIFXMLFilePath, string parserFilePath)
 		{
-			NIFXMLDoc = new XmlDocument();
-			NIFXMLDoc.Load(NIFXMLFilePath);
-
 			strBuilder = new StringBuilder();
 
 			GenerateCode("// Automatically generated."); EndLine();
@@ -331,17 +460,6 @@ namespace TESUnity
 
 			GenerateIdentifier(node.Attributes["name"].Value);
 
-			/*if(node.Attributes["default"] != null)
-			{
-				GenerateCode(" = ");
-				GenerateCode(node.Attributes["default"].Value);
-
-				if(formattedTypeName == "float")
-				{
-					GenerateCode("f");
-				}
-			}*/
-
 			GenerateCode(";");
 			EndLine();
 		}
@@ -385,5 +503,5 @@ namespace TESUnity
 
 			EndLine(-1); GenerateCode("}");
 		}
-	}
+	}*/
 }
