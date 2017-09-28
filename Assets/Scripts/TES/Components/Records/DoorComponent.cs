@@ -46,7 +46,15 @@ namespace TESUnity.Components.Records
             if (doorData.leadsToAnotherCell && !doorData.leadsToInteriorCell)
             {
                 var doorExitCell = MorrowindEngine.instance.dataReader.FindExteriorCellRecord(MorrowindEngine.instance.cellManager.GetExteriorCellIndices(doorData.doorExitPos));
-                doorData.doorExitName = (doorExitCell != null) ? doorExitCell.RGNN.value : doorData.doorName;
+
+                if (doorExitCell != null)
+                {
+                    doorData.doorExitName = doorExitCell.RGNN?.value ?? "Unknown Region";
+                }
+                else
+                {
+                    doorData.doorExitName = doorData.doorName;
+                }
             }
 
             if (refObjDataGroup.DODT != null)
