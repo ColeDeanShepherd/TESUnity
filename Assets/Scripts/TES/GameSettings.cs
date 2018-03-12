@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace TESUnity
 {
@@ -75,10 +76,27 @@ namespace TESUnity
 
                     switch (temp[0].Trim())
                     {
-                        case "AntiAliasing": tes.antiAliasing = ParseBool(value, tes.antiAliasing); break;
-                        case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
+                        case "AntiAliasing":
+                            {
+                                int result;
+                                if (int.TryParse(value, out result))
+                                {
+                                    if (result >= 0 && result < 4)
+                                        tes.antiAliasing = (PostProcessLayer.Antialiasing)result;
+                                }
+                            }
+                            break;
+                        case "PostProcessQuality":
+                            {
+                                int result;
+                                if (int.TryParse(value, out result))
+                                {
+                                    if (result >= 0 && result < 4)
+                                        tes.postProcessingQuality = (TESUnity.PostProcessingQuality)result;
+                                }
+                            }
+                            break;
                         case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
-                        case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
                         case "MorrowindDataPath": path = value; break;
                         case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
                         case "DirectModePreview": tes.directModePreview = ParseBool(value, tes.directModePreview); break;
@@ -134,8 +152,7 @@ namespace TESUnity
 
             sb.Append("[Effects]\r\n");
             sb.Append("AntiAliasing = \r\n");
-            sb.Append("AmbientOcclusion = \r\n");
-            sb.Append("Bloom = \r\n");
+            sb.Append("PostProcessQuality = \r\n");
             sb.Append("WaterBackSideTransparent = \r\n");
             sb.Append("\r\n");
 

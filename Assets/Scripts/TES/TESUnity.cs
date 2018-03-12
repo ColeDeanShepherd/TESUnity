@@ -2,6 +2,7 @@
 using System.IO;
 using TESUnity.UI;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace TESUnity
 {
@@ -12,6 +13,11 @@ namespace TESUnity
         public enum MWMaterialType
         {
             Default, Standard, BumpedDiffuse, Unlit
+        }
+
+        public enum PostProcessingQuality
+        {
+            None = 0, Low, Middle, High
         }
 
         #region Inspector-set Members
@@ -40,9 +46,8 @@ namespace TESUnity
         public bool animateLights = false;
 
         [Header("Effects")]
-        public bool antiAliasing = false;
-        public bool ambientOcclusion = false;
-        public bool bloom = false;
+        public PostProcessingQuality postProcessingQuality = PostProcessingQuality.High;
+        public PostProcessLayer.Antialiasing antiAliasing = PostProcessLayer.Antialiasing.TemporalAntialiasing;
         public bool waterBackSideTransparent = false;
 
         [Header("VR")]
