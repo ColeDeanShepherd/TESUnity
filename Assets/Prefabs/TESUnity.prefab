@@ -40,24 +40,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f45c2eae24c43174a92eeaa8e8613dd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bypassINIConfig: 0
-  dataPath: 
+  _bypassINIConfig: 1
+  dataPath: D:\Jeux\SteamLibrary\steamapps\common\Morrowind\Data Files
   useKinematicRigidbodies: 1
-  playMusic: 0
+  playMusic: 1
   enableLog: 0
   materialType: 1
-  renderPath: 1
+  renderPath: 3
   ambientIntensity: 1.5
   renderSunShadows: 1
-  renderLightShadows: 0
-  renderExteriorCellLights: 0
-  animateLights: 0
-  antiAliasing: 0
-  ambientOcclusion: 0
-  bloom: 1
+  renderLightShadows: 1
+  renderExteriorCellLights: 1
+  animateLights: 1
+  postProcessingQuality: 3
+  antiAliasing: 1
   waterBackSideTransparent: 0
   followHeadDirection: 1
   directModePreview: 1
+  roomScale: 1
+  forceControllers: 1
   UIManager: {fileID: 0}
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}

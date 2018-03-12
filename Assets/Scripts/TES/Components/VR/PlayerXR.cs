@@ -1,6 +1,7 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
 using TESUnity.UI;
 using UnityEngine;
+using UnityEngine.SpatialTracking;
 using UnityEngine.XR;
 
 namespace TESUnity.Components.VR
@@ -10,9 +11,10 @@ namespace TESUnity.Components.VR
     /// VR SDKs allows us to provide more support (moving controller, teleportation, etc.)
     /// To enable a VR SDKs, please read the README.md file located in the Vendors folder.
     /// </summary>
-    public class PlayerVRComponent : MonoBehaviour
+    public class PlayerXR : MonoBehaviour
     {
         private Transform _camTransform = null;
+        private Transform _transform = null;
         private RectTransform _canvas = null;
         private Transform _pivotCanvas = null;
         private RectTransform _hud = null;
@@ -22,14 +24,13 @@ namespace TESUnity.Components.VR
         [SerializeField]
         private Canvas _mainCanvas = null;
 
-
         /// <summary>
         /// Intialize the VR support for the player.
         /// - The HUD and UI will use a WorldSpace Canvas
         /// - The HUD canvas is not recommanded, it's usefull for small informations
         /// - The UI is for all other UIs: Menu, Life, etc.
         /// </summary>
-        void Start()
+        private void Start()
         {
             if (!XRSettings.enabled)
             {
@@ -52,6 +53,7 @@ namespace TESUnity.Components.VR
 
             // Put the Canvas in WorldSpace and Attach it to the camera.
             _camTransform = Camera.main.GetComponent<Transform>();
+            _transform = transform;
 
             // Add a pivot to the UI. It'll help to rotate it in the inverse direction of the camera.
             var uiPivot = new GameObject("UI Pivot");
@@ -69,16 +71,63 @@ namespace TESUnity.Components.VR
             // Setup the camera
             Camera.main.nearClipPlane = 0.1f;
 
-            ResetOrientationAndPosition();
+            // Setup RoomScale/Sitted mode.
+            var trackingSpaceType = TESUnity.instance.roomScale ? TrackingSpaceType.RoomScale : TrackingSpaceType.Stationary;
+            XRDevice.SetTrackingSpaceType(trackingSpaceType);
+            if (trackingSpaceType == TrackingSpaceType.RoomScale)
+                transform.GetChild(0).localPosition = Vector3.zero;
+
+            // Detect controllers
+            var controllers = TESUnity.instance.forceControllers ? 2 : 0;
+
+            // Try to detect controllers
+            if (controllers == 0)
+            {
+                var list = new List<XRNodeState>();
+                InputTracking.GetNodeStates(list);
+
+                foreach (var item in list)
+                    if (item.nodeType == XRNode.LeftHand || item.nodeType == XRNode.RightHand)
+                        controllers++;
+            }
+
+            if (controllers == 2)
+            {
+                var trackedPoseDrivers = GetComponentsInChildren<TrackedPoseDriver>(true);
+                foreach (var driver in trackedPoseDrivers)
+                {
+                    driver.transform.parent = _camTransform.parent;
+                    driver.enabled = true;
+                }
+            }
+
+            RecenterOrientationAndPosition();
         }
 
-        void Update()
+        private void Update()
         {
             // At any time, the user might want to reset the orientation and position.
             if (Input.GetButtonDown("Recenter"))
-                ResetOrientationAndPosition();
+                RecenterOrientationAndPosition();
 
             RecenterUI(true);
+
+            var centerEye = _camTransform;
+            var root = centerEye.parent;
+            var prevPos = root.position;
+            var prevRot = root.rotation;
+
+            if (TESUnity.instance.followHeadDirection)
+            {
+                _transform.rotation = Quaternion.Euler(0.0f, centerEye.rotation.eulerAngles.y, 0.0f);
+                root.rotation = prevRot;
+            }
+
+            if (TESUnity.instance.roomScale)
+            {
+                //_transform.position = new Vector3(centerEye.position.x, 0.0f, centerEye.position.z);
+                root.position = prevPos;
+            }
         }
 
         public void ShowUICursor(bool visible)
@@ -109,21 +158,13 @@ namespace TESUnity.Components.VR
             _pivotCanvas.position = targetPosition;
         }
 
-        private IEnumerator ResetOrientationAndPosition(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-
-            InputTracking.Recenter();
-
-            RecenterUI();
-        }
-
         /// <summary>
         /// Reset the orientation and the position of the HMD with a delay of 0.1ms.
         /// </summary>
-        public void ResetOrientationAndPosition()
+        public void RecenterOrientationAndPosition()
         {
-            StartCoroutine(ResetOrientationAndPosition(0.1f));
+            InputTracking.Recenter();
+            RecenterUI();
         }
 
         /// <summary>

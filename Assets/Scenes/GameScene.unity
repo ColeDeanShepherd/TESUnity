@@ -213,6 +213,48 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 077b1d90dd328134999603a3db4259c8, type: 2}
   m_IsPrefabParent: 0
+--- !u!1001 &285148785
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000012289534432, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: bb4f50960e3bc08459bb6f708eb7d79f, type: 2}
+  m_IsPrefabParent: 0
 --- !u!114 &314437976 stripped
 MonoBehaviour:
   m_PrefabParentObject: {fileID: 114000012634297938, guid: 0beda27bcd6e09c4cb8135ce4f3028b6,
@@ -818,7 +860,11 @@ Prefab:
       value: 
       objectReference: {fileID: 1214623308}
     - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
-      propertyPath: playMusic
+      propertyPath: forceControllers
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
+      propertyPath: roomScale
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

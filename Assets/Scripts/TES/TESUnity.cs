@@ -25,7 +25,7 @@ namespace TESUnity
 #if UNITY_EDITOR
         [Header("Editor Only")]
         [SerializeField]
-        private bool _bypassINIConfig = false;
+        public bool _bypassINIConfig = false;
 #endif
 
         [Header("Global")]
@@ -53,6 +53,8 @@ namespace TESUnity
         [Header("VR")]
         public bool followHeadDirection = false;
         public bool directModePreview = true;
+        public bool roomScale = true;
+        public bool forceControllers = false;
 
         [Header("UI")]
         public UIManager UIManager;
@@ -74,9 +76,9 @@ namespace TESUnity
 
         #endregion
 
-        private MorrowindDataReader MWDataReader;
-        private MorrowindEngine MWEngine;
-        private MusicPlayer musicPlayer;
+        private MorrowindDataReader MWDataReader = null;
+        private MorrowindEngine MWEngine = null;
+        private MusicPlayer musicPlayer = null;
 
         public MorrowindEngine Engine
         {

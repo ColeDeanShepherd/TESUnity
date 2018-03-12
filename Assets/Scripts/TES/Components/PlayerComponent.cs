@@ -99,20 +99,6 @@ namespace TESUnity
                 SetVelocity();
             else if (!_isGrounded || !isFlying)
                 ApplyAirborneForce();
-
-            if (TESUnity.instance.followHeadDirection)
-            {
-                var centerEye = _camTransform;
-                var root = centerEye.parent;
-                var prevPos = root.position;
-                var prevRot = root.rotation;
-
-                // TODO: Do the same with position.
-                _transform.rotation = Quaternion.Euler(0.0f, centerEye.rotation.eulerAngles.y, 0.0f);
-
-                root.position = prevPos;
-                root.rotation = prevRot;
-            }
         }
 
         private void Rotate()
@@ -226,7 +212,7 @@ namespace TESUnity
 
         private bool CalculateIsGrounded()
         {
-            var playerCenter = _transform.position;
+            var playerCenter = _transform.position + _capsuleCollider.center;
             var castedSphereRadius = 0.8f * _capsuleCollider.radius;
             var sphereCastDistance = (_capsuleCollider.height / 2);
 

@@ -120,6 +120,10 @@ namespace TESUnity
                                 default: tes.materialType = TESUnity.MWMaterialType.BumpedDiffuse; break;
                             }
                             break;
+                        case "RoomScale": tes.roomScale = ParseBool(value, tes.roomScale); break;
+                        case "ForceControllers": tes.forceControllers = ParseBool(value, tes.forceControllers); break;
+                        case "CreaturesEnabled": tes.creaturesEnabled = ParseBool(value, tes.creaturesEnabled); break;
+                        default: break;
                     }
                 }
             }
@@ -159,6 +163,8 @@ namespace TESUnity
             sb.Append("[VR]\r\n");
             sb.Append("FollowHeadDirection = \r\n");
             sb.Append("DirectModePreview = \r\n");
+            sb.Append("RoomScale = \r\n");
+            sb.Append("ForceControllers = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Debug]\r\n");

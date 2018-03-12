@@ -117,7 +117,7 @@ MonoBehaviour:
     value: {fileID: 0}
   temperature:
     overrideState: 1
-    value: 30
+    value: 45
   tint:
     overrideState: 0
     value: 0

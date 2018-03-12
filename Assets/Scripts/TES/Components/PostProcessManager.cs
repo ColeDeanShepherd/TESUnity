@@ -10,6 +10,10 @@ namespace TESUnity.Components
     {
         private void Start()
         {
+#if UNITY_EDITOR
+            if (TESUnity.instance._bypassINIConfig)
+                return;
+#endif
             UpdateEffects();
         }
 
