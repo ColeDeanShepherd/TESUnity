@@ -323,10 +323,15 @@ namespace TESUnity
 
         private GameObject CreatePlayer(GameObject playerPrefab, Vector3 position, out GameObject playerCamera)
         {
-            var player = (GameObject)GameObject.Instantiate(playerPrefab);
-            player.name = "Player";
+            var player = GameObject.FindWithTag("Player");
+            if (player == null)
+            {
+                player = GameObject.Instantiate(playerPrefab);
+                player.name = "Player";
+            }
+
             player.transform.position = position;
-            
+
             playerTransform = player.GetComponent<Transform>();
             playerCamera = player.GetComponentInChildren<Camera>().gameObject;
             playerComponent = player.GetComponent<PlayerComponent>();

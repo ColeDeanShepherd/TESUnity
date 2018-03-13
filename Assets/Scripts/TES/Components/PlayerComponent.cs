@@ -63,8 +63,11 @@ namespace TESUnity
             _capsuleCollider = GetComponent<CapsuleCollider>();
             _rigidbody = GetComponent<Rigidbody>();
 
-            // Setup the render path
-            Camera.main.renderingPath = TESUnity.instance.renderPath;
+            // Setup the camera
+            var tes = TESUnity.instance;
+            var camera = Camera.main;
+            camera.renderingPath = tes.renderPath;
+            camera.farClipPlane = tes.cameraFarClip;
 
             _crosshair = FindObjectOfType<UICrosshair>();
         }

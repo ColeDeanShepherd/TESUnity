@@ -860,13 +860,10 @@ Prefab:
       value: 
       objectReference: {fileID: 1214623308}
     - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
-      propertyPath: forceControllers
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 11464354, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
-      propertyPath: roomScale
-      value: 0
-      objectReference: {fileID: 0}
+      propertyPath: waterPrefab
+      value: 
+      objectReference: {fileID: 1586121937244772, guid: 6de569209e643e2438dd3dbfe2d466df,
+        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: d9a1ba27e850d6d478d4a64d027d1204, type: 2}
   m_IsPrefabParent: 0

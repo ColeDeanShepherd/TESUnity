@@ -30,6 +30,7 @@ namespace TESUnity
 
         [Header("Global")]
         public string dataPath;
+        public string alternativeDataPath;
         public bool useKinematicRigidbodies = true;
         public bool playMusic = false;
         public bool enableLog = false;
@@ -37,6 +38,7 @@ namespace TESUnity
         [Header("Rendering")]
         public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
         public RenderingPath renderPath = RenderingPath.Forward;
+        public float cameraFarClip = 500.0f;
 
         [Header("Lighting")]
         public float ambientIntensity = 1.5f;
@@ -104,11 +106,17 @@ namespace TESUnity
                 path = GameSettings.CheckSettings(this);
             }
 #else
-            var path = GameSettings.CheckSettings(this);
+            path = GameSettings.CheckSettings(this);
 #endif
 
             if(!GameSettings.IsValidPath(path))
             {
+                if (GameSettings.IsValidPath(alternativeDataPath))
+                {
+                    dataPath = alternativeDataPath;
+                    return;
+                }
+
                 GameSettings.SetDataPath(string.Empty);
                 UnityEngine.SceneManagement.SceneManager.LoadScene("AskPathScene");
             }

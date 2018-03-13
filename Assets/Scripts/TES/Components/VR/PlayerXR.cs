@@ -34,6 +34,13 @@ namespace TESUnity.Components.VR
         {
             if (!XRSettings.enabled)
             {
+                var trackedPoseDrivers = GetComponentsInChildren<TrackedPoseDriver>(true);
+                foreach (var driver in trackedPoseDrivers)
+                {
+                    Destroy(driver.transform.GetChild(0).gameObject);
+                    Destroy(driver);
+                }
+
                 Destroy(this);
                 return;
             }

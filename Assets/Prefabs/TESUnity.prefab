@@ -42,11 +42,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _bypassINIConfig: 1
   dataPath: D:\Jeux\SteamLibrary\steamapps\common\Morrowind\Data Files
+  alternativeDataPath: D:\Jeux\Oldies\Morrowind\Data Files
   useKinematicRigidbodies: 1
   playMusic: 1
   enableLog: 0
   materialType: 1
   renderPath: 3
+  cameraFarClip: 500
   ambientIntensity: 1.5
   renderSunShadows: 1
   renderLightShadows: 1
@@ -57,7 +59,7 @@ MonoBehaviour:
   waterBackSideTransparent: 0
   followHeadDirection: 1
   directModePreview: 1
-  roomScale: 1
+  roomScale: 0
   forceControllers: 1
   UIManager: {fileID: 0}
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}

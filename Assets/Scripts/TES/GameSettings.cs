@@ -123,6 +123,7 @@ namespace TESUnity
                         case "RoomScale": tes.roomScale = ParseBool(value, tes.roomScale); break;
                         case "ForceControllers": tes.forceControllers = ParseBool(value, tes.forceControllers); break;
                         case "CreaturesEnabled": tes.creaturesEnabled = ParseBool(value, tes.creaturesEnabled); break;
+                        case "CameraFarClip": tes.cameraFarClip = ParseFloat(value, tes.cameraFarClip); break;
                         default: break;
                     }
                 }
@@ -145,6 +146,7 @@ namespace TESUnity
             sb.Append("[Rendering]\r\n");
             sb.Append("RenderPath = \r\n");
             sb.Append("Shader = \r\n");
+            sb.Append("CameraFarClip = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Lighting]\r\n");
@@ -188,6 +190,16 @@ namespace TESUnity
             int result;
 
             if (int.TryParse(value, out result))
+                return result;
+
+            return defaultValue;
+        }
+
+        private static float ParseFloat(string value, float defaultValue)
+        {
+            float result;
+
+            if (float.TryParse(value, out result))
                 return result;
 
             return defaultValue;
