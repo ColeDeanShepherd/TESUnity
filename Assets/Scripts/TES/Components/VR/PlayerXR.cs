@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Demonixis.Toolbox.XR;
+using System.Collections.Generic;
 using TESUnity.UI;
 using UnityEngine;
 using UnityEngine.SpatialTracking;
@@ -107,6 +108,10 @@ namespace TESUnity.Components.VR
                     driver.enabled = true;
                 }
             }
+
+            // Confort
+            if (TESUnity.instance.useXRVignette)
+                gameObject.AddComponent<XRVignetteOverlay>();
 
             RecenterOrientationAndPosition();
         }

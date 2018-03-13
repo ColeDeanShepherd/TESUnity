@@ -6,6 +6,7 @@ using TESUnity.Effects;
 using TESUnity.ESM;
 using TESUnity.UI;
 using UnityEngine;
+using UnityStandardAssets.Water;
 
 namespace TESUnity
 {
@@ -77,6 +78,9 @@ namespace TESUnity
 
             waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
             waterObj.SetActive(false);
+
+            var water = waterObj.GetComponent<Water>();
+            water.waterMode = TESUnity.instance.waterQuality;
 
             if (!TESUnity.instance.waterBackSideTransparent)
             {

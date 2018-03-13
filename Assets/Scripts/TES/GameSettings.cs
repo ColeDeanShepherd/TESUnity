@@ -124,6 +124,17 @@ namespace TESUnity
                         case "ForceControllers": tes.forceControllers = ParseBool(value, tes.forceControllers); break;
                         case "CreaturesEnabled": tes.creaturesEnabled = ParseBool(value, tes.creaturesEnabled); break;
                         case "CameraFarClip": tes.cameraFarClip = ParseFloat(value, tes.cameraFarClip); break;
+                        case "XRVignette": tes.useXRVignette = ParseBool(value, tes.useXRVignette); break;
+                        case "WaterQuality":
+                            {
+                                int result;
+                                if (int.TryParse(value, out result))
+                                {
+                                    if (result > -1 && result < 3)
+                                        tes.waterQuality = (UnityStandardAssets.Water.Water.WaterMode)result;
+                                }
+                            }
+                            break;
                         default: break;
                     }
                 }
@@ -147,6 +158,7 @@ namespace TESUnity
             sb.Append("RenderPath = \r\n");
             sb.Append("Shader = \r\n");
             sb.Append("CameraFarClip = \r\n");
+            sb.Append("WaterQuality = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Lighting]\r\n");
@@ -167,6 +179,7 @@ namespace TESUnity
             sb.Append("DirectModePreview = \r\n");
             sb.Append("RoomScale = \r\n");
             sb.Append("ForceControllers = \r\n");
+            sb.Append("XRVignette = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Debug]\r\n");

@@ -3,6 +3,7 @@ using System.IO;
 using TESUnity.UI;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
+using UnityStandardAssets.Water;
 
 namespace TESUnity
 {
@@ -34,6 +35,7 @@ namespace TESUnity
         public bool useKinematicRigidbodies = true;
         public bool playMusic = false;
         public bool enableLog = false;
+        public Water.WaterMode waterQuality = Water.WaterMode.Simple;
 
         [Header("Rendering")]
         public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
@@ -57,6 +59,7 @@ namespace TESUnity
         public bool directModePreview = true;
         public bool roomScale = true;
         public bool forceControllers = false;
+        public bool useXRVignette = false;
 
         [Header("UI")]
         public UIManager UIManager;
@@ -190,10 +193,6 @@ namespace TESUnity
                         writer.Write("Pass: ");
                     }
                     catch(Exception exception)
-                    {
-                        writer.Write("Fail: ");
-                    }
-                    catch
                     {
                         writer.Write("Fail: ");
                     }

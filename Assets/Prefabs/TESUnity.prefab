@@ -46,6 +46,7 @@ MonoBehaviour:
   useKinematicRigidbodies: 1
   playMusic: 1
   enableLog: 0
+  waterHighQuality: 1
   materialType: 1
   renderPath: 3
   cameraFarClip: 500
@@ -61,6 +62,7 @@ MonoBehaviour:
   directModePreview: 1
   roomScale: 0
   forceControllers: 1
+  useXRVignette: 0
   UIManager: {fileID: 0}
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
@@ -72,7 +74,9 @@ MonoBehaviour:
   UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   playerPrefab: {fileID: 1000014283173620, guid: bb4f50960e3bc08459bb6f708eb7d79f,
     type: 2}
-  waterPrefab: {fileID: 1000013936092580, guid: e8e3a26facab0b742b401e1c0da419dc,
+  simpleWaterPrefab: {fileID: 1000013936092580, guid: e8e3a26facab0b742b401e1c0da419dc,
+    type: 2}
+  highWaterPrefab: {fileID: 1586121937244772, guid: 6de569209e643e2438dd3dbfe2d466df,
     type: 2}
   creaturesEnabled: 1
   npcsEnabled: 0
