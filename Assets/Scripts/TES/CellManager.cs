@@ -46,7 +46,7 @@ namespace TESUnity
         {
             var CELL = dataReader.FindExteriorCellRecord(cellIndices);
 
-            if(CELL != null)
+            if (CELL != null)
             {
                 var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[cellIndices] = cellInfo;
@@ -71,25 +71,25 @@ namespace TESUnity
             // Destroy out of range cells.
             var outOfRangeCellIndices = new List<Vector2i>();
 
-            foreach(var KVPair in cellObjects)
+            foreach (var KVPair in cellObjects)
             {
-                if((KVPair.Key.x < minCellX) || (KVPair.Key.x > maxCellX) || (KVPair.Key.y < minCellY) || (KVPair.Key.y > maxCellY))
+                if ((KVPair.Key.x < minCellX) || (KVPair.Key.x > maxCellX) || (KVPair.Key.y < minCellY) || (KVPair.Key.y > maxCellY))
                 {
                     outOfRangeCellIndices.Add(KVPair.Key);
                 }
             }
 
-            foreach(var cellIndices in outOfRangeCellIndices)
+            foreach (var cellIndices in outOfRangeCellIndices)
             {
                 DestroyExteriorCell(cellIndices);
             }
 
             // Create new cells.
-            for(int r = 0; r <= cellRadius; r++)
+            for (int r = 0; r <= cellRadius; r++)
             {
-                for(int x = minCellX; x <= maxCellX; x++)
+                for (int x = minCellX; x <= maxCellX; x++)
                 {
-                    for(int y = minCellY; y <= maxCellY; y++)
+                    for (int y = minCellY; y <= maxCellY; y++)
                     {
                         var cellIndices = new Vector2i(x, y);
 
@@ -97,11 +97,11 @@ namespace TESUnity
                         var cellYDistance = Mathf.Abs(cameraCellIndices.y - cellIndices.y);
                         var cellDistance = Mathf.Max(cellXDistance, cellYDistance);
 
-                        if((cellDistance == r) && !cellObjects.ContainsKey(cellIndices))
+                        if ((cellDistance == r) && !cellObjects.ContainsKey(cellIndices))
                         {
                             var cellInfo = StartCreatingExteriorCell(cellIndices);
 
-                            if((cellInfo != null) && immediate)
+                            if ((cellInfo != null) && immediate)
                             {
                                 temporalLoadBalancer.WaitForTask(cellInfo.objectsCreationCoroutine);
                             }
@@ -111,7 +111,7 @@ namespace TESUnity
             }
 
             // Update LODs.
-            foreach(var keyValuePair in cellObjects)
+            foreach (var keyValuePair in cellObjects)
             {
                 Vector2i cellIndices = keyValuePair.Key;
                 InRangeCellInfo cellInfo = keyValuePair.Value;
@@ -120,14 +120,14 @@ namespace TESUnity
                 var cellYDistance = Mathf.Abs(cameraCellIndices.y - cellIndices.y);
                 var cellDistance = Mathf.Max(cellXDistance, cellYDistance);
 
-                if(cellDistance <= detailRadius)
+                if (cellDistance <= detailRadius)
                 {
-                    if(!cellInfo.objectsContainerGameObject.activeSelf)
+                    if (!cellInfo.objectsContainerGameObject.activeSelf)
                         cellInfo.objectsContainerGameObject.SetActive(true);
                 }
                 else
                 {
-                    if(cellInfo.objectsContainerGameObject.activeSelf)
+                    if (cellInfo.objectsContainerGameObject.activeSelf)
                         cellInfo.objectsContainerGameObject.SetActive(false);
                 }
             }
@@ -136,7 +136,7 @@ namespace TESUnity
         {
             var CELL = dataReader.FindInteriorCellRecord(cellName);
 
-            if(CELL != null)
+            if (CELL != null)
             {
                 var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[Vector2i.zero] = cellInfo;
@@ -152,7 +152,7 @@ namespace TESUnity
         {
             var CELL = dataReader.FindInteriorCellRecord(gridCoords);
 
-            if(CELL != null)
+            if (CELL != null)
             {
                 var cellInfo = StartInstantiatingCell(CELL);
                 cellObjects[Vector2i.zero] = cellInfo;
@@ -194,7 +194,7 @@ namespace TESUnity
         }
         public void DestroyAllCells()
         {
-            foreach(var keyValuePair in cellObjects)
+            foreach (var keyValuePair in cellObjects)
             {
                 temporalLoadBalancer.CancelTask(keyValuePair.Value.objectsCreationCoroutine);
                 GameObject.Destroy(keyValuePair.Value.gameObject);
@@ -219,18 +219,18 @@ namespace TESUnity
         private IEnumerator InstantiateCellObjectsCoroutine(CELLRecord CELL, LANDRecord LAND, GameObject cellObj, GameObject cellObjectsContainer)
         {
             // Start pre-loading all required textures for the terrain.
-            if(LAND != null)
+            if (LAND != null)
             {
                 var landTextureFilePaths = GetLANDTextureFilePaths(LAND);
 
-                if(landTextureFilePaths != null)
+                if (landTextureFilePaths != null)
                 {
-                    foreach(var landTextureFilePath in landTextureFilePaths)
+                    foreach (var landTextureFilePath in landTextureFilePaths)
                     {
                         textureManager.PreloadTextureFileAsync(landTextureFilePath);
                     }
                 }
-                
+
                 yield return null;
             }
 
@@ -239,9 +239,9 @@ namespace TESUnity
             yield return null;
 
             // Start pre-loading all required files for referenced objects. The NIF manager will load the textures as well.
-            foreach(var refCellObjInfo in refCellObjInfos)
+            foreach (var refCellObjInfo in refCellObjInfos)
             {
-                if(refCellObjInfo.modelFilePath != null)
+                if (refCellObjInfo.modelFilePath != null)
                 {
                     nifManager.PreloadNifFileAsync(refCellObjInfo.modelFilePath);
                 }
@@ -249,12 +249,12 @@ namespace TESUnity
             yield return null;
 
             // Instantiate terrain.
-            if(LAND != null)
+            if (LAND != null)
             {
                 var instantiateLANDTaskEnumerator = InstantiateLANDCoroutine(LAND, cellObj);
 
                 // Run the LAND instantiation coroutine.
-                while(instantiateLANDTaskEnumerator.MoveNext())
+                while (instantiateLANDTaskEnumerator.MoveNext())
                 {
                     // Yield every time InstantiateLANDCoroutine does to avoid doing too much work in one frame.
                     yield return null;
@@ -265,7 +265,7 @@ namespace TESUnity
             }
 
             // Instantiate objects.
-            foreach(var refCellObjInfo in refCellObjInfos)
+            foreach (var refCellObjInfo in refCellObjInfos)
             {
                 InstantiateCellObject(CELL, cellObjectsContainer, refCellObjInfo);
                 yield return null;
@@ -275,7 +275,7 @@ namespace TESUnity
         private RefCellObjInfo[] GetRefCellObjInfos(CELLRecord CELL)
         {
             RefCellObjInfo[] refCellObjInfos = new RefCellObjInfo[CELL.refObjDataGroups.Count];
-            for(int i = 0; i < CELL.refObjDataGroups.Count; i++)
+            for (int i = 0; i < CELL.refObjDataGroups.Count; i++)
             {
                 var refObjInfo = new RefCellObjInfo();
                 refObjInfo.refObjDataGroup = CELL.refObjDataGroups[i];
@@ -283,12 +283,12 @@ namespace TESUnity
                 // Get the record the RefObjDataGroup references.
                 dataReader.MorrowindESMFile.objectsByIDString.TryGetValue(refObjInfo.refObjDataGroup.NAME.value, out refObjInfo.referencedRecord);
 
-                if(refObjInfo.referencedRecord != null)
+                if (refObjInfo.referencedRecord != null)
                 {
                     var modelFileName = ESM.RecordUtils.GetModelFileName(refObjInfo.referencedRecord);
 
                     // If the model file name is valid, store the model file path.
-                    if(!string.IsNullOrEmpty(modelFileName))
+                    if (!string.IsNullOrEmpty(modelFileName))
                     {
                         refObjInfo.modelFilePath = "meshes\\" + modelFileName;
                     }
@@ -305,12 +305,12 @@ namespace TESUnity
         /// </summary>
         private void InstantiateCellObject(CELLRecord CELL, GameObject parent, RefCellObjInfo refCellObjInfo)
         {
-            if(refCellObjInfo.referencedRecord != null)
+            if (refCellObjInfo.referencedRecord != null)
             {
                 GameObject modelObj = null;
 
                 // If the object has a model, instantiate it.
-                if(refCellObjInfo.modelFilePath != null)
+                if (refCellObjInfo.modelFilePath != null)
                 {
                     modelObj = nifManager.InstantiateNIF(refCellObjInfo.modelFilePath);
                     PostProcessInstantiatedCellObject(modelObj, refCellObjInfo);
@@ -319,23 +319,23 @@ namespace TESUnity
                 }
 
                 // If the object has a light, instantiate it.
-                if(refCellObjInfo.referencedRecord is LIGHRecord)
+                if (refCellObjInfo.referencedRecord is LIGHRecord)
                 {
                     var lightObj = InstantiateLight((LIGHRecord)refCellObjInfo.referencedRecord, CELL.isInterior);
 
                     // If the object also has a model, parent the model to the light.
-                    if(modelObj != null)
+                    if (modelObj != null)
                     {
                         // Some NIF files have nodes named "AttachLight". Parent it to the light if it exists.
                         GameObject attachLightObj = GameObjectUtils.FindChildRecursively(modelObj, "AttachLight");
 
-                        if(attachLightObj == null)
+                        if (attachLightObj == null)
                         {
                             //attachLightObj = GameObjectUtils.FindChildWithNameSubstringRecursively(modelObj, "Emitter");
                             attachLightObj = modelObj;
                         }
 
-                        if(attachLightObj != null)
+                        if (attachLightObj != null)
                         {
                             lightObj.transform.position = attachLightObj.transform.position;
                             lightObj.transform.rotation = attachLightObj.transform.rotation;
@@ -358,13 +358,14 @@ namespace TESUnity
                 }
             }
             else
-			{
-				Debug.Log("Unknown Object: " + refCellObjInfo.refObjDataGroup.NAME.value);
-			}
+            {
+                Debug.Log("Unknown Object: " + refCellObjInfo.refObjDataGroup.NAME.value);
+            }
         }
         private GameObject InstantiateLight(LIGHRecord LIGH, bool indoors)
         {
             var lightObj = new GameObject("Light");
+            lightObj.isStatic = true;
 
             var lightComponent = lightObj.AddComponent<Light>();
             lightComponent.range = 3 * (LIGH.LHDT.radius / Convert.meterInMWUnits);
@@ -373,7 +374,7 @@ namespace TESUnity
             lightComponent.bounceIntensity = 0f;
             lightComponent.shadows = TESUnity.instance.renderLightShadows ? LightShadows.Soft : LightShadows.None;
 
-            if(!indoors && !TESUnity.instance.renderExteriorCellLights) // disabling exterior cell lights because there is no day/night cycle
+            if (!indoors && !TESUnity.instance.renderExteriorCellLights) // disabling exterior cell lights because there is no day/night cycle
             {
                 lightComponent.enabled = false;
             }
@@ -389,7 +390,7 @@ namespace TESUnity
             var refObjDataGroup = refCellObjInfo.refObjDataGroup;
 
             // Handle object transforms.
-            if(refObjDataGroup.XSCL != null)
+            if (refObjDataGroup.XSCL != null)
             {
                 gameObject.transform.localScale = Vector3.one * refObjDataGroup.XSCL.value;
             }
@@ -399,7 +400,7 @@ namespace TESUnity
 
             var tagTarget = gameObject;
             var coll = gameObject.GetComponentInChildren<Collider>(); // if the collider is on a child object and not on the object with the component, we need to set that object's tag instead.
-            if(coll != null)
+            if (coll != null)
                 tagTarget = coll.gameObject;
 
             ProcessObjectType<DOORRecord>(tagTarget, refCellObjInfo, "Door");
@@ -420,19 +421,20 @@ namespace TESUnity
             ProcessObjectType<CREARecord>(tagTarget, refCellObjInfo, "Creature");
             ProcessObjectType<NPC_Record>(tagTarget, refCellObjInfo, "NPC");
         }
+
         private void ProcessObjectType<RecordType>(GameObject gameObject, RefCellObjInfo info, string tag) where RecordType : Record
         {
             var record = info.referencedRecord;
-            if(record is RecordType)
+            if (record is RecordType)
             {
                 var obj = GameObjectUtils.FindTopLevelObject(gameObject);
-                if(obj == null)
+                if (obj == null)
                 { return; }
 
                 var component = GenericObjectComponent.Create(obj, record, tag);
 
                 //only door records need access to the cell object data group so far
-                if(record is DOORRecord)
+                if (record is DOORRecord)
                 {
                     ((DoorComponent)component).refObjDataGroup = info.refObjDataGroup;
                 }
@@ -442,15 +444,15 @@ namespace TESUnity
         private List<string> GetLANDTextureFilePaths(LANDRecord LAND)
         {
             // Don't return anything if the LAND doesn't have height data or texture data.
-            if((LAND.VHGT == null) || (LAND.VTEX == null)) { return null; }
+            if ((LAND.VHGT == null) || (LAND.VTEX == null)) { return null; }
 
             var textureFilePaths = new List<string>();
             var distinctTextureIndices = LAND.VTEX.textureIndices.Distinct().ToList();
-            for(int i = 0; i < distinctTextureIndices.Count; i++)
+            for (int i = 0; i < distinctTextureIndices.Count; i++)
             {
                 short textureIndex = (short)((short)distinctTextureIndices[i] - 1);
 
-                if(textureIndex < 0)
+                if (textureIndex < 0)
                 {
                     textureFilePaths.Add(defaultLandTextureFilePath);
                     continue;
@@ -473,7 +475,7 @@ namespace TESUnity
             Debug.Assert(LAND != null);
 
             // Don't create anything if the LAND doesn't have height data.
-            if(LAND.VHGT == null)
+            if (LAND.VHGT == null)
             {
                 yield break;
             }
@@ -488,14 +490,14 @@ namespace TESUnity
             const int VHGTIncrementToMWUnits = 8;
             float rowOffset = LAND.VHGT.referenceHeight;
 
-            for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
+            for (int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
             {
                 rowOffset += LAND.VHGT.heightOffsets[y * LAND_SIDE_LENGTH_IN_SAMPLES];
                 heights[y, 0] = VHGTIncrementToMWUnits * rowOffset;
 
                 float colOffset = rowOffset;
 
-                for(int x = 1; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
+                for (int x = 1; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
                 {
                     colOffset += LAND.VHGT.heightOffsets[(y * LAND_SIDE_LENGTH_IN_SAMPLES) + x];
                     heights[y, x] = VHGTIncrementToMWUnits * colOffset;
@@ -506,9 +508,9 @@ namespace TESUnity
             float minHeight, maxHeight;
             ArrayUtils.GetExtrema(heights, out minHeight, out maxHeight);
 
-            for(int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
+            for (int y = 0; y < LAND_SIDE_LENGTH_IN_SAMPLES; y++)
             {
-                for(int x = 0; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
+                for (int x = 0; x < LAND_SIDE_LENGTH_IN_SAMPLES; x++)
                 {
                     heights[y, x] = Utils.ChangeRange(heights[y, x], minHeight, maxHeight, 0, 1);
                 }
@@ -525,16 +527,16 @@ namespace TESUnity
             var splatPrototypeList = new List<SplatPrototype>();
             var texInd2splatInd = new Dictionary<ushort, int>();
 
-            for(int i = 0; i < textureIndices.Length; i++)
+            for (int i = 0; i < textureIndices.Length; i++)
             {
                 short textureIndex = (short)((short)textureIndices[i] - 1);
 
-                if(!texInd2splatInd.ContainsKey((ushort)textureIndex))
+                if (!texInd2splatInd.ContainsKey((ushort)textureIndex))
                 {
                     // Load terrain texture.
                     string textureFilePath;
 
-                    if(textureIndex < 0)
+                    if (textureIndex < 0)
                     {
                         textureFilePath = defaultLandTextureFilePath;
                     }
@@ -543,7 +545,7 @@ namespace TESUnity
                         var LTEX = dataReader.FindLTEXRecord(textureIndex);
                         textureFilePath = LTEX.DATA.value;
                     }
-                    
+
                     var texture = textureManager.LoadTexture(textureFilePath);
 
                     // Yield after loading each texture to avoid doing too much work on one frame.
@@ -570,19 +572,19 @@ namespace TESUnity
             int VTEX_COLUMNS = VTEX_ROWS;
             alphaMap = new float[VTEX_ROWS, VTEX_COLUMNS, splatPrototypes.Length];
 
-            for(int y = 0; y < VTEX_ROWS; y++)
+            for (int y = 0; y < VTEX_ROWS; y++)
             {
                 var yMajor = y / 4;
                 var yMinor = y - (yMajor * 4);
 
-                for(int x = 0; x < VTEX_COLUMNS; x++)
+                for (int x = 0; x < VTEX_COLUMNS; x++)
                 {
                     var xMajor = x / 4;
                     var xMinor = x - (xMajor * 4);
 
                     var texIndex = (short)((short)textureIndices[(yMajor * 64) + (xMajor * 16) + (yMinor * 4) + xMinor] - 1);
 
-                    if(texIndex >= 0)
+                    if (texIndex >= 0)
                     {
                         var splatIndex = texInd2splatInd[(ushort)texIndex];
 
@@ -608,13 +610,14 @@ namespace TESUnity
             terrain.GetComponent<Terrain>().materialType = Terrain.MaterialType.BuiltInLegacyDiffuse;
 
             terrain.transform.parent = parent.transform;
+            terrain.isStatic = true;
         }
 
         private void DestroyExteriorCell(Vector2i indices)
         {
             InRangeCellInfo cellInfo;
 
-            if(cellObjects.TryGetValue(indices, out cellInfo))
+            if (cellObjects.TryGetValue(indices, out cellInfo))
             {
                 temporalLoadBalancer.CancelTask(cellInfo.objectsCreationCoroutine);
                 GameObject.Destroy(cellInfo.gameObject);

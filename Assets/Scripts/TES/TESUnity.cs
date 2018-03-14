@@ -2,6 +2,8 @@
 using System.IO;
 using TESUnity.UI;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
+using UnityStandardAssets.Water;
 
 namespace TESUnity
 {
@@ -14,23 +16,31 @@ namespace TESUnity
             Default, Standard, BumpedDiffuse, Unlit
         }
 
+        public enum PostProcessingQuality
+        {
+            None = 0, Low, Middle, High
+        }
+
         #region Inspector-set Members
 
 #if UNITY_EDITOR
         [Header("Editor Only")]
         [SerializeField]
-        private bool _bypassINIConfig = false;
+        public bool _bypassINIConfig = false;
 #endif
 
         [Header("Global")]
         public string dataPath;
+        public string alternativeDataPath;
         public bool useKinematicRigidbodies = true;
         public bool playMusic = false;
         public bool enableLog = false;
+        public Water.WaterMode waterQuality = Water.WaterMode.Simple;
 
         [Header("Rendering")]
         public MWMaterialType materialType = MWMaterialType.BumpedDiffuse;
         public RenderingPath renderPath = RenderingPath.Forward;
+        public float cameraFarClip = 500.0f;
 
         [Header("Lighting")]
         public float ambientIntensity = 1.5f;
@@ -38,16 +48,21 @@ namespace TESUnity
         public bool renderLightShadows = false;
         public bool renderExteriorCellLights = false;
         public bool animateLights = false;
+        public bool dayNightCycle = false;
+        public bool generateNormalMap = true;
+        public float normalGeneratorIntensity = 0.75f;
 
         [Header("Effects")]
-        public bool antiAliasing = false;
-        public bool ambientOcclusion = false;
-        public bool bloom = false;
+        public PostProcessingQuality postProcessingQuality = PostProcessingQuality.High;
+        public PostProcessLayer.Antialiasing antiAliasing = PostProcessLayer.Antialiasing.TemporalAntialiasing;
         public bool waterBackSideTransparent = false;
 
         [Header("VR")]
         public bool followHeadDirection = false;
         public bool directModePreview = true;
+        public bool roomScale = true;
+        public bool forceControllers = false;
+        public bool useXRVignette = false;
 
         [Header("UI")]
         public UIManager UIManager;
@@ -69,9 +84,9 @@ namespace TESUnity
 
         #endregion
 
-        private MorrowindDataReader MWDataReader;
-        private MorrowindEngine MWEngine;
-        private MusicPlayer musicPlayer;
+        private MorrowindDataReader MWDataReader = null;
+        private MorrowindEngine MWEngine = null;
+        private MusicPlayer musicPlayer = null;
 
         public MorrowindEngine Engine
         {
@@ -97,11 +112,17 @@ namespace TESUnity
                 path = GameSettings.CheckSettings(this);
             }
 #else
-            var path = GameSettings.CheckSettings(this);
+            path = GameSettings.CheckSettings(this);
 #endif
 
             if(!GameSettings.IsValidPath(path))
             {
+                if (GameSettings.IsValidPath(alternativeDataPath))
+                {
+                    dataPath = alternativeDataPath;
+                    return;
+                }
+
                 GameSettings.SetDataPath(string.Empty);
                 UnityEngine.SceneManagement.SceneManager.LoadScene("AskPathScene");
             }
@@ -175,10 +196,6 @@ namespace TESUnity
                         writer.Write("Pass: ");
                     }
                     catch(Exception exception)
-                    {
-                        writer.Write("Fail: ");
-                    }
-                    catch
                     {
                         writer.Write("Fail: ");
                     }

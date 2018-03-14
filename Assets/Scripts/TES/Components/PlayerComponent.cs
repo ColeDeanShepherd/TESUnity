@@ -1,4 +1,5 @@
-﻿using TESUnity.UI;
+﻿using TESUnity.Inputs;
+using TESUnity.UI;
 using UnityEngine;
 
 namespace TESUnity
@@ -63,8 +64,11 @@ namespace TESUnity
             _capsuleCollider = GetComponent<CapsuleCollider>();
             _rigidbody = GetComponent<Rigidbody>();
 
-            // Setup the render path
-            Camera.main.renderingPath = TESUnity.instance.renderPath;
+            // Setup the camera
+            var tes = TESUnity.instance;
+            var camera = Camera.main;
+            camera.renderingPath = tes.renderPath;
+            camera.farClipPlane = tes.cameraFarClip;
 
             _crosshair = FindObjectOfType<UICrosshair>();
         }
@@ -79,7 +83,7 @@ namespace TESUnity
             if (Input.GetKeyDown(KeyCode.Tab))
                 isFlying = !isFlying;
 
-            if (_isGrounded && !isFlying && Input.GetButtonDown("Jump"))
+            if (_isGrounded && !isFlying && InputManager.GetButtonDown("Jump"))
             {
                 var newVelocity = _rigidbody.velocity;
                 newVelocity.y = 5;
@@ -87,7 +91,7 @@ namespace TESUnity
                 _rigidbody.velocity = newVelocity;
             }
 
-            if (Input.GetButtonDown("Light"))
+            if (InputManager.GetButtonDown("Light"))
                 lantern.enabled = !lantern.enabled;
         }
 
@@ -99,20 +103,6 @@ namespace TESUnity
                 SetVelocity();
             else if (!_isGrounded || !isFlying)
                 ApplyAirborneForce();
-
-            if (TESUnity.instance.followHeadDirection)
-            {
-                var centerEye = _camTransform;
-                var root = centerEye.parent;
-                var prevPos = root.position;
-                var prevRot = root.rotation;
-
-                // TODO: Do the same with position.
-                _transform.rotation = Quaternion.Euler(0.0f, centerEye.rotation.eulerAngles.y, 0.0f);
-
-                root.position = prevPos;
-                root.rotation = prevRot;
-            }
         }
 
         private void Rotate()
@@ -139,7 +129,7 @@ namespace TESUnity
             if (eulerAngles.x > 180)
                 eulerAngles.x = eulerAngles.x - 360;
 
-            var deltaMouse = mouseSensitivity * (new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")));
+            var deltaMouse = mouseSensitivity * (new Vector2(InputManager.GetAxis("Mouse X"), InputManager.GetAxis("Mouse Y")));
 
             eulerAngles.x = Mathf.Clamp(eulerAngles.x - deltaMouse.y, minVerticalAngle, maxVerticalAngle);
             eulerAngles.y = Mathf.Repeat(eulerAngles.y + deltaMouse.x, 360);
@@ -177,7 +167,7 @@ namespace TESUnity
         private Vector3 CalculateLocalMovementDirection()
         {
             // Calculate the local movement direction.
-            var direction = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
+            var direction = new Vector3(InputManager.GetAxis("Horizontal"), 0.0f, InputManager.GetAxis("Vertical"));
 
             // A small hack for French Keyboard...
             if (Application.systemLanguage == SystemLanguage.French)
@@ -207,10 +197,10 @@ namespace TESUnity
         {
             var speed = normalSpeed;
 
-            if (Input.GetButton("Run"))
+            if (InputManager.GetButton("Run"))
                 speed = fastSpeed;
 
-            else if (Input.GetButton("Slow"))
+            else if (InputManager.GetButton("Slow"))
                 speed = slowSpeed;
 
             if (isFlying)
@@ -226,7 +216,7 @@ namespace TESUnity
 
         private bool CalculateIsGrounded()
         {
-            var playerCenter = _transform.position;
+            var playerCenter = _transform.position + _capsuleCollider.center;
             var castedSphereRadius = 0.8f * _capsuleCollider.radius;
             var sphereCastDistance = (_capsuleCollider.height / 2);
 
@@ -243,7 +233,7 @@ namespace TESUnity
             Cursor.visible = pause;
 
             // Used by the VR Component to enable/disable some features.
-            SendMessage("OnPlayerPause", pause);
+            SendMessage("OnPlayerPause", pause, SendMessageOptions.DontRequireReceiver);
         }
     }
 }

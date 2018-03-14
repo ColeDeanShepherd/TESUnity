@@ -25,33 +25,39 @@ The first step is to rename the `config.ini.dist` file to `config.ini`.
 | SunShadows  | `True` or `False` |
 | LightShadows  | `True` or `False` |
 | RenderExteriorCellLights | `True` or `False` |
+| DayNightCycle | `True` or `False` |
+| GenerateNormalMap | `True` or `False` |
+| NormalGeneratorIntensity | A value from 0.1 to 1.0 |
 |**Effects** | |
-|AntiAliasing | `True` or `False` |
-|AmbientOcclusion | `True` or `False` |
-|Bloom | `True` or `False` |
-|WaterBackSideTransparent | `True` or `False` |
+| AntiAliasing |  A value from 0 to 3 (0 is disabled) | 
+| PostProcessQuality | A value from 0 to 3 (0 is disabled) | 
+| WaterBackSideTransparent | `True` or `False` |
 |**Rendering** | |
 | Shader  | `Unlit` or `Standard` or `Default` or `Bumped` |
-| RenderPath  | `1` = Forward, `3` = Deferred |
+| RenderPath  | `Forward` or `Deferred` |
+| CameraFarClip | a value from 10 to 10000 |
+| WaterQuality | a value from 0 to 2 |
 |**VR** | |
 | FollowHeadDirection | `True` or `False` |
-| DirectModePreview | `True` or `False` |
+| RoomScale | `True` or `False` |
+| ForceControllers | `True` or `False` |
+| XRVignette = | `True` or `False` |
 |**Debug** | |
 | CreaturesEnabled | `True` or `False` |
 
 ## Controls
-| Action | Keys | Gamepad |
-|--------|------|---------|
-| Move | W, A, S, D* | Left thumbstick |
-| Sprint | Left Shift | Left thumbstick button | 
-| Walk | Left Ctrl | Right thumstick button |
-| Use / Open / Attack | Space | Button A |
-| Cancel / Menu | Left click | Button B | 
-| Take (book mode) | Nothing | Button X |
-| Jump | E | button Y |
-| Toggle Flight Mode | Tab | Nothing |
-| Toggle Lantern | L | Nothing |
-| Free Cursor Lock | Backquote | Nothing |
+| Action | Keys | Gamepad | VR |
+|--------|------|---------|----|
+| Move | W, A, S, D* | Left thumbstick | Left thumbstick |
+| Sprint | Left Shift | Left thumbstick button | Left Grip |
+| Walk | Left Ctrl | Right thumstick button | Right Grip |
+| Use / Open / Attack | Space | Button A | Right Trigger |
+| Cancel / Menu | Left click | Button B | Left Menu |
+| Take (book mode) | Nothing | Button X | Left Trigger |
+| Jump | E | button Y | Left thumbstick |
+| Toggle Flight Mode | Tab | Nothing | Nohtin |
+| Toggle Lantern | L | Nothing | Right thumbstick |
+| Free Cursor Lock | Backquote | Nothing | Nothing |
 
 \* *It uses the AZERTY mapping for French users.*
 
