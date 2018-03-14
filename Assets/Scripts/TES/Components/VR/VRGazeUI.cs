@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using TESUnity.Inputs;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.VR;
 
 namespace TESUnity.Components.VR
 {
@@ -27,13 +26,13 @@ namespace TESUnity.Components.VR
             if (EventSystem.current == null)
                 throw new UnityException("[VRGazeUI] EventSystem is null.");
 
-            var scaling = VRSettings.renderScale;
+            var scaling = UnityEngine.XR.XRSettings.eyeTextureResolutionScale;
             var screenCenter = new Vector2(Screen.width * 0.5f * scaling, Screen.height * 0.5f * scaling);
 
-            if (VRSettings.enabled)
+            if (UnityEngine.XR.XRSettings.enabled)
             {
-                screenCenter.x = VRSettings.eyeTextureWidth * 0.5f * scaling;
-                screenCenter.y = VRSettings.eyeTextureHeight * 0.5f * scaling;
+                screenCenter.x = UnityEngine.XR.XRSettings.eyeTextureWidth * 0.5f * scaling;
+                screenCenter.y = UnityEngine.XR.XRSettings.eyeTextureHeight * 0.5f * scaling;
             }
 
             _eventSystem = EventSystem.current;
@@ -51,7 +50,7 @@ namespace TESUnity.Components.VR
 
             if (_selected != null)
             {
-                if (Input.GetButtonDown("Use") || Input.GetButtonDown("Attack") || Input.GetKeyDown(KeyCode.Return))
+                if (InputManager.GetButtonDown("Use") || InputManager.GetButtonDown("Attack") || Input.GetKeyDown(KeyCode.Return))
                     Click(_selected.gameObject);
                 else if (_eventSystem.currentSelectedGameObject != _selected.gameObject)
                     SelectGameObject(_selected.gameObject);

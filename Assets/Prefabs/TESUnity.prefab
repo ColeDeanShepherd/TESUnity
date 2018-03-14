@@ -40,24 +40,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f45c2eae24c43174a92eeaa8e8613dd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bypassINIConfig: 0
-  dataPath: 
+  _bypassINIConfig: 1
+  dataPath: D:\Jeux\SteamLibrary\steamapps\common\Morrowind\Data Files
+  alternativeDataPath: D:\Jeux\Oldies\Morrowind\Data Files
   useKinematicRigidbodies: 1
-  playMusic: 0
+  playMusic: 1
   enableLog: 0
-  materialType: 1
-  renderPath: 1
+  waterQuality: 0
+  materialType: 2
+  renderPath: 3
+  cameraFarClip: 500
   ambientIntensity: 1.5
   renderSunShadows: 1
   renderLightShadows: 0
-  renderExteriorCellLights: 0
-  animateLights: 0
-  antiAliasing: 0
-  ambientOcclusion: 0
-  bloom: 1
+  renderExteriorCellLights: 1
+  animateLights: 1
+  dayNightCycle: 1
+  generateNormalMap: 1
+  normalGeneratorIntensity: 0.75
+  postProcessingQuality: 3
+  antiAliasing: 3
   waterBackSideTransparent: 0
   followHeadDirection: 1
   directModePreview: 1
+  roomScale: 0
+  forceControllers: 1
+  useXRVignette: 0
   UIManager: {fileID: 0}
   UIBackgroundImg: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   UICheckmarkImg: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
@@ -69,7 +77,7 @@ MonoBehaviour:
   UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   playerPrefab: {fileID: 1000014283173620, guid: bb4f50960e3bc08459bb6f708eb7d79f,
     type: 2}
-  waterPrefab: {fileID: 1000013936092580, guid: e8e3a26facab0b742b401e1c0da419dc,
+  waterPrefab: {fileID: 1586121937244772, guid: 6de569209e643e2438dd3dbfe2d466df,
     type: 2}
   creaturesEnabled: 1
   npcsEnabled: 0

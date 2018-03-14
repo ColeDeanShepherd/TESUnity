@@ -14,7 +14,7 @@ namespace TESUnity
         public MWStandardMaterial(TextureManager textureManager)
             : base(textureManager)
         {
-            _standardMaterial = Resources.Load<Material>("Materials/Standard");
+            _standardMaterial = new Material(Shader.Find("Standard"));
             _standardCutoutMaterial = Resources.Load<Material>("Materials/StandardCutout");
         }
 
@@ -34,24 +34,22 @@ namespace TESUnity
                     material = BuildMaterial();
 
                 if (mp.textures.mainFilePath != null)
+                {
                     material.mainTexture = m_textureManager.LoadTexture(mp.textures.mainFilePath);
 
-                if (mp.textures.glowFilePath != null)
-                {
-                    material.EnableKeyword("_EMISION");
-                    material.SetTexture("_EMISSION", m_textureManager.LoadTexture(mp.textures.glowFilePath));
+                    if (TESUnity.instance.generateNormalMap)
+                    {
+                        material.EnableKeyword("_NORMALMAP");
+                        material.SetTexture("_BumpMap", GenerateNormalMap((Texture2D)material.mainTexture, TESUnity.instance.normalGeneratorIntensity));
+                    }
                 }
+                else
+                    material.DisableKeyword("_NORMALMAP");
 
                 if (mp.textures.bumpFilePath != null)
                 {
                     material.EnableKeyword("_NORMALMAP");
                     material.SetTexture("_NORMALMAP", m_textureManager.LoadTexture(mp.textures.bumpFilePath));
-                }
-
-                if (mp.textures.glossFilePath != null)
-                {
-                    material.EnableKeyword("_METALLICGLOSSMAP");
-                    material.SetTexture("_METALLICGLOSSMAP", m_textureManager.LoadTexture(mp.textures.glossFilePath));
                 }
 
                 m_existingMaterials[mp] = material;
