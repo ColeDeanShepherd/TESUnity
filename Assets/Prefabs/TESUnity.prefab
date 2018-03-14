@@ -46,17 +46,20 @@ MonoBehaviour:
   useKinematicRigidbodies: 1
   playMusic: 1
   enableLog: 0
-  waterHighQuality: 1
-  materialType: 1
+  waterQuality: 0
+  materialType: 2
   renderPath: 3
   cameraFarClip: 500
   ambientIntensity: 1.5
   renderSunShadows: 1
-  renderLightShadows: 1
+  renderLightShadows: 0
   renderExteriorCellLights: 1
   animateLights: 1
+  dayNightCycle: 1
+  generateNormalMap: 1
+  normalGeneratorIntensity: 0.75
   postProcessingQuality: 3
-  antiAliasing: 1
+  antiAliasing: 3
   waterBackSideTransparent: 0
   followHeadDirection: 1
   directModePreview: 1
@@ -74,9 +77,7 @@ MonoBehaviour:
   UISpriteImg: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   playerPrefab: {fileID: 1000014283173620, guid: bb4f50960e3bc08459bb6f708eb7d79f,
     type: 2}
-  simpleWaterPrefab: {fileID: 1000013936092580, guid: e8e3a26facab0b742b401e1c0da419dc,
-    type: 2}
-  highWaterPrefab: {fileID: 1586121937244772, guid: 6de569209e643e2438dd3dbfe2d466df,
+  waterPrefab: {fileID: 1586121937244772, guid: 6de569209e643e2438dd3dbfe2d466df,
     type: 2}
   creaturesEnabled: 1
   npcsEnabled: 0

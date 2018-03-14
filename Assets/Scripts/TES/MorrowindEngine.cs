@@ -4,6 +4,7 @@ using TESUnity.Components;
 using TESUnity.Components.Records;
 using TESUnity.Effects;
 using TESUnity.ESM;
+using TESUnity.Inputs;
 using TESUnity.UI;
 using UnityEngine;
 using UnityStandardAssets.Water;
@@ -75,6 +76,9 @@ namespace TESUnity
             sunObj = GameObjectUtils.CreateDirectionalLight(Vector3.zero, Quaternion.Euler(new Vector3(50, 330, 0)));
             sunObj.GetComponent<Light>().shadows = TESUnity.instance.renderSunShadows ? LightShadows.Soft : LightShadows.None;
             sunObj.SetActive(false);
+
+            if (TESUnity.instance.dayNightCycle)
+                sunObj.AddComponent<DayNightCycle>();
 
             waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
             waterObj.SetActive(false);
@@ -214,7 +218,7 @@ namespace TESUnity
 
                         ShowInteractiveText(component);
 
-                        if (Input.GetButtonDown("Use"))
+                        if (InputManager.GetButtonDown("Use"))
                         {
                             if (component is DoorComponent)
                                 OpenDoor((DoorComponent)component);

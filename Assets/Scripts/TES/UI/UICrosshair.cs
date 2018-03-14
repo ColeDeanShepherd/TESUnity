@@ -14,11 +14,15 @@ namespace TESUnity.UI
             set { _crosshair.enabled = value; }
         }
 
-        void Start()
+        private void Awake()
+        {
+            _crosshair = GetComponent<Image>();
+        }
+
+        private void Start()
         {
             var textureManager = TESUnity.instance.TextureManager;
             var crosshairTexture = textureManager.LoadTexture("target", true);
-            _crosshair = GetComponent<Image>();
             _crosshair.sprite = GUIUtils.CreateSprite(crosshairTexture);
         }
 

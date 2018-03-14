@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TESUnity.Inputs;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -49,7 +50,7 @@ namespace TESUnity.Components.VR
 
             if (_selected != null)
             {
-                if (Input.GetButtonDown("Use") || Input.GetButtonDown("Attack") || Input.GetKeyDown(KeyCode.Return))
+                if (InputManager.GetButtonDown("Use") || InputManager.GetButtonDown("Attack") || Input.GetKeyDown(KeyCode.Return))
                     Click(_selected.gameObject);
                 else if (_eventSystem.currentSelectedGameObject != _selected.gameObject)
                     SelectGameObject(_selected.gameObject);

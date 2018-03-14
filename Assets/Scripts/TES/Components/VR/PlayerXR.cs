@@ -1,5 +1,6 @@
 ﻿using Demonixis.Toolbox.XR;
 using System.Collections.Generic;
+using TESUnity.Inputs;
 using TESUnity.UI;
 using UnityEngine;
 using UnityEngine.SpatialTracking;
@@ -119,7 +120,7 @@ namespace TESUnity.Components.VR
         private void Update()
         {
             // At any time, the user might want to reset the orientation and position.
-            if (Input.GetButtonDown("Recenter"))
+            if (InputManager.GetButtonDown("Recenter"))
                 RecenterOrientationAndPosition();
 
             RecenterUI(true);
@@ -154,9 +155,6 @@ namespace TESUnity.Components.VR
         /// </summary>
         private void RecenterUI(bool onlyPosition = false)
         {
-            if (!XRSettings.enabled)
-                return;
-
             if (!onlyPosition)
             {
                 var pivotRot = _pivotCanvas.localRotation;
@@ -183,7 +181,7 @@ namespace TESUnity.Components.VR
         /// Sent by the PlayerComponent when the pause method is called.
         /// </summary>
         /// <param name="paused">Boolean: Indicates if the player is paused.</param>
-        void OnPlayerPause(bool paused)
+        private void OnPlayerPause(bool paused)
         {
             if (paused)
                 RecenterUI();

@@ -316,7 +316,6 @@ namespace TESUnity
                     PostProcessInstantiatedCellObject(modelObj, refCellObjInfo);
 
                     modelObj.transform.parent = parent.transform;
-                    modelObj.isStatic = true;
                 }
 
                 // If the object has a light, instantiate it.
@@ -438,12 +437,6 @@ namespace TESUnity
                 if (record is DOORRecord)
                 {
                     ((DoorComponent)component).refObjDataGroup = info.refObjDataGroup;
-                }
-                else
-                {
-                    obj.isStatic = true;
-                    foreach (Transform child in obj.transform)
-                        child.gameObject.isStatic = true;
                 }
             }
         }

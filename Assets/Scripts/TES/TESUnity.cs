@@ -48,6 +48,9 @@ namespace TESUnity
         public bool renderLightShadows = false;
         public bool renderExteriorCellLights = false;
         public bool animateLights = false;
+        public bool dayNightCycle = false;
+        public bool generateNormalMap = true;
+        public float normalGeneratorIntensity = 0.75f;
 
         [Header("Effects")]
         public PostProcessingQuality postProcessingQuality = PostProcessingQuality.High;

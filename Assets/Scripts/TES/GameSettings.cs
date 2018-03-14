@@ -135,6 +135,11 @@ namespace TESUnity
                                 }
                             }
                             break;
+
+                        case "DayNightCycle": tes.dayNightCycle = ParseBool(value, tes.dayNightCycle); break;
+                        case "GenerateNormalMap": tes.generateNormalMap = ParseBool(value, tes.generateNormalMap); break;
+                        case "NormalGeneratorIntensity": tes.normalGeneratorIntensity = ParseFloat(value, tes.normalGeneratorIntensity); break;
+
                         default: break;
                     }
                 }
@@ -166,6 +171,9 @@ namespace TESUnity
             sb.Append("SunShadows = \r\n");
             sb.Append("LightShadows = \r\n");
             sb.Append("RenderExteriorCellLights = \r\n");
+            sb.Append("DayNightCycle = \r\n");
+            sb.Append("GenerateNormalMap = \r\n");
+            sb.Append("NormalGeneratorIntensity = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Effects]\r\n");

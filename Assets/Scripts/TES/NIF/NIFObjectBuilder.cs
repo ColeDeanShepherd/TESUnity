@@ -227,6 +227,8 @@ namespace TESUnity
 				{
 					meshRenderer.enabled = false;
 				}
+
+                obj.isStatic = true;
 			}
 			
 			if(collidable)
