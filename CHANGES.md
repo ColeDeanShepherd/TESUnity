@@ -1,19 +1,5 @@
 #TESUnity Changelog
 
-## Version 0.6 - 03/14/2018
-### Added
-- Updated to Unity 2018.1b10
-- New VR integration
-- Controller support
-- Auto Normal Map generation
-- Using the Post processing stack V2
-- Normal Map support
-- Day/Night Cycle
-- Graphics Improvement
-
-### Removed
-- OSVR Support
-
 ## Version 0.5 - 10/21/2016
 ### Added
 - OSVR Support

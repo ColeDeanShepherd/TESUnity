@@ -4,10 +4,8 @@ using TESUnity.Components;
 using TESUnity.Components.Records;
 using TESUnity.Effects;
 using TESUnity.ESM;
-using TESUnity.Inputs;
 using TESUnity.UI;
 using UnityEngine;
-using UnityStandardAssets.Water;
 
 namespace TESUnity
 {
@@ -77,14 +75,8 @@ namespace TESUnity
             sunObj.GetComponent<Light>().shadows = TESUnity.instance.renderSunShadows ? LightShadows.Soft : LightShadows.None;
             sunObj.SetActive(false);
 
-            if (TESUnity.instance.dayNightCycle)
-                sunObj.AddComponent<DayNightCycle>();
-
             waterObj = GameObject.Instantiate(TESUnity.instance.waterPrefab);
             waterObj.SetActive(false);
-
-            var water = waterObj.GetComponent<Water>();
-            water.waterMode = TESUnity.instance.waterQuality;
 
             if (!TESUnity.instance.waterBackSideTransparent)
             {
@@ -218,7 +210,7 @@ namespace TESUnity
 
                         ShowInteractiveText(component);
 
-                        if (InputManager.GetButtonDown("Use"))
+                        if (Input.GetButtonDown("Use"))
                         {
                             if (component is DoorComponent)
                                 OpenDoor((DoorComponent)component);
@@ -331,15 +323,10 @@ namespace TESUnity
 
         private GameObject CreatePlayer(GameObject playerPrefab, Vector3 position, out GameObject playerCamera)
         {
-            var player = GameObject.FindWithTag("Player");
-            if (player == null)
-            {
-                player = GameObject.Instantiate(playerPrefab);
-                player.name = "Player";
-            }
-
+            var player = (GameObject)GameObject.Instantiate(playerPrefab);
+            player.name = "Player";
             player.transform.position = position;
-
+            
             playerTransform = player.GetComponent<Transform>();
             playerCamera = player.GetComponentInChildren<Camera>().gameObject;
             playerComponent = player.GetComponent<PlayerComponent>();
