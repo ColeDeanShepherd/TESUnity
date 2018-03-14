@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Rendering.PostProcessing;
 
 namespace TESUnity
 {
@@ -76,27 +75,10 @@ namespace TESUnity
 
                     switch (temp[0].Trim())
                     {
-                        case "AntiAliasing":
-                            {
-                                int result;
-                                if (int.TryParse(value, out result))
-                                {
-                                    if (result >= 0 && result < 4)
-                                        tes.antiAliasing = (PostProcessLayer.Antialiasing)result;
-                                }
-                            }
-                            break;
-                        case "PostProcessQuality":
-                            {
-                                int result;
-                                if (int.TryParse(value, out result))
-                                {
-                                    if (result >= 0 && result < 4)
-                                        tes.postProcessingQuality = (TESUnity.PostProcessingQuality)result;
-                                }
-                            }
-                            break;
+                        case "AntiAliasing": tes.antiAliasing = ParseBool(value, tes.antiAliasing); break;
+                        case "AmbientOcclusion": tes.ambientOcclusion = ParseBool(value, tes.ambientOcclusion); break;
                         case "AnimateLights": tes.animateLights = ParseBool(value, tes.animateLights); break;
+                        case "Bloom": tes.bloom = ParseBool(value, tes.bloom); break;
                         case "MorrowindDataPath": path = value; break;
                         case "FollowHeadDirection": tes.followHeadDirection = ParseBool(value, tes.followHeadDirection); break;
                         case "DirectModePreview": tes.directModePreview = ParseBool(value, tes.directModePreview); break;
@@ -106,7 +88,10 @@ namespace TESUnity
                         case "RenderExteriorCellLights": tes.renderExteriorCellLights = ParseBool(value, tes.renderExteriorCellLights); break;
                         case "WaterBackSideTransparent": tes.waterBackSideTransparent = ParseBool(value, tes.waterBackSideTransparent); break;
                         case "RenderPath":
-                            tes.renderPath = value == "Forward" ? RenderingPath.Forward : RenderingPath.DeferredShading;
+                            var renderPathID = ParseInt(value, 0);
+                            if (renderPathID == 1 || renderPathID == 3)
+                                tes.renderPath = (RenderingPath)renderPathID;
+
                             break;
                         case "Shader":
                             switch (value)
@@ -117,27 +102,6 @@ namespace TESUnity
                                 default: tes.materialType = TESUnity.MWMaterialType.BumpedDiffuse; break;
                             }
                             break;
-                        case "RoomScale": tes.roomScale = ParseBool(value, tes.roomScale); break;
-                        case "ForceControllers": tes.forceControllers = ParseBool(value, tes.forceControllers); break;
-                        case "CreaturesEnabled": tes.creaturesEnabled = ParseBool(value, tes.creaturesEnabled); break;
-                        case "CameraFarClip": tes.cameraFarClip = ParseFloat(value, tes.cameraFarClip); break;
-                        case "XRVignette": tes.useXRVignette = ParseBool(value, tes.useXRVignette); break;
-                        case "WaterQuality":
-                            {
-                                int result;
-                                if (int.TryParse(value, out result))
-                                {
-                                    if (result > -1 && result < 3)
-                                        tes.waterQuality = (UnityStandardAssets.Water.Water.WaterMode)result;
-                                }
-                            }
-                            break;
-
-                        case "DayNightCycle": tes.dayNightCycle = ParseBool(value, tes.dayNightCycle); break;
-                        case "GenerateNormalMap": tes.generateNormalMap = ParseBool(value, tes.generateNormalMap); break;
-                        case "NormalGeneratorIntensity": tes.normalGeneratorIntensity = ParseFloat(value, tes.normalGeneratorIntensity); break;
-
-                        default: break;
                     }
                 }
             }
@@ -152,53 +116,46 @@ namespace TESUnity
             sb.Append("\r\n");
 
             sb.Append("[Global]\r\n");
-            sb.Append("PlayMusic = True\r\n");
+            sb.Append("PlayMusic = \r\n");
             sb.Append(string.Format("{0} = \r\n", MWDataPathName));
             sb.Append("\r\n");
 
             sb.Append("[Rendering]\r\n");
-            sb.Append("RenderPath = Deferred\r\n");
-            sb.Append("Shader = Standard\r\n");
-            sb.Append("CameraFarClip = 500\r\n");
-            sb.Append("WaterQuality = 0\r\n");
+            sb.Append("RenderPath = \r\n");
+            sb.Append("Shader = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Lighting]\r\n");
-            sb.Append("AnimateLights = True\r\n");
-            sb.Append("SunShadows = True\r\n");
-            sb.Append("LightShadows = False\r\n");
-            sb.Append("RenderExteriorCellLights = True\r\n");
-            sb.Append("DayNightCycle = True\r\n");
-            sb.Append("GenerateNormalMap = True\r\n");
-            sb.Append("NormalGeneratorIntensity = 0.75\r\n");
+            sb.Append("AnimateLights = \r\n");
+            sb.Append("SunShadows = \r\n");
+            sb.Append("LightShadows = \r\n");
+            sb.Append("RenderExteriorCellLights = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Effects]\r\n");
-            sb.Append("AntiAliasing = True\r\n");
-            sb.Append("PostProcessQuality = 3\r\n");
-            sb.Append("WaterBackSideTransparent = False\r\n");
+            sb.Append("AntiAliasing = \r\n");
+            sb.Append("AmbientOcclusion = \r\n");
+            sb.Append("Bloom = \r\n");
+            sb.Append("WaterBackSideTransparent = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[VR]\r\n");
-            sb.Append("FollowHeadDirection = True\r\n");
-            sb.Append("RoomScale = False\r\n");
-            sb.Append("ForceControllers = True\r\n");
-            sb.Append("XRVignette = False\r\n");
+            sb.Append("FollowHeadDirection = \r\n");
+            sb.Append("DirectModePreview = \r\n");
             sb.Append("\r\n");
 
             sb.Append("[Debug]\r\n");
-            sb.Append("CreaturesEnabled = False\r\n");
+            sb.Append("CreaturesEnabled = \r\n");
 
             File.WriteAllText(ConfigFile, sb.ToString());
         }
 
         private static bool ParseBool(string value, bool defaultValue)
         {
-            var val = value.ToLower();
-            if (val == "true" || val == "1")
-                return true;
-            else if (val == "false" || value == "0")
-                return false;
+            bool result;
+
+            if (bool.TryParse(value, out result))
+                return result;
 
             return defaultValue;
         }
@@ -208,16 +165,6 @@ namespace TESUnity
             int result;
 
             if (int.TryParse(value, out result))
-                return result;
-
-            return defaultValue;
-        }
-
-        private static float ParseFloat(string value, float defaultValue)
-        {
-            float result;
-
-            if (float.TryParse(value, out result))
                 return result;
 
             return defaultValue;

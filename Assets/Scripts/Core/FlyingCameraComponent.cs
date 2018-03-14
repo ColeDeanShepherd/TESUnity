@@ -1,5 +1,4 @@
-﻿using TESUnity.Inputs;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class FlyingCameraComponent : MonoBehaviour
 {
@@ -47,7 +46,7 @@ public class FlyingCameraComponent : MonoBehaviour
 			eulerAngles.x = eulerAngles.x - 360;
 		}
 
-		var deltaMouse = mouseSensitivity * (new Vector2(InputManager.GetAxis("Mouse X"), InputManager.GetAxis("Mouse Y")));
+		var deltaMouse = mouseSensitivity * (new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")));
 
 		var arrowKeysDirection = CalculateArrowKeysDirection();
 		deltaMouse.x += Time.deltaTime * (arrowKeyRotSpeedMultiplier * arrowKeysDirection.x);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using TESUnity.ESM;
-using TESUnity.Inputs;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,9 +35,9 @@ namespace TESUnity.UI
             if (!_container.activeSelf)
                 return;
 
-            if (InputManager.GetButtonDown("Use"))
+            if (Input.GetButtonDown("Use"))
                 Take();
-            else if (InputManager.GetButtonDown("Menu"))
+            else if (Input.GetButton("Menu"))
                 Close();
         }
 

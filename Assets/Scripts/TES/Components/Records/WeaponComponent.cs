@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using TESUnity.ESM;
-using TESUnity.Inputs;
 using UnityEngine;
 
 namespace TESUnity.Components.Records
@@ -33,7 +32,7 @@ namespace TESUnity.Components.Records
         {
             if (_isEquiped)
             {
-                if (InputManager.GetButtonDown("Attack"))
+                if (Input.GetButtonDown("Attack"))
                 {
                     if (_isVisible)
                         PlayAttackAnimation();

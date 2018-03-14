@@ -11,6 +11,7 @@ public static class GameObjectUtils
 		cameraObject.tag = "MainCamera";
 
 		cameraObject.AddComponent<Camera>();
+		cameraObject.AddComponent<GUILayer>();
 		cameraObject.AddComponent<FlareLayer>();
 		cameraObject.AddComponent<AudioListener>();
 
@@ -98,7 +99,6 @@ public static class GameObjectUtils
 	{
 		// Create the terrain game object.
 		GameObject terrainObject = new GameObject("terrain");
-        terrainObject.isStatic = true;
 
 		var terrain = terrainObject.AddComponent<Terrain>();
 		terrain.terrainData = terrainData;
